@@ -1,0 +1,4190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BabyStore Owner Operations Portal</title>
+  
+  <!-- IMPORT GOOGLE FONTS FOR MYANMAR & ENGLISH -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Padauk:wght@400;700&family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <!-- LIGHTWEIGHT HTML-TO-CANVAS ENGINE FOR VOUCHER SCREENSHOTS -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+  <style>
+    :root {
+      --primary: #e65c00;
+      --primary-hover: #cf5300;
+      --primary-light: #fff3eb;
+      --primary-border: #ffd8be;
+      --success: #2e7d32;
+      --warning: #b78103;
+      --danger: #c62828;
+      --text: #2c3e50;
+      --bg: #f5f7fa;
+      --card-bg: #ffffff;
+      --border: #dcdfe6;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', 'Padauk', Arial, sans-serif;
+      margin: 0;
+      padding: 16px;
+      background-color: var(--bg);
+      color: var(--text);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .app-container {
+      max-width: 1250px;
+      margin: 0 auto;
+      background: var(--card-bg);
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+    }
+
+    /* Top Header */
+    .header-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      border-bottom: 2px solid var(--primary);
+      padding-bottom: 12px;
+      margin-bottom: 15px;
+    }
+    .brand-title {
+      margin: 0;
+      color: var(--primary);
+      font-size: 22px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Status Badges */
+    .status-badge {
+      font-size: 11px;
+      font-weight: bold;
+      padding: 4px 8px;
+      border-radius: 12px;
+      white-space: nowrap;
+    }
+    .badge-synced { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+    .badge-unsaved { background-color: #fff3cd; color: #856404; border: 1px solid #ffeeba; }
+    .badge-stock-out { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+    .badge-stock-low { background-color: #fff3cd; color: #856404; border: 1px solid #ffeeba; }
+    .badge-stock-ok { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+
+    /* Navigation Tabs */
+    .tab-nav { display: flex; border-bottom: 2px solid #e0e0e0; margin-bottom: 15px; overflow-x: auto; }
+    .tab-btn {
+      padding: 10px 18px;
+      font-size: 14px;
+      font-weight: bold;
+      border: none;
+      background: #e9ecef;
+      cursor: pointer;
+      border-radius: 6px 6px 0 0;
+      margin-right: 5px;
+      white-space: nowrap;
+      color: #495057;
+      transition: 0.2s ease;
+    }
+    .tab-btn.active { background: var(--primary); color: white; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    /* Layout & Grids */
+    .grid-pos {
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 20px;
+    }
+    @media (max-width: 850px) {
+      .grid-pos { grid-template-columns: 1fr; }
+    }
+
+    .card-panel {
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 15px;
+      background: #fafbfc;
+    }
+
+    label {
+      font-weight: bold;
+      font-size: 12px;
+      display: block;
+      margin-top: 8px;
+      color: #444;
+    }
+    input, textarea, select {
+      width: 100%;
+      padding: 8px 10px;
+      margin-top: 4px;
+      box-sizing: border-box;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 13px;
+      font-family: inherit;
+    }
+    input:focus, textarea:focus, select:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+    input:disabled, select:disabled {
+      background-color: #e9ecef;
+      cursor: not-allowed;
+      color: #6c757d;
+    }
+
+    /* Buttons */
+    .btn {
+      padding: 8px 14px;
+      font-weight: bold;
+      font-size: 13px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      transition: 0.2s;
+    }
+    .btn-primary { background: var(--primary); color: white; }
+    .btn-primary:hover { background: var(--primary-hover); }
+    .btn-secondary { background: #0d5c75; color: white; }
+    .btn-success { background: var(--success); color: white; }
+    .btn-warning { background: var(--warning); color: white; }
+    .btn-sm { padding: 4px 8px; font-size: 11px; }
+
+    /* Filter Chips */
+    .chip-group {
+      display: flex;
+      gap: 5px;
+      overflow-x: auto;
+      padding-bottom: 6px;
+      margin-top: 6px;
+    }
+    .chip {
+      padding: 4px 10px;
+      border-radius: 15px;
+      border: 1px solid #ccc;
+      background: white;
+      font-size: 12px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .chip.active {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+    }
+
+    /* Product Grid */
+    .product-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+      gap: 10px;
+      max-height: 480px;
+      overflow-y: auto;
+      margin-top: 10px;
+      padding-right: 4px;
+    }
+    .product-card {
+      background: white;
+      border: 1px solid #e0e0e0;
+      border-radius: 6px;
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: transform 0.1s, box-shadow 0.1s;
+    }
+    .product-card:hover {
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .product-title {
+      font-size: 13px;
+      font-weight: bold;
+      color: #333;
+      line-height: 1.3;
+      margin-bottom: 4px;
+    }
+    .product-meta {
+      font-size: 11px;
+      color: #666;
+      margin-bottom: 4px;
+    }
+    .product-price {
+      font-weight: bold;
+      color: var(--primary);
+      font-size: 13px;
+    }
+
+    /* Cart Table */
+    .cart-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+      font-size: 12px;
+    }
+    .cart-table th, .cart-table td {
+      border-bottom: 1px solid #eee;
+      padding: 6px 4px;
+      text-align: left;
+    }
+    .cart-qty-btn {
+      width: 22px;
+      height: 22px;
+      padding: 0;
+      font-weight: bold;
+      border: 1px solid #ccc;
+      background: #f8f9fa;
+      border-radius: 3px;
+      cursor: pointer;
+    }
+
+    /* Discount Container */
+    .discount-container {
+      background: #fff8f2;
+      border: 1px solid var(--primary-border);
+      border-radius: 6px;
+      padding: 8px 10px;
+      margin-top: 10px;
+    }
+
+    /* Data Tables */
+    table.data-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+      font-size: 12px;
+    }
+    table.data-table th, table.data-table td {
+      border: 1px solid #ddd;
+      padding: 6px 8px;
+      text-align: left;
+    }
+    table.data-table th {
+      background-color: #f1f3f5;
+      color: #333;
+      white-space: nowrap;
+    }
+    tr.clickable:hover { background-color: #fff8f2; cursor: pointer; }
+
+    /* Modals */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.55);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+    }
+    .modal-card {
+      background: white;
+      width: 90%;
+      max-width: 650px;
+      max-height: 90vh;
+      border-radius: 8px;
+      padding: 20px;
+      overflow-y: auto;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    }
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid var(--primary);
+      padding-bottom: 8px;
+      margin-bottom: 12px;
+    }
+    .modal-header h3 { margin: 0; color: var(--primary); font-size: 16px; }
+    .close-btn { background: none; border: none; font-size: 20px; cursor: pointer; }
+
+    .calc-box {
+      background: #f8f9fa;
+      border: 1px solid #e2e8f0;
+      padding: 10px;
+      border-radius: 6px;
+      margin-top: 10px;
+    }
+
+    /* Matrix Table Layout */
+    .matrix-checkbox-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 4px;
+      padding: 8px;
+      background: white;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      max-height: 90px;
+      overflow-y: auto;
+    }
+    .matrix-checkbox-item {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 12px;
+      cursor: pointer;
+      user-select: none;
+    }
+    .matrix-checkbox-item input {
+      width: auto;
+      margin: 0;
+    }
+    .matrix-input-cell {
+      width: 55px;
+      padding: 4px;
+      text-align: center;
+      font-size: 12px;
+      font-weight: bold;
+    }
+
+    /* Live Search Results inside Order Edit Modal */
+    .quick-add-search-box {
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      max-height: 180px;
+      overflow-y: auto;
+      margin-top: 6px;
+      display: none;
+    }
+    .quick-add-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 10px;
+      border-bottom: 1px solid #f0f0f0;
+      font-size: 11px;
+    }
+    .quick-add-item:hover {
+      background: #fff3eb;
+    }
+
+    /* Floating Customer Dropdown */
+    .customer-suggestion-dropdown {
+      position: relative;
+    }
+    .suggestion-popup {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: #ffffff;
+      border: 1px solid var(--primary-border);
+      border-radius: 6px;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
+      z-index: 100;
+      max-height: 220px;
+      overflow-y: auto;
+      display: none;
+    }
+    .suggestion-item {
+      padding: 8px 12px;
+      border-bottom: 1px solid #f5f5f5;
+      cursor: pointer;
+      transition: background 0.15s ease;
+    }
+    .suggestion-item:hover {
+      background-color: var(--primary-light);
+    }
+    .suggestion-name {
+      font-weight: bold;
+      font-size: 12px;
+      color: var(--text);
+      display: flex;
+      justify-content: space-between;
+    }
+    .suggestion-last-order {
+      font-size: 11px;
+      color: #666;
+      margin-top: 2px;
+    }
+
+    /* Voucher Formatting */
+    .voucher-capture-wrapper {
+      padding: 10px;
+      display: flex;
+      justify-content: center;
+      background: #eef2f5;
+      border-radius: 6px;
+    }
+    .voucher-card {
+      width: 100%;
+      max-width: 360px;
+      background: #ffffff;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      font-size: 12px;
+      color: #222;
+      border: 1px solid #e1e4e8;
+    }
+    .voucher-header {
+      text-align: center;
+      border-bottom: 2px dashed #e65c00;
+      padding-bottom: 12px;
+      margin-bottom: 12px;
+    }
+    .voucher-logo { font-size: 20px; font-weight: bold; color: #e65c00; margin-bottom: 2px; }
+    .voucher-sub { font-size: 11px; color: #666; }
+    .voucher-row { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 12px; }
+    .voucher-table { width: 100%; border-collapse: collapse; margin: 12px 0; }
+    .voucher-table th { border-bottom: 1px solid #ddd; padding: 6px 0; font-size: 11px; color: #555; text-align: left; }
+    .voucher-table td { padding: 6px 0; border-bottom: 1px solid #f0f0f0; font-size: 12px; }
+    .voucher-total-box { border-top: 2px dashed #333; padding-top: 10px; margin-top: 10px; }
+    .voucher-footer { text-align: center; font-size: 11px; color: #777; margin-top: 15px; border-top: 1px solid #f0f0f0; padding-top: 10px; }
+
+    #printReceiptSlip { display: none; }
+    @media print {
+      body { background-color: white; padding: 0; color: #000; font-family: 'Segoe UI', 'Padauk', Arial, sans-serif; }
+      .app-container, .tab-nav, .header-bar, button, .modal-overlay { display: none !important; }
+      body.printing-slip #printReceiptSlip { display: block !important; width: 100%; max-width: 380px; margin: 0 auto; font-size: 12px; }
+      .receipt-title { text-align: center; font-weight: bold; font-size: 16px; margin-bottom: 4px; }
+      .receipt-divider { border-bottom: 1px dashed #000; margin: 8px 0; }
+      .receipt-table { width: 100%; border-collapse: collapse; margin-top: 6px; font-size: 11px; }
+      .receipt-table th, .receipt-table td { padding: 4px 0; border: none; text-align: left; }
+    }
+
+    /* Analytics Dashboard Styles (Pure CSS Metric Bars) */
+    .metric-cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+    .metric-card {
+      background: white;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 14px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+    }
+    .metric-card-title {
+      font-size: 11px;
+      font-weight: bold;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 6px;
+    }
+    .metric-card-value {
+      font-size: 20px;
+      font-weight: bold;
+      color: var(--primary);
+    }
+    .metric-card-sub {
+      font-size: 11px;
+      color: #888;
+      margin-top: 4px;
+    }
+
+    .analytics-grid-two {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 18px;
+    }
+    @media (max-width: 800px) {
+      .analytics-grid-two { grid-template-columns: 1fr; }
+    }
+
+    .progress-bar-container {
+      margin-bottom: 10px;
+    }
+    .progress-bar-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 3px;
+    }
+    .progress-bar-track {
+      background: #edf2f7;
+      height: 14px;
+      border-radius: 7px;
+      overflow: hidden;
+      display: flex;
+    }
+    .progress-bar-fill {
+      background: var(--primary);
+      height: 100%;
+      transition: width 0.3s ease;
+    }
+  </style>
+</head>
+<body>
+
+<div class="app-container">
+  <!-- Top Header with Synced Controls & Backup Tools -->
+  <div class="header-bar">
+    <h2 class="brand-title">🧸 Mini-M Baby Clothing Store Owner Portal</h2>
+    <div class="sync-controls" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+      <span id="syncStatus" class="status-badge badge-synced">⚡ All Synced</span>
+      <button class="btn btn-secondary btn-sm" onclick="downloadFromGoogleSheets()">📥 Download Sheets</button>
+      <button id="btnUploadSheets" class="btn btn-primary btn-sm" onclick="uploadToGoogleSheets()">☁️ Upload Sheets</button>
+      <button class="btn btn-sm" style="background: #4a5568; color: white;" onclick="exportLocalJsonBackup()" title="Download offline JSON backup">💾 JSON Backup</button>
+      <button class="btn btn-sm" style="background: #718096; color: white;" onclick="document.getElementById('jsonFileInput').click()" title="Restore from local JSON file">📂 Restore</button>
+      <input type="file" id="jsonFileInput" style="display: none;" accept=".json" onchange="importLocalJsonBackup(event)">
+    </div>
+  </div>
+
+  <!-- Navigation Tabs -->
+  <div class="tab-nav">
+    <button class="tab-btn active" onclick="switchTab('posTab')">🛒 POS & Fast Intake</button>
+    <button class="tab-btn" onclick="switchTab('inventoryTab')">📦 Inventory & Stock</button>
+    <button class="tab-btn" onclick="switchTab('ordersTab')">📋 Orders & Fulfillment</button>
+    <button class="tab-btn" onclick="switchTab('customersTab')">👥 Customers</button>
+    <button class="tab-btn" onclick="switchTab('analyticsTab')">📊 Analytics</button>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- TAB 1: POS & FAST ORDER INTAKE -->
+  <!-- ========================================================================= -->
+  <div id="posTab" class="tab-content active">
+    <div class="grid-pos">
+      
+      <!-- Left Column: Product Catalog & Multi-Attribute Filters -->
+      <div class="card-panel">
+        <div style="display: flex; gap: 8px;">
+          <input type="text" id="posSearchInput" placeholder="🔍 Search SKU, Title, Color, Type, Remark..." oninput="filterPosCatalog()">
+          <button class="btn btn-secondary btn-sm" onclick="resetPosFilters()">Reset</button>
+        </div>
+
+        <!-- Sex Category Filters -->
+        <label>Sex Filter:</label>
+        <div class="chip-group" id="posSexChips">
+          <div class="chip active" onclick="setPosSex('All', this)">All</div>
+          <div class="chip" onclick="setPosSex('Unisex', this)">Unisex</div>
+          <div class="chip" onclick="setPosSex('Male', this)">Male</div>
+          <div class="chip" onclick="setPosSex('Female', this)">Female</div>
+        </div>
+
+        <!-- Type Category Filters (Dynamically Rendered from Settings) -->
+        <label>Type Category Filter:</label>
+        <div class="chip-group" id="posTypeChips"></div>
+
+        <!-- Size Filters (Dynamically Rendered from Settings) -->
+        <label>Size Filter:</label>
+        <div class="chip-group" id="posSizeChips"></div>
+
+        <!-- Product Cards Grid -->
+        <div class="product-grid" id="posProductGrid">
+          <div style="grid-column: 1/-1; text-align: center; color: #888; padding: 20px;">No in-stock products found.</div>
+        </div>
+      </div>
+
+      <!-- Right Column: Customer Info & Order Cart Drawer -->
+      <div class="card-panel">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <h3 style="margin: 0; color: var(--primary); font-size: 15px;">📝 Order & Customer Details</h3>
+          <label style="margin: 0; font-size: 11px; display: flex; align-items: center; gap: 4px; cursor: pointer;">
+            <input type="checkbox" id="cartWholesaleToggle" onchange="toggleWholesaleMode()" style="width:auto; margin:0;">
+            <b>Wholesale Pricing</b>
+          </label>
+        </div>
+
+        <input type="hidden" id="custBoundId">
+
+        <!-- Customer Name Input with Option A Dropdown Suggestions -->
+        <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 8px;">
+          <div class="customer-suggestion-dropdown">
+            <label>Customer Name <span style="color:red;">*</span>:</label>
+            <input type="text" id="custName" placeholder="e.g. Daw Nwe Nwe Yee" autocomplete="off" oninput="handleCustomerNameInput()">
+            <div id="custSuggestionsPopup" class="suggestion-popup"></div>
+          </div>
+          <div>
+            <label>Phone Number (Optional):</label>
+            <input type="text" id="custPhone" placeholder="09xxxxxxxxx">
+          </div>
+        </div>
+
+        <div id="custLookupBadge" style="display:none; font-size: 11px; margin-top: 4px; color: var(--success); font-weight: bold;">
+          ✅ Selected Profile: <span id="custFoundId"></span> (<span id="custFoundSpend"></span>)
+          <button type="button" style="border:none; background:none; color:red; cursor:pointer; font-size:11px; margin-left:6px;" onclick="unbindCustomer()">✕ Unbind / New Customer</button>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+          <div>
+            <label>Township / City (Optional):</label>
+            <input type="text" id="custTownship" placeholder="e.g. Kamayut, Yangon">
+          </div>
+          <div>
+            <label>Customer Remark (Optional):</label>
+            <input type="text" id="custRemark" placeholder="e.g. Prefers fast delivery, KPay">
+          </div>
+        </div>
+
+        <label>Delivery Address (Optional):</label>
+        <textarea id="custAddress" style="height: 45px;" placeholder="Street / House No. / Quarter"></textarea>
+
+        <!-- Cart Items Table -->
+        <div style="margin-top: 15px; border-top: 1px dashed #ccc; padding-top: 10px;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <b style="font-size: 13px;">🛒 Order Items (<span id="cartCount">0</span>)</b>
+            <button class="btn btn-sm" style="background:#e9ecef; color:#333;" onclick="clearCart()">Clear</button>
+          </div>
+
+          <table class="cart-table">
+            <thead>
+              <tr>
+                <th>Item / SKU</th>
+                <th style="width: 70px; text-align: center;">Qty</th>
+                <th style="text-align: right;">Subtotal</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="cartTableBody">
+              <tr><td colspan="4" style="text-align:center; color:#888; padding: 15px;">Cart is empty. Click items on the left to add.</td></tr>
+            </tbody>
+          </table>
+
+          <!-- DISCOUNT CONFIGURATION SECTION -->
+          <div class="discount-container">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+              <b style="font-size: 12px; color: var(--primary);">🎁 Discount / Promotion:</b>
+              <span id="discountBadge" style="font-size: 11px; font-weight: bold; color: var(--success);"></span>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 6px;">
+              <select id="orderDiscountType" onchange="handleDiscountTypeChange()" style="padding: 6px; font-size: 12px;">
+                <option value="none">No Discount</option>
+                <option value="percentage">Percentage (%) Off</option>
+                <option value="flat">Direct Flat Cash (MMK)</option>
+                <option value="tiered">Tiered Cashback (e.g. 5K per 100K)</option>
+              </select>
+
+              <div id="discountInputsWrapper">
+                <input type="number" id="orderDiscountVal" placeholder="Amount / %" style="display:none; padding: 6px; font-size: 12px;" oninput="renderCart()">
+              </div>
+            </div>
+
+            <div id="tieredDiscountRow" style="display: none; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 6px;">
+              <div>
+                <label style="font-size: 10px; margin: 0;">Cashback (MMK):</label>
+                <input type="number" id="orderTierCashback" placeholder="e.g. 5000" value="5000" style="padding: 4px 6px; font-size: 11px;" oninput="renderCart()">
+              </div>
+              <div>
+                <label style="font-size: 10px; margin: 0;">For Every (MMK):</label>
+                <input type="number" id="orderTierThreshold" placeholder="e.g. 100000" value="100000" style="padding: 4px 6px; font-size: 11px;" oninput="renderCart()">
+              </div>
+            </div>
+          </div>
+
+          <!-- Total Calculation Breakdown -->
+          <div style="margin-top: 10px; padding: 10px; background: #fff; border-radius: 6px; border: 1px solid #ddd; font-size: 13px;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+              <span style="color: #666;">Subtotal:</span>
+              <span id="cartSubtotalDisplay" style="font-weight: bold;">0 MMK</span>
+            </div>
+            <div id="cartDiscountRow" style="display: none; justify-content: space-between; margin-bottom: 4px; color: var(--success);">
+              <span id="cartDiscountLabel">Discount:</span>
+              <span id="cartDiscountDisplay" style="font-weight: bold;">-0 MMK</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 15px; font-weight: bold; border-top: 1px dashed #ccc; padding-top: 6px; margin-top: 4px;">
+              <span>Net Total:</span>
+              <span style="color: var(--primary);" id="cartTotalDisplay">0 MMK</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Payment & Remarks -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px;">
+          <div>
+            <label>Payment Method:</label>
+            <select id="orderPaymentType"></select>
+          </div>
+          <div>
+            <label>Order Status:</label>
+            <select id="orderStatus">
+              <option value="Confirmed">Confirmed</option>
+              <option value="Pending">Pending</option>
+              <option value="Shipped">Shipped</option>
+            </select>
+          </div>
+        </div>
+
+        <label>Order Remark / Delivery Notes (Optional):</label>
+        <input type="text" id="orderRemark" placeholder="e.g. Call before delivery">
+
+        <div style="display: flex; gap: 8px; margin-top: 15px; flex-wrap: wrap;">
+          <button class="btn btn-primary" style="flex: 1;" onclick="submitOrderIntake()">💾 Complete Sale</button>
+          <button class="btn btn-success" onclick="openVoucherModal(lastSavedOrder)">📸 Generate Voucher</button>
+          <button class="btn btn-secondary" onclick="printReceipt()">🖨️ Print Slip</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- TAB 2: INVENTORY & STOCK MANAGEMENT -->
+  <!-- ========================================================================= -->
+  <div id="inventoryTab" class="tab-content">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 10px;">
+      <div style="display: flex; gap: 12px; flex: 1; max-width: 550px; align-items: center;">
+        <input type="text" id="invSearchInput" placeholder="Search SKU, name, color, type, remark..." oninput="renderInventoryTable()">
+        <label style="display: flex; align-items: center; gap: 4px; font-size: 12px; cursor: pointer; user-select: none; white-space: nowrap; margin-top: 4px;">
+          <input type="checkbox" id="invShowOutOfStock" onchange="renderInventoryTable()" style="width: auto; margin: 0;">
+          <b>Show Out of Stock (0 Stock)</b>
+        </label>
+      </div>
+      <div style="display: flex; gap: 6px;">
+        <button class="btn btn-primary btn-sm" onclick="openNewProductModal()">➕ Single Variant SKU</button>
+        <button class="btn btn-success btn-sm" onclick="openBulkMatrixModal()">📦 Bulk Matrix Intake (Shipment Mode)</button>
+      </div>
+    </div>
+
+    <div style="overflow-x: auto;">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>SKU</th>
+            <th>Name (MM)</th>
+            <th>Sex</th>
+            <th>Type</th>
+            <th>Length</th>
+            <th>Size</th>
+            <th>Color</th>
+            <th>Remark</th>
+            <th>Capital (MMK)</th>
+            <th>Selling Price</th>
+            <th>Wholesale Price</th>
+            <th style="width: 120px; text-align: center;">Stock</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody id="inventoryTableBody">
+          <tr><td colspan="13" style="text-align: center;">Loading inventory...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- TAB 3: ORDERS & FULFILLMENT -->
+  <!-- ========================================================================= -->
+  <div id="ordersTab" class="tab-content">
+    <div style="display: flex; gap: 8px; margin-bottom: 10px;">
+      <input type="text" id="orderSearchInput" placeholder="Search Sales ID, Customer Name, or Phone..." oninput="renderOrdersTable()">
+    </div>
+
+    <div style="overflow-x: auto;">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Sales ID</th>
+            <th>Date</th>
+            <th>Customer</th>
+            <th>Phone</th>
+            <th>Items Summary</th>
+            <th>Discount</th>
+            <th>Total Amount</th>
+            <th>Payment</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="ordersTableBody">
+          <tr><td colspan="10" style="text-align: center;">Loading orders...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- TAB 4: CUSTOMER MANAGEMENT -->
+  <!-- ========================================================================= -->
+  <div id="customersTab" class="tab-content">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 10px;">
+      <div style="display: flex; gap: 8px; flex: 1; max-width: 400px;">
+        <input type="text" id="custSearchInput" placeholder="Search Name, Phone, Township, ID..." oninput="renderCustomersTable()">
+      </div>
+      <button class="btn btn-primary btn-sm" onclick="openNewCustomerModal()">➕ Add Customer Profile</button>
+    </div>
+
+    <div style="overflow-x: auto;">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Customer ID</th>
+            <th>Full Name</th>
+            <th>Phone</th>
+            <th>Township / City</th>
+            <th style="text-align: center;">Orders</th>
+            <th>Total Spend</th>
+            <th>Last Purchase Summary</th>
+            <th>Remark / Aliases</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="customersTableBody">
+          <tr><td colspan="9" style="text-align: center;">Loading customers database...</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- TAB 5: ANALYTICS & BUSINESS INTELLIGENCE DASHBOARD -->
+  <!-- ========================================================================= -->
+  <div id="analyticsTab" class="tab-content">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; background: #fafbfc; border: 1px solid var(--border); padding: 10px; border-radius: 8px;">
+      <div class="chip-group" id="analyticsPeriodChips" style="margin: 0;">
+        <div class="chip active" onclick="setAnalyticsPeriod('today', this)">Today</div>
+        <div class="chip" onclick="setAnalyticsPeriod('this_month', this)">This Month</div>
+        <div class="chip" onclick="setAnalyticsPeriod('last_30', this)">Last 30 Days</div>
+        <div class="chip" onclick="setAnalyticsPeriod('all_time', this)">All Time</div>
+        <div class="chip" onclick="setAnalyticsPeriod('custom', this)">📅 Custom Range</div>
+      </div>
+      
+      <div id="analyticsCustomDateInputs" style="display: none; gap: 6px; align-items: center;">
+        <input type="date" id="analyticsStartDate" style="width: auto; padding: 4px 8px;" onchange="renderAnalyticsDashboard()">
+        <span>to</span>
+        <input type="date" id="analyticsEndDate" style="width: auto; padding: 4px 8px;" onchange="renderAnalyticsDashboard()">
+      </div>
+    </div>
+
+    <div class="metric-cards-grid">
+      <div class="metric-card">
+        <div class="metric-card-title">💰 Total Net Revenue</div>
+        <div class="metric-card-value" id="anTotalRevenue">0 MMK</div>
+        <div class="metric-card-sub" id="anOrderCount">0 valid orders completed</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-card-title">📈 Estimated Gross Profit</div>
+        <div class="metric-card-value" style="color: var(--success);" id="anGrossProfit">0 MMK</div>
+        <div class="metric-card-sub" id="anProfitMargin">Margin: 0%</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-card-title">📦 Total Items Sold</div>
+        <div class="metric-card-value" style="color: #0d5c75;" id="anItemsSold">0 Units</div>
+        <div class="metric-card-sub" id="anAvgOrderVal">Avg Order Value: 0 K</div>
+      </div>
+      <div class="metric-card">
+        <div class="metric-card-title">🏷️ Shelf Stock Valuation</div>
+        <div class="metric-card-value" style="color: var(--warning);" id="anShelfValuation">0 MMK</div>
+        <div class="metric-card-sub" id="anTotalShelfUnits">0 items on shelf</div>
+      </div>
+    </div>
+
+    <div class="analytics-grid-two">
+      <div class="card-panel">
+        <h4 style="margin: 0 0 12px 0; color: var(--primary); font-size: 13px;">👗 Sales by Clothing Category</h4>
+        <div id="anCategoryBarsContainer">
+          <div style="text-align: center; color: #888; padding: 15px;">No sales data in this period.</div>
+        </div>
+      </div>
+
+      <div class="card-panel">
+        <h4 style="margin: 0 0 12px 0; color: var(--primary); font-size: 13px;">📏 Size Demand Distribution</h4>
+        <div id="anSizeBarsContainer">
+          <div style="text-align: center; color: #888; padding: 15px;">No sales data in this period.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="analytics-grid-two">
+      <div class="card-panel">
+        <h4 style="margin: 0 0 12px 0; color: var(--primary); font-size: 13px;">💳 Payment Method Distribution</h4>
+        <div id="anPaymentBarsContainer">
+          <div style="text-align: center; color: #888; padding: 15px;">No sales data in this period.</div>
+        </div>
+      </div>
+
+      <div class="card-panel">
+        <h4 style="margin: 0 0 12px 0; color: var(--primary); font-size: 13px;">🏆 Top 5 Best-Selling Variants</h4>
+        <div style="overflow-x: auto;">
+          <table class="data-table" style="background: white;">
+            <thead>
+              <tr>
+                <th>Rank</th>
+                <th>Item & Size</th>
+                <th style="text-align: center;">Sold</th>
+                <th style="text-align: right;">Total Sales</th>
+              </tr>
+            </thead>
+            <tbody id="anTopProductsBody">
+              <tr><td colspan="4" style="text-align:center; color:#888;">No sales recorded yet.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="statusMsg" style="text-align: center; font-size: 11px; color: #888; margin-top: 15px;">
+    IndexedDB Engine Running Local-First.
+  </div>
+</div>
+
+<!-- ========================================================================= -->
+<!-- MODAL: BULK MATRIX INTAKE / NEW SHIPMENT GENERATOR -->
+<!-- ========================================================================= -->
+<div id="bulkMatrixModal" class="modal-overlay">
+  <div class="modal-card" style="max-width: 820px;">
+    <div class="modal-header">
+      <h3 style="display:flex; align-items:center; gap:6px;">📦 Bulk Shipment Matrix Intake</h3>
+      <button class="close-btn" onclick="closeModal('bulkMatrixModal')">&times;</button>
+    </div>
+
+    <!-- Base Item Information -->
+    <div style="background:#f8f9fa; border:1px solid var(--border); padding:10px; border-radius:6px;">
+      <div style="font-weight:bold; font-size:12px; color:var(--primary); margin-bottom:4px;">1. Base Product Information (Shared across variants)</div>
+      <div style="display: grid; grid-template-columns: 1fr 1.5fr 1fr 1fr; gap: 8px;">
+        <div>
+          <label>Base Item Code:</label>
+          <input type="text" id="bmItemCode" readonly style="background:#e9ecef; font-weight:bold; color:var(--primary);">
+        </div>
+        <div>
+          <label>Product Name (MM/EN) <span style="color:red;">*</span>:</label>
+          <input type="text" id="bmName" placeholder="Duducream ဂါဝန် လက်ပြတ်">
+        </div>
+        <div>
+          <label>Sex Category:</label>
+          <select id="bmSex">
+            <option value="Unisex">Unisex</option>
+            <option value="Female">Female</option>
+            <option value="Male">Male</option>
+          </select>
+        </div>
+        <div>
+          <label>Type Category:</label>
+          <select id="bmType"></select>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 8px; margin-top:6px;">
+        <div>
+          <label>Length (အလျား):</label>
+          <select id="bmLength">
+            <option value="တို">တို (Short)</option>
+            <option value="ရှည်">ရှည် (Long)</option>
+            <option value="None">None / Regular</option>
+          </select>
+        </div>
+        <div>
+          <label>Shipment Batch Remark / Notes:</label>
+          <input type="text" id="bmRemark" placeholder="e.g. Batch 2026-08 China Air Cargo restock">
+        </div>
+      </div>
+    </div>
+
+    <!-- Shared Pricing Engine -->
+    <div class="calc-box" style="margin-top: 10px;">
+      <div style="font-weight:bold; font-size:12px; color:#0d5c75; margin-bottom:4px;">2. Shared Cost & Pricing Engine</div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 6px;">
+        <div>
+          <label style="font-size:11px;">Buying (¥):</label>
+          <input type="number" id="bmBuyingYuan" step="0.01" placeholder="35.00" oninput="calculateBulkPricingEngine()">
+        </div>
+        <div>
+          <label style="font-size:11px;">Supplier %:</label>
+          <input type="number" id="bmSupplierPct" step="0.1" value="0" placeholder="5" oninput="calculateBulkPricingEngine()">
+        </div>
+        <div>
+          <label style="font-size:11px;">Yuan Rate (MMK):</label>
+          <input type="number" id="bmYuanRate" placeholder="620" oninput="calculateBulkPricingEngine()">
+        </div>
+        <div>
+          <label style="font-size:11px;">Cargo Fee (MMK):</label>
+          <input type="number" id="bmCargoFee" placeholder="2500" oninput="calculateBulkPricingEngine()">
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 6px; margin-top:6px;">
+        <div>
+          <label style="font-size:11px;">Total Capital (Auto):</label>
+          <input type="number" id="bmTotalCapital" readonly style="background:#edf2f7; font-weight:bold;">
+        </div>
+        <div>
+          <label style="font-size:11px;" id="lblBmNormalPrice">Normal Price (Auto):</label>
+          <input type="number" id="bmNormalPrice" readonly style="background:#edf2f7; font-weight:bold; color:#008055;">
+        </div>
+        <div>
+          <label style="font-size:11px;">Selling Price (MMK) <span style="color:red;">*</span>:</label>
+          <input type="number" id="bmSellingPrice" placeholder="Selling Price">
+        </div>
+        <div>
+          <label style="font-size:11px;">Wholesale Price (MMK):</label>
+          <input type="number" id="bmWholesalePrice" placeholder="Wholesale Price">
+        </div>
+      </div>
+    </div>
+
+    <!-- Dimension Selectors -->
+    <div style="margin-top: 10px;">
+      <label>3. Select Sizes to Include in Matrix:</label>
+      <div id="bmSizeCheckboxGrid" class="matrix-checkbox-grid"></div>
+
+      <label style="margin-top: 8px;">Select Colors / Patterns to Include in Matrix:</label>
+      <div id="bmColorCheckboxGrid" class="matrix-checkbox-grid"></div>
+    </div>
+
+    <!-- Matrix Fill Controls & Real-Time Counter -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 12px; flex-wrap: wrap; gap: 8px; background: #fff8f2; padding: 8px 10px; border-radius: 6px; border: 1px solid var(--primary-border);">
+      <div style="display: flex; align-items: center; gap: 6px;">
+        <span style="font-size: 11px; font-weight: bold;">⚡ Fast Action:</span>
+        <input type="number" id="bmQuickFillQty" value="5" min="0" style="width: 55px; padding: 4px; font-size: 11px;">
+        <button type="button" class="btn btn-secondary btn-sm" onclick="applyBulkQuickFill()">Fill Active Cells</button>
+        <button type="button" class="btn btn-sm" style="background:#e9ecef; color:#333;" onclick="clearBulkMatrixInputs()">Clear Grid</button>
+      </div>
+      <div style="font-size: 12px; font-weight: bold; color: var(--primary);" id="bmSummaryBadge">
+        Total Pieces: 0 pcs (0 SKUs)
+      </div>
+    </div>
+
+    <!-- Live Matrix Table Grid -->
+    <div style="overflow-x: auto; max-height: 240px; margin-top: 10px; border: 1px solid #ddd; border-radius: 6px;">
+      <table class="data-table" style="margin: 0; background: white;">
+        <thead id="bmMatrixThead"></thead>
+        <tbody id="bmMatrixTbody">
+          <tr><td style="text-align: center; color: #888; padding: 20px;">Please check at least one size and one color above.</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Action Buttons -->
+    <div style="display: flex; gap: 8px; margin-top: 15px;">
+      <button class="btn btn-primary" style="flex: 1;" onclick="submitBulkMatrixIntake()">💾 Generate & Save All Variant SKUs</button>
+      <button class="btn" style="background:#ccc;" onclick="closeModal('bulkMatrixModal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========================================================================= -->
+<!-- MODAL: CUSTOMER PROFILE & PURCHASE HISTORY DRAWER -->
+<!-- ========================================================================= -->
+<div id="customerModal" class="modal-overlay">
+  <div class="modal-card" style="max-width: 780px;">
+    <div class="modal-header">
+      <h3 id="customerModalTitle">👤 Customer Profile & Orders History</h3>
+      <button class="close-btn" onclick="closeModal('customerModal')">&times;</button>
+    </div>
+
+    <div style="display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; background: #fff8f2; border: 1px solid var(--primary-border); padding: 10px; border-radius: 6px;">
+      <button class="btn btn-primary btn-sm" onclick="startPosFromCustomerModal()">🛒 Create POS Order for this Customer</button>
+      <button class="btn btn-success btn-sm" onclick="saveCustomerModal()">💾 Save Profile Details</button>
+      <button class="btn btn-sm" style="background:#e0e0e0; color:#333;" onclick="closeModal('customerModal')">Close</button>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
+      <div>
+        <label>Customer ID:</label>
+        <input type="text" id="mCustId" readonly style="background:#edf2f7; font-weight:bold; color:var(--primary);">
+      </div>
+      <div>
+        <label>Customer Name <span style="color:red;">*</span>:</label>
+        <input type="text" id="mCustName" placeholder="e.g. Daw Nwe Nwe Yee">
+      </div>
+      <div>
+        <label>Phone Number (Optional):</label>
+        <input type="text" id="mCustPhone" placeholder="09xxxxxxxxx">
+      </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 6px;">
+      <div>
+        <label>Township / City:</label>
+        <input type="text" id="mCustTownship" placeholder="Kamayut, Yangon">
+      </div>
+      <div>
+        <label>Customer Remark / Social Media Aliases:</label>
+        <input type="text" id="mCustRemark" placeholder="e.g. VIP, Formerly 'Sweet Angel FB'">
+      </div>
+    </div>
+
+    <label style="margin-top: 6px;">Default Delivery Address:</label>
+    <textarea id="mCustAddress" style="height: 45px;" placeholder="Street / House No. / Quarter"></textarea>
+
+    <div style="margin-top: 16px; border-top: 2px dashed #ddd; padding-top: 12px;">
+      <h4 style="margin: 0 0 8px 0; color: var(--primary); font-size: 13px;">📋 All Previous Purchases for this Customer</h4>
+      <div style="overflow-x: auto; max-height: 220px;">
+        <table class="data-table" style="background: white;">
+          <thead>
+            <tr>
+              <th>Sales ID</th>
+              <th>Date</th>
+              <th>Items Breakdown</th>
+              <th>Net Total</th>
+              <th>Payment</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="mCustHistoryBody">
+            <tr><td colspan="7" style="text-align: center; color: #888;">No prior purchases found.</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ========================================================================= -->
+<!-- MODAL: ADD / EDIT PRODUCT SKU (SINGLE VARIANT) -->
+<!-- ========================================================================= -->
+<div id="productModal" class="modal-overlay">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3 id="productModalTitle">➕ Create Product SKU & Cost Calculator</h3>
+      <button class="close-btn" onclick="closeModal('productModal')">&times;</button>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+      <div>
+        <label>Base Item Code:</label>
+        <input type="text" id="mProdItemCode" placeholder="I000001" oninput="autoGenerateSku()">
+      </div>
+      <div>
+        <label>Product Name (MM/EN) <span style="color:red;">*</span>:</label>
+        <input type="text" id="mProdName" placeholder="Duducream ဂါဝန် လက်ပြတ်">
+      </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
+      <div>
+        <label>Sex Category:</label>
+        <select id="mProdSex">
+          <option value="Unisex">Unisex</option>
+          <option value="Female">Female</option>
+          <option value="Male">Male</option>
+        </select>
+      </div>
+      
+      <div>
+        <label>Type Category:</label>
+        <select id="mProdTypeSelect" onchange="handleTypeSelectChange()"></select>
+        <input type="text" id="mProdTypeCustom" placeholder="Type custom category..." style="display:none; margin-top:4px;" oninput="autoGenerateSku()">
+      </div>
+
+      <div>
+        <label>Length (အလျား):</label>
+        <select id="mProdLength">
+          <option value="တို">တို (Short)</option>
+          <option value="ရှည်">ရှည် (Long)</option>
+          <option value="None">None / Regular</option>
+        </select>
+      </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+      <div>
+        <label>Size:</label>
+        <select id="mProdSizeSelect" onchange="handleSizeSelectChange()"></select>
+        <input type="text" id="mProdSizeCustom" placeholder="Type custom size..." style="display:none; margin-top:4px;" oninput="autoGenerateSku()">
+      </div>
+
+      <div>
+        <label>Color / Pattern:</label>
+        <select id="mProdColorSelect" onchange="handleColorSelectChange()"></select>
+        <input type="text" id="mProdColorCustom" placeholder="Type custom color..." style="display:none; margin-top:4px;" oninput="autoGenerateSku()">
+      </div>
+    </div>
+
+    <div>
+      <label>Product SKU (Primary Key):</label>
+      <input type="text" id="mProdSku" readonly style="background:#e9ecef; font-weight:bold; color:var(--primary);">
+    </div>
+
+    <div class="calc-box">
+      <div style="font-weight:bold; font-size:12px; color:#0d5c75; margin-bottom:6px;">💰 Cost & Pricing Engine (Dynamic Sheets Margins)</div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 6px;">
+        <div>
+          <label style="font-size:11px;">Buying (¥):</label>
+          <input type="number" id="mProdBuyingYuan" step="0.01" placeholder="35.00" oninput="calculatePricingEngine()">
+        </div>
+        <div>
+          <label style="font-size:11px;">Supplier %:</label>
+          <input type="number" id="mProdSupplierPct" step="0.1" value="0" placeholder="5" oninput="calculatePricingEngine()">
+        </div>
+        <div>
+          <label style="font-size:11px;">Yuan Rate (MMK):</label>
+          <input type="number" id="mProdYuanRate" placeholder="620" oninput="calculatePricingEngine()">
+        </div>
+        <div>
+          <label style="font-size:11px;">Cargo Fee (MMK):</label>
+          <input type="number" id="mProdCargoFee" placeholder="2500" oninput="calculatePricingEngine()">
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top:6px;">
+        <div>
+          <label style="font-size:11px;">Total Capital (Auto):</label>
+          <input type="number" id="mProdTotalCapital" readonly style="background:#edf2f7; font-weight:bold;">
+        </div>
+        <div>
+          <label style="font-size:11px;" id="lblNormalPriceCalc">Normal Price (Auto):</label>
+          <input type="number" id="mProdNormalPrice" readonly style="background:#edf2f7; font-weight:bold; color:#008055;">
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top:6px;">
+        <div>
+          <label style="font-size:11px;">Selling Price (MMK) <span style="color:red;">*</span>:</label>
+          <input type="number" id="mProdSellingPrice" placeholder="Selling Price">
+        </div>
+        <div>
+          <label style="font-size:11px;" id="lblWholesalePriceCalc">Wholesale Price (MMK):</label>
+          <input type="number" id="mProdWholesalePrice" placeholder="Wholesale Price">
+        </div>
+      </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px;">
+      <div>
+        <label>Stock Level:</label>
+        <input type="number" id="mProdStock" value="5" min="0">
+      </div>
+      <div>
+        <label>Product Remark / Batch Note:</label>
+        <input type="text" id="mProdRemark" placeholder="e.g. New floral batch, foldover mittens">
+      </div>
+    </div>
+
+    <div style="display: flex; gap: 8px; margin-top: 15px;">
+      <button class="btn btn-primary" style="flex: 1;" onclick="saveProductModal()">💾 Save Product Variant</button>
+      <button class="btn" style="background:#ccc;" onclick="closeModal('productModal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========================================================================= -->
+<!-- MODAL: EDIT EXISTING ORDER WITH LIVE PRODUCT PICKER & RECONCILIATION -->
+<!-- ========================================================================= -->
+<div id="editOrderModal" class="modal-overlay">
+  <div class="modal-card" style="max-width: 720px;">
+    <div class="modal-header">
+      <h3 id="editOrderModalTitle">✏️ Edit Order Record</h3>
+      <button class="close-btn" onclick="closeModal('editOrderModal')">&times;</button>
+    </div>
+
+    <input type="hidden" id="eoSalesId">
+    <input type="hidden" id="eoCustId">
+
+    <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 8px;">
+      <div>
+        <label>Customer Name <span style="color:red;">*</span>:</label>
+        <input type="text" id="eoCustName">
+      </div>
+      <div>
+        <label>Phone Number (Optional):</label>
+        <input type="text" id="eoPhone">
+      </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+      <div>
+        <label>Township / City (Optional):</label>
+        <input type="text" id="eoTownship">
+      </div>
+      <div>
+        <label>Payment Method:</label>
+        <select id="eoPaymentType"></select>
+      </div>
+    </div>
+
+    <label>Delivery Address (Optional):</label>
+    <textarea id="eoAddress" style="height: 45px;"></textarea>
+
+    <div style="margin-top: 12px; border: 1px solid var(--primary-border); background: #fffaf5; padding: 10px; border-radius: 6px;">
+      <label style="margin: 0 0 4px 0; color: var(--primary);">➕ Add New Item into this Order:</label>
+      <input type="text" id="eoItemSearchInput" placeholder="🔍 Search catalog by SKU, name, color, size to add..." oninput="filterEditOrderCatalog()">
+      <div id="eoQuickAddList" class="quick-add-search-box"></div>
+    </div>
+
+    <label style="margin-top: 12px;">Ordered Line Items (Adjust Quantities or Remove):</label>
+    <table class="cart-table" style="background: white;">
+      <thead>
+        <tr>
+          <th>SKU / Item</th>
+          <th style="width: 80px; text-align: center;">Qty</th>
+          <th style="text-align: right;">Unit Price</th>
+          <th style="text-align: right;">Subtotal</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="eoItemsBody"></tbody>
+    </table>
+
+    <div class="discount-container" style="margin-top: 10px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+        <b style="font-size: 12px; color: var(--primary);">🎁 Modify Discount:</b>
+      </div>
+      <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 6px;">
+        <select id="eoDiscountType" onchange="handleEditOrderDiscountChange()">
+          <option value="none">No Discount</option>
+          <option value="percentage">Percentage (%) Off</option>
+          <option value="flat">Direct Flat Cash (MMK)</option>
+          <option value="tiered">Tiered Cashback (e.g. 5K per 100K)</option>
+        </select>
+        <input type="number" id="eoDiscountVal" placeholder="Discount Amount / %" style="display:none;" oninput="renderEditOrderTotals()">
+      </div>
+
+      <div id="eoTieredRow" style="display: none; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 6px;">
+        <div>
+          <label style="font-size: 10px; margin: 0;">Cashback (MMK):</label>
+          <input type="number" id="eoTierCashback" value="5000" oninput="renderEditOrderTotals()">
+        </div>
+        <div>
+          <label style="font-size: 10px; margin: 0;">For Every (MMK):</label>
+          <input type="number" id="eoTierThreshold" value="100000" oninput="renderEditOrderTotals()">
+        </div>
+      </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px;">
+      <div>
+        <label>Fulfillment Status:</label>
+        <select id="eoStatus">
+          <option value="Confirmed">Confirmed</option>
+          <option value="Pending">Pending</option>
+          <option value="Shipped">Shipped</option>
+          <option value="Delivered">Delivered</option>
+          <option value="Cancelled">Cancelled (Returns Stock)</option>
+        </select>
+      </div>
+      <div>
+        <label>Order Remark (Optional):</label>
+        <input type="text" id="eoRemark" placeholder="e.g. Added extra romper per customer message">
+      </div>
+    </div>
+
+    <div style="margin-top: 10px; padding: 10px; background: #fff; border-radius: 6px; border: 1px solid #ddd; font-size: 13px;">
+      <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+        <span style="color: #666;">Subtotal:</span>
+        <span id="eoSubtotalDisplay" style="font-weight: bold;">0 MMK</span>
+      </div>
+      <div id="eoDiscountRow" style="display: none; justify-content: space-between; margin-bottom: 4px; color: var(--success);">
+        <span id="eoDiscountLabel">Discount:</span>
+        <span id="eoDiscountDisplay" style="font-weight: bold;">-0 MMK</span>
+      </div>
+      <div style="display: flex; justify-content: space-between; font-size: 15px; font-weight: bold; border-top: 1px dashed #ccc; padding-top: 6px; margin-top: 4px;">
+        <span>Updated Net Total:</span>
+        <span style="color: var(--primary);" id="eoTotalDisplay">0 MMK</span>
+      </div>
+    </div>
+
+    <div style="display: flex; gap: 8px; margin-top: 15px;">
+      <button class="btn btn-primary" style="flex: 1;" onclick="saveEditedOrder()">💾 Save Order Changes</button>
+      <button class="btn" style="background:#ccc;" onclick="closeModal('editOrderModal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ========================================================================= -->
+<!-- MODAL: DIGITAL SCREENSHOT VOUCHER PREVIEW -->
+<!-- ========================================================================= -->
+<div id="voucherModal" class="modal-overlay">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3>📸 Order Voucher (Screenshot Ready)</h3>
+      <button class="close-btn" onclick="closeModal('voucherModal')">&times;</button>
+    </div>
+
+    <div class="voucher-capture-wrapper">
+      <div id="voucherCardToCapture" class="voucher-card">
+        <div class="voucher-header">
+          <div class="voucher-logo">🧸 Mini-M BABY CLOTHING STORE</div>
+          <div class="voucher-sub">Official Sales Order Receipt</div>
+        </div>
+
+        <div class="voucher-row">
+          <span><b>Order ID:</b></span>
+          <span id="vSalesId" style="font-family:monospace; font-weight:bold;"></span>
+        </div>
+        <div class="voucher-row">
+          <span><b>Date:</b></span>
+          <span id="vDate"></span>
+        </div>
+        <div class="voucher-row">
+          <span><b>Customer:</b></span>
+          <span id="vCustName" style="font-weight:bold;"></span>
+        </div>
+        <div class="voucher-row">
+          <span><b>Phone:</b></span>
+          <span id="vPhone"></span>
+        </div>
+        <div class="voucher-row" style="flex-direction: column; gap: 2px;">
+          <span><b>Delivery Address:</b></span>
+          <span id="vAddress" style="color: #444;"></span>
+        </div>
+
+        <table class="voucher-table">
+          <thead>
+            <tr>
+              <th>Item / Variant</th>
+              <th style="text-align: center; width: 40px;">Qty</th>
+              <th style="text-align: right; width: 80px;">Amount</th>
+            </tr>
+          </thead>
+          <tbody id="vItemsBody"></tbody>
+        </table>
+
+        <div class="voucher-total-box">
+          <div class="voucher-row" style="font-size: 12px; color: #555;">
+            <span>Subtotal:</span>
+            <span id="vSubtotal"></span>
+          </div>
+          <div id="vDiscountRow" class="voucher-row" style="font-size: 12px; color: #2e7d32; display: none;">
+            <span id="vDiscountLabel">Discount:</span>
+            <span id="vDiscountAmount"></span>
+          </div>
+          <div class="voucher-row" style="font-size: 14px; font-weight: bold; margin-top: 4px; border-top: 1px dashed #ddd; padding-top: 4px;">
+            <span>Total Payable:</span>
+            <span id="vTotalAmount" style="color: #e65c00;"></span>
+          </div>
+          <div class="voucher-row" style="font-size: 11px; color: #555; margin-top: 4px;">
+            <span>Payment Method:</span>
+            <span id="vPaymentType" style="font-weight:bold;"></span>
+          </div>
+          <div class="voucher-row" style="font-size: 11px; color: #555;">
+            <span>Remark / Notes:</span>
+            <span id="vRemark"></span>
+          </div>
+        </div>
+
+        <div class="voucher-footer">
+          Thank you for ordering with us! 💕<br>
+          <i>Please inspect your items upon delivery.</i>
+        </div>
+      </div>
+    </div>
+
+    <div style="display: flex; gap: 8px; margin-top: 15px; flex-wrap: wrap;">
+      <button class="btn btn-primary" style="flex: 1;" onclick="downloadVoucherImage()">📥 Save Image</button>
+      <button class="btn btn-success" style="flex: 1;" onclick="shareVoucherImage()">📲 Share Image</button>
+      <button class="btn btn-secondary" onclick="copyVoucherToClipboard()">📋 Copy</button>
+      <button class="btn" style="background:#e0e0e0; color:#333;" onclick="closeModal('voucherModal')">Close</button>
+    </div>
+    <div id="voucherStatusLabel" style="font-size: 11px; text-align: center; color: #666; margin-top: 6px;"></div>
+  </div>
+</div>
+
+<!-- TEMPLATE: PRINTABLE SLIP FALLBACK -->
+<div id="printReceiptSlip">
+  <div class="receipt-title">🧸 BABY STORE</div>
+  <div style="text-align: center; font-size: 10px;">Order Sales Slip</div>
+  <div class="receipt-divider"></div>
+  <div><b>Sales ID:</b> <span id="slipSalesId"></span></div>
+  <div><b>Date:</b> <span id="slipDate"></span></div>
+  <div><b>Customer:</b> <span id="slipCustName"></span> (<span id="slipPhone"></span>)</div>
+  <div><b>Address:</b> <span id="slipAddress"></span></div>
+  <div class="receipt-divider"></div>
+  <table class="receipt-table">
+    <thead>
+      <tr>
+        <th>Item</th>
+        <th style="text-align: center;">Qty</th>
+        <th style="text-align: right;">Price</th>
+      </tr>
+    </thead>
+    <tbody id="slipItemsBody"></tbody>
+  </table>
+  <div class="receipt-divider"></div>
+  <div style="display: flex; justify-content: space-between;">
+    <span>Subtotal:</span>
+    <span id="slipSubtotal"></span>
+  </div>
+  <div id="slipDiscountRow" style="display: none; justify-content: space-between; color: #2e7d32;">
+    <span id="slipDiscountLabel">Discount:</span>
+    <span id="slipDiscountAmount"></span>
+  </div>
+  <div style="display: flex; justify-content: space-between; font-weight: bold; margin-top: 4px; border-top: 1px dashed #000; padding-top: 4px;">
+    <span>Total Payable:</span>
+    <span id="slipTotalAmount"></span>
+  </div>
+  <div style="margin-top: 4px;"><b>Payment:</b> <span id="slipPaymentType"></span></div>
+  <div style="text-align: center; margin-top: 15px; font-style: italic; font-size: 10px;">
+    Thank you for shopping with us!
+  </div>
+</div>
+
+<!-- ========================================================================= -->
+<!-- JAVASCRIPT: INDEXEDDB + DYNAMIC SETTINGS + BULK MATRIX ENGINE -->
+<!-- ========================================================================= -->
+<script>
+  // --- 1. INDEXEDDB SETUP (VERSION 5) ---
+  let db;
+  const DB_NAME = "BabyStoreOwnerDB";
+  const DB_VERSION = 5;
+
+  let appSettings = {
+    RegularProfitMargin: 33,
+    WholesaleProfitMargin: 15,
+    DefaultYuanRate: 620,
+    DefaultCargoFee: 2500,
+    ProductTypes: ["Dress", "Pant", "Top", "T shirt", "Shirt", "Cap", "Set", "Boiler", "Romper", "Accessories"],
+    ProductSizes: ["73", "80", "90", "100", "110", "120", "130", "140", "150"],
+    ProductColors: ["ပန်း", "ဝါ", "ပြာ", "ခဲ", "ဖြူ", "နီ", "စိမ်း", "နက်", "လိမ္မော်", "ခရမ်း", "ကြား", "ပွင့်"],
+    PaymentMethods: ["KPay", "WavePay", "COD", "AYA Pay"]
+  };
+
+  function initDatabase() {
+    return new Promise((resolve, reject) => {
+      const request = indexedDB.open(DB_NAME, DB_VERSION);
+
+      request.onupgradeneeded = (e) => {
+        const d = e.target.result;
+        
+        if (!d.objectStoreNames.contains("products")) {
+          const pStore = d.createObjectStore("products", { keyPath: "ProductID" });
+          pStore.createIndex("ItemCode", "ItemCode", { unique: false });
+          pStore.createIndex("Type", "Type", { unique: false });
+          pStore.createIndex("Sex", "Sex", { unique: false });
+          pStore.createIndex("Size", "Size", { unique: false });
+        }
+        
+        if (!d.objectStoreNames.contains("orders")) {
+          const oStore = d.createObjectStore("orders", { keyPath: "SalesID" });
+          oStore.createIndex("CustomerID", "CustomerID", { unique: false });
+          oStore.createIndex("Phone", "Phone", { unique: false });
+          oStore.createIndex("Status", "Status", { unique: false });
+        }
+
+        if (!d.objectStoreNames.contains("customers")) {
+          const cStore = d.createObjectStore("customers", { keyPath: "CustomerID" });
+          cStore.createIndex("FullName", "FullName", { unique: false });
+          cStore.createIndex("Phone", "Phone", { unique: false });
+        }
+
+        if (!d.objectStoreNames.contains("settings")) {
+          d.createObjectStore("settings", { keyPath: "key" });
+        }
+      };
+
+      request.onsuccess = (e) => {
+        db = e.target.result;
+        resolve(db);
+      };
+      request.onerror = (e) => reject("IndexedDB Error: " + e.target.error);
+    });
+  }
+
+  function dbGetAll(storeName) {
+    return new Promise((resolve) => {
+      const tx = db.transaction(storeName, "readonly");
+      tx.objectStore(storeName).getAll().onsuccess = (e) => resolve(e.target.result || []);
+    });
+  }
+
+  function dbPut(storeName, record) {
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(storeName, "readwrite");
+      tx.objectStore(storeName).put(record).onsuccess = () => {
+        updateUnsavedChangesBadge();
+        resolve(true);
+      };
+      tx.onerror = (e) => reject(e.target.error);
+    });
+  }
+
+  // --- 2. GLOBAL STATE ---
+  let currentCart = [];
+  let activeSex = "All";
+  let activeType = "All";
+  let activeSize = "All";
+  let lastSavedOrder = null;
+  let isWholesaleActive = false;
+  let isEditMode = false;
+  
+  let editingOrderOriginal = null;
+  let editingOrderItems = [];
+  let currentModalCustomer = null;
+  let activeAnalyticsPeriod = "today";
+
+  // --- 3. LOAD & RENDER DYNAMIC SETTINGS UI ---
+  async function loadSettings() {
+    try {
+      const saved = await dbGetAll("settings");
+      if (saved && saved.length > 0) {
+        saved.forEach(row => {
+          appSettings[row.key] = row.value;
+        });
+      }
+    } catch (e) {
+      console.warn("Using offline fallback settings", e);
+    }
+    applyDynamicSettingsToUI();
+  }
+
+  function applyDynamicSettingsToUI() {
+    // 1. Render POS Type Filter Chips
+    const typeChips = document.getElementById("posTypeChips");
+    if (typeChips) {
+      const types = ["All", ...(appSettings.ProductTypes || [])];
+      typeChips.innerHTML = types.map((t) => `
+        <div class="chip ${t === activeType ? 'active' : ''}" onclick="setPosType('${t}', this)">
+          ${t === 'All' ? 'All Types' : t}
+        </div>
+      `).join('');
+    }
+
+    // 2. Render POS Size Filter Chips
+    const sizeChips = document.getElementById("posSizeChips");
+    if (sizeChips) {
+      const sizes = ["All", ...(appSettings.ProductSizes || [])];
+      sizeChips.innerHTML = sizes.map((s) => `
+        <div class="chip ${s === activeSize ? 'active' : ''}" onclick="setPosSize('${s}', this)">
+          ${s === 'All' ? 'All Sizes' : s}
+        </div>
+      `).join('');
+    }
+
+    // 3. Render Product Modal Type Select
+    const prodTypeSelect = document.getElementById("mProdTypeSelect");
+    if (prodTypeSelect) {
+      const curVal = prodTypeSelect.value;
+      prodTypeSelect.innerHTML = (appSettings.ProductTypes || []).map(t => 
+        `<option value="${t}">${t}</option>`
+      ).join('') + `<option value="__CUSTOM__">➕ Custom / Other...</option>`;
+      if (curVal && [...prodTypeSelect.options].some(o => o.value === curVal)) {
+        prodTypeSelect.value = curVal;
+      }
+    }
+
+    // 4. Render Product Modal Size Select
+    const prodSizeSelect = document.getElementById("mProdSizeSelect");
+    if (prodSizeSelect) {
+      const curVal = prodSizeSelect.value;
+      prodSizeSelect.innerHTML = (appSettings.ProductSizes || []).map(s => 
+        `<option value="${s}">${s}</option>`
+      ).join('') + `<option value="__CUSTOM__">➕ Custom Size...</option>`;
+      if (curVal && [...prodSizeSelect.options].some(o => o.value === curVal)) {
+        prodSizeSelect.value = curVal;
+      }
+    }
+
+    // 5. Render Product Modal Color Select
+    const prodColorSelect = document.getElementById("mProdColorSelect");
+    if (prodColorSelect) {
+      const curVal = prodColorSelect.value;
+      prodColorSelect.innerHTML = (appSettings.ProductColors || []).map(c => 
+        `<option value="${c}">${c}</option>`
+      ).join('') + `<option value="__CUSTOM__">➕ Custom Color...</option>`;
+      if (curVal && [...prodColorSelect.options].some(o => o.value === curVal)) {
+        prodColorSelect.value = curVal;
+      }
+    }
+
+    // 6. Render Bulk Matrix Modal Type Select
+    const bmType = document.getElementById("bmType");
+    if (bmType) {
+      bmType.innerHTML = (appSettings.ProductTypes || []).map(t => `<option value="${t}">${t}</option>`).join('');
+    }
+
+    // 7. Render POS and Edit Order Payment Selects
+    const paymentMethods = appSettings.PaymentMethods || ["KPay", "WavePay", "COD", "AYA Pay"];
+    const posPay = document.getElementById("orderPaymentType");
+    if (posPay) {
+      const curVal = posPay.value;
+      posPay.innerHTML = paymentMethods.map(p => `<option value="${p}">${p}</option>`).join('');
+      if (curVal && [...posPay.options].some(o => o.value === curVal)) posPay.value = curVal;
+    }
+    const eoPay = document.getElementById("eoPaymentType");
+    if (eoPay) {
+      const curVal = eoPay.value;
+      eoPay.innerHTML = paymentMethods.map(p => `<option value="${p}">${p}</option>`).join('');
+      if (curVal && [...eoPay.options].some(o => o.value === curVal)) eoPay.value = curVal;
+    }
+
+    // 8. Update Pricing Labels
+    const regMargin = appSettings.RegularProfitMargin || 33;
+    const wsMargin = appSettings.WholesaleProfitMargin || 15;
+    const lblNormal = document.getElementById("lblNormalPriceCalc");
+    if (lblNormal) lblNormal.innerText = `Normal Price (+${regMargin}% Exact):`;
+    const lblWs = document.getElementById("lblWholesalePriceCalc");
+    if (lblWs) lblWs.innerText = `Wholesale Price (+${wsMargin}% Sug):`;
+    const lblBmNormal = document.getElementById("lblBmNormalPrice");
+    if (lblBmNormal) lblBmNormal.innerText = `Normal (+${regMargin}%):`;
+  }
+
+  // --- 4. DIRTY TRACKING & SYNC INDICATOR ---
+  async function updateUnsavedChangesBadge() {
+    try {
+      const [products, orders, customers] = await Promise.all([
+        dbGetAll("products"),
+        dbGetAll("orders"),
+        dbGetAll("customers")
+      ]);
+
+      const unsavedProds = products.filter(p => p._syncStatus === "pending_upload").length;
+      const unsavedOrders = orders.filter(o => o._syncStatus === "pending_upload").length;
+      const unsavedCusts = customers.filter(c => c._syncStatus === "pending_upload").length;
+      const totalUnsaved = unsavedProds + unsavedOrders + unsavedCusts;
+
+      const badge = document.getElementById("syncStatus");
+      const btnUpload = document.getElementById("btnUploadSheets");
+
+      if (totalUnsaved > 0) {
+        badge.className = "status-badge badge-unsaved";
+        badge.innerText = `⏳ ${totalUnsaved} Unsaved Changes`;
+        btnUpload.innerText = `☁️ Upload Sheets (${totalUnsaved})`;
+      } else {
+        badge.className = "status-badge badge-synced";
+        badge.innerText = "⚡ All Synced";
+        btnUpload.innerText = "☁️ Upload Sheets";
+      }
+    } catch (e) {
+      console.warn("Could not calculate unsaved status", e);
+    }
+  }
+
+  // --- 5. SEQUENTIAL ID GENERATORS ---
+  async function generateNextSalesId() {
+    const orders = await dbGetAll("orders");
+    let maxNum = 0;
+    orders.forEach(o => {
+      if (o.SalesID) {
+        const match = String(o.SalesID).match(/\d+/);
+        if (match) {
+          const num = parseInt(match[0], 10);
+          if (num > maxNum) maxNum = num;
+        }
+      }
+    });
+    return "S" + String(maxNum + 1).padStart(6, "0");
+  }
+
+  async function generateNextItemCode() {
+    const products = await dbGetAll("products");
+    let maxNum = 0;
+    products.forEach(p => {
+      if (p.ItemCode) {
+        const match = String(p.ItemCode).match(/\d+/);
+        if (match) {
+          const num = parseInt(match[0], 10);
+          if (num > maxNum) maxNum = num;
+        }
+      }
+    });
+    return "I" + String(maxNum + 1).padStart(6, "0");
+  }
+
+  async function generateNextCustomerId() {
+    const customers = await dbGetAll("customers");
+    let maxNum = 0;
+    customers.forEach(c => {
+      if (c.CustomerID) {
+        const match = String(c.CustomerID).match(/\d+/);
+        if (match) {
+          const num = parseInt(match[0], 10);
+          if (num > maxNum) maxNum = num;
+        }
+      }
+    });
+    return "C" + String(maxNum + 1).padStart(6, "0");
+  }
+
+  // --- 6. HELPER: ROUND UP TO NEAREST THOUSAND ---
+  function roundUpToThousand(num) {
+    if (!num || num <= 0) return 0;
+    return Math.ceil(num / 1000) * 1000;
+  }
+
+  // --- 7. PAGE INITIALIZATION ---
+  window.addEventListener("DOMContentLoaded", async () => {
+    await initDatabase();
+    await loadSettings();
+    renderPosCatalog();
+    renderInventoryTable();
+    renderOrdersTable();
+    renderCustomersTable();
+    renderAnalyticsDashboard();
+    updateUnsavedChangesBadge();
+
+    document.addEventListener("click", (e) => {
+      if (!e.target.closest(".customer-suggestion-dropdown")) {
+        const popup = document.getElementById("custSuggestionsPopup");
+        if (popup) popup.style.display = "none";
+      }
+    });
+  });
+
+  function switchTab(tabId) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    
+    if (tabId === 'posTab') {
+      document.querySelectorAll('.tab-btn')[0].classList.add('active');
+      renderPosCatalog();
+    } else if (tabId === 'inventoryTab') {
+      document.querySelectorAll('.tab-btn')[1].classList.add('active');
+      renderInventoryTable();
+    } else if (tabId === 'ordersTab') {
+      document.querySelectorAll('.tab-btn')[2].classList.add('active');
+      renderOrdersTable();
+    } else if (tabId === 'customersTab') {
+      document.querySelectorAll('.tab-btn')[3].classList.add('active');
+      renderCustomersTable();
+    } else if (tabId === 'analyticsTab') {
+      document.querySelectorAll('.tab-btn')[4].classList.add('active');
+      renderAnalyticsDashboard();
+    }
+    document.getElementById(tabId).classList.add('active');
+  }
+
+  // --- 8. FINANCIAL PRICING CALCULATOR (SINGLE VARIANT) ---
+  function calculatePricingEngine() {
+    const buyingYuan = parseFloat(document.getElementById('mProdBuyingYuan').value) || 0;
+    const supplierPct = parseFloat(document.getElementById('mProdSupplierPct').value) || 0;
+    const yuanRate = parseFloat(document.getElementById('mProdYuanRate').value) || (appSettings.DefaultYuanRate || 620);
+    const cargoFee = parseFloat(document.getElementById('mProdCargoFee').value) || (appSettings.DefaultCargoFee || 2500);
+
+    const capital = ((buyingYuan * (1 + (supplierPct / 100))) * yuanRate) + cargoFee;
+    const totalCapital = Math.round(capital);
+    
+    const regMarginPct = Number(appSettings.RegularProfitMargin || 33) / 100;
+    const wsMarginPct = Number(appSettings.WholesaleProfitMargin || 15) / 100;
+
+    const normalPrice = Math.round(totalCapital * (1 + regMarginPct));
+    const rawWholesale = totalCapital * (1 + wsMarginPct);
+    const wholesaleSuggested = roundUpToThousand(rawWholesale);
+    const sellingPriceSuggested = roundUpToThousand(normalPrice);
+
+    document.getElementById('mProdTotalCapital').value = totalCapital;
+    document.getElementById('mProdNormalPrice').value = normalPrice;
+    
+    if (!isEditMode || !document.getElementById('mProdSellingPrice').value) {
+      document.getElementById('mProdSellingPrice').value = sellingPriceSuggested;
+    }
+    if (!isEditMode || !document.getElementById('mProdWholesalePrice').value) {
+      document.getElementById('mProdWholesalePrice').value = wholesaleSuggested;
+    }
+  }
+
+  // --- 9. BULK MATRIX INTAKE ENGINE (OPTION B) ---
+  async function openBulkMatrixModal() {
+    const nextCode = await generateNextItemCode();
+    document.getElementById('bmItemCode').value = nextCode;
+    document.getElementById('bmName').value = '';
+    document.getElementById('bmSex').value = 'Unisex';
+    document.getElementById('bmLength').value = 'တို';
+    document.getElementById('bmRemark').value = '';
+
+    const bmType = document.getElementById('bmType');
+    if (bmType && bmType.options.length > 0) bmType.selectedIndex = 0;
+
+    document.getElementById('bmBuyingYuan').value = '';
+    document.getElementById('bmSupplierPct').value = '0';
+    document.getElementById('bmYuanRate').value = appSettings.DefaultYuanRate || '620';
+    document.getElementById('bmCargoFee').value = appSettings.DefaultCargoFee || '2500';
+    document.getElementById('bmTotalCapital').value = '';
+    document.getElementById('bmNormalPrice').value = '';
+    document.getElementById('bmSellingPrice').value = '';
+    document.getElementById('bmWholesalePrice').value = '';
+    document.getElementById('bmQuickFillQty').value = '5';
+
+    // Populate Size Checkboxes
+    const sizeBox = document.getElementById('bmSizeCheckboxGrid');
+    const sizes = appSettings.ProductSizes || [];
+    sizeBox.innerHTML = sizes.map((s, idx) => `
+      <label class="matrix-checkbox-item">
+        <input type="checkbox" value="${s}" ${idx < 5 ? 'checked' : ''} onchange="renderBulkMatrixTable()">
+        <b>${s}</b>
+      </label>
+    `).join('');
+
+    // Populate Color Checkboxes
+    const colorBox = document.getElementById('bmColorCheckboxGrid');
+    const colors = appSettings.ProductColors || [];
+    colorBox.innerHTML = colors.map((c, idx) => `
+      <label class="matrix-checkbox-item">
+        <input type="checkbox" value="${c}" ${idx < 3 ? 'checked' : ''} onchange="renderBulkMatrixTable()">
+        <span>${c}</span>
+      </label>
+    `).join('');
+
+    renderBulkMatrixTable();
+    document.getElementById('bulkMatrixModal').style.display = 'flex';
+  }
+
+  function calculateBulkPricingEngine() {
+    const buyingYuan = parseFloat(document.getElementById('bmBuyingYuan').value) || 0;
+    const supplierPct = parseFloat(document.getElementById('bmSupplierPct').value) || 0;
+    const yuanRate = parseFloat(document.getElementById('bmYuanRate').value) || (appSettings.DefaultYuanRate || 620);
+    const cargoFee = parseFloat(document.getElementById('bmCargoFee').value) || (appSettings.DefaultCargoFee || 2500);
+
+    const capital = ((buyingYuan * (1 + (supplierPct / 100))) * yuanRate) + cargoFee;
+    const totalCapital = Math.round(capital);
+    
+    const regMarginPct = Number(appSettings.RegularProfitMargin || 33) / 100;
+    const wsMarginPct = Number(appSettings.WholesaleProfitMargin || 15) / 100;
+
+    const normalPrice = Math.round(totalCapital * (1 + regMarginPct));
+    const rawWholesale = totalCapital * (1 + wsMarginPct);
+    const wholesaleSuggested = roundUpToThousand(rawWholesale);
+    const sellingPriceSuggested = roundUpToThousand(normalPrice);
+
+    document.getElementById('bmTotalCapital').value = totalCapital;
+    document.getElementById('bmNormalPrice').value = normalPrice;
+    
+    if (!document.getElementById('bmSellingPrice').value) {
+      document.getElementById('bmSellingPrice').value = sellingPriceSuggested;
+    }
+    if (!document.getElementById('bmWholesalePrice').value) {
+      document.getElementById('bmWholesalePrice').value = wholesaleSuggested;
+    }
+  }
+
+  function getSelectedBulkSizes() {
+    return Array.from(document.querySelectorAll('#bmSizeCheckboxGrid input:checked')).map(cb => cb.value);
+  }
+
+  function getSelectedBulkColors() {
+    return Array.from(document.querySelectorAll('#bmColorCheckboxGrid input:checked')).map(cb => cb.value);
+  }
+
+  function renderBulkMatrixTable() {
+    const selectedSizes = getSelectedBulkSizes();
+    const selectedColors = getSelectedBulkColors();
+    const thead = document.getElementById('bmMatrixThead');
+    const tbody = document.getElementById('bmMatrixTbody');
+
+    if (selectedSizes.length === 0 || selectedColors.length === 0) {
+      thead.innerHTML = '';
+      tbody.innerHTML = `<tr><td style="text-align: center; color: #888; padding: 20px;">Please check at least one size and one color above.</td></tr>`;
+      updateBulkMatrixSummary();
+      return;
+    }
+
+    const currentValues = {};
+    document.querySelectorAll('.matrix-input-cell').forEach(inp => {
+      currentValues[inp.dataset.cellId] = inp.value;
+    });
+
+    thead.innerHTML = `
+      <tr>
+        <th style="min-width: 110px;">Color / Pattern</th>
+        ${selectedSizes.map(s => `<th style="text-align:center;">Size ${s}</th>`).join('')}
+        <th style="text-align:center; min-width: 80px;">Color Total</th>
+      </tr>
+    `;
+
+    tbody.innerHTML = selectedColors.map(c => {
+      return `
+        <tr>
+          <td><b>${c}</b></td>
+          ${selectedSizes.map(s => {
+            const cellId = `cell_${cleanColorCode(c)}_${s}`;
+            const val = currentValues[cellId] !== undefined ? currentValues[cellId] : '5';
+            return `
+              <td style="text-align:center;">
+                <input type="number" class="matrix-input-cell" 
+                  id="${cellId}" 
+                  data-cell-id="${cellId}" 
+                  data-color="${c}" 
+                  data-size="${s}" 
+                  value="${val}" 
+                  min="0" 
+                  oninput="updateBulkMatrixSummary()">
+              </td>
+            `;
+          }).join('')}
+          <td style="text-align:center; font-weight:bold;" id="row_total_${cleanColorCode(c)}">0</td>
+        </tr>
+      `;
+    }).join('');
+
+    updateBulkMatrixSummary();
+  }
+
+  function applyBulkQuickFill() {
+    const fillVal = document.getElementById('bmQuickFillQty').value || '0';
+    document.querySelectorAll('.matrix-input-cell').forEach(inp => {
+      inp.value = fillVal;
+    });
+    updateBulkMatrixSummary();
+  }
+
+  function clearBulkMatrixInputs() {
+    document.querySelectorAll('.matrix-input-cell').forEach(inp => {
+      inp.value = '0';
+    });
+    updateBulkMatrixSummary();
+  }
+
+  function updateBulkMatrixSummary() {
+    let grandTotalPcs = 0;
+    let grandTotalSkus = 0;
+
+    const selectedColors = getSelectedBulkColors();
+    const selectedSizes = getSelectedBulkSizes();
+
+    selectedColors.forEach(c => {
+      let rowTotal = 0;
+      selectedSizes.forEach(s => {
+        const cell = document.getElementById(`cell_${cleanColorCode(c)}_${s}`);
+        if (cell) {
+          const qty = parseInt(cell.value, 10) || 0;
+          rowTotal += qty;
+          if (qty > 0) grandTotalSkus++;
+        }
+      });
+      const rowTotalEl = document.getElementById(`row_total_${cleanColorCode(c)}`);
+      if (rowTotalEl) rowTotalEl.innerText = `${rowTotal} pcs`;
+      grandTotalPcs += rowTotal;
+    });
+
+    const badge = document.getElementById('bmSummaryBadge');
+    if (badge) {
+      badge.innerText = `Total Pieces: ${grandTotalPcs} pcs (${grandTotalSkus} active SKUs)`;
+    }
+  }
+
+  async function submitBulkMatrixIntake() {
+    const itemCode = document.getElementById('bmItemCode').value.trim();
+    const name = document.getElementById('bmName').value.trim();
+    const sex = document.getElementById('bmSex').value;
+    const type = document.getElementById('bmType').value;
+    const length = document.getElementById('bmLength').value;
+    const remark = document.getElementById('bmRemark').value.trim();
+
+    const buyingYuan = parseFloat(document.getElementById('bmBuyingYuan').value) || 0;
+    const supplierPct = parseFloat(document.getElementById('bmSupplierPct').value) || 0;
+    const yuanRate = parseFloat(document.getElementById('bmYuanRate').value) || 0;
+    const cargoFee = parseFloat(document.getElementById('bmCargoFee').value) || 0;
+    const totalCapital = Number(document.getElementById('bmTotalCapital').value) || 0;
+    const normalPrice = Number(document.getElementById('bmNormalPrice').value) || 0;
+    const sellingPrice = Number(document.getElementById('bmSellingPrice').value) || normalPrice;
+    const wholesalePrice = Number(document.getElementById('bmWholesalePrice').value) || totalCapital;
+
+    if (!name) return alert("Product Name is required.");
+    if (!itemCode) return alert("Base Item Code is missing.");
+
+    const matrixInputs = Array.from(document.querySelectorAll('.matrix-input-cell'));
+    const variantsToCreate = [];
+    const timestamp = new Date().toISOString();
+
+    for (let input of matrixInputs) {
+      const qty = parseInt(input.value, 10) || 0;
+      if (qty <= 0) continue;
+
+      const color = input.dataset.color;
+      const size = input.dataset.size;
+      const cleanColor = cleanColorCode(color);
+      const sku = `${itemCode}-${String(size).replace(/[^a-zA-Z0-9]/g, '')}-${cleanColor}`;
+
+      variantsToCreate.push({
+        ProductID: sku,
+        ItemCode: itemCode,
+        Name_MM: name,
+        Sex: sex,
+        Type: type,
+        Length: length,
+        Size: size,
+        ColorPattern: color,
+        Remark: remark,
+        Stock: qty,
+        BuyingYuan: buyingYuan,
+        SupplierPct: supplierPct,
+        YuanRate: yuanRate,
+        CargoFee: cargoFee,
+        TotalCapital: totalCapital,
+        NormalPrice: normalPrice,
+        SellingPrice: sellingPrice,
+        WholesalePrice: wholesalePrice,
+        LastModified: timestamp,
+        _syncStatus: "pending_upload"
+      });
+    }
+
+    if (variantsToCreate.length === 0) {
+      return alert("No stock entered! Please enter quantity (> 0) in at least one matrix cell.");
+    }
+
+    const tx = db.transaction("products", "readwrite");
+    const store = tx.objectStore("products");
+    variantsToCreate.forEach(variant => store.put(variant));
+
+    tx.oncomplete = () => {
+      alert(`✅ Successfully created and stocked ${variantsToCreate.length} variant SKUs for "${name}"!`);
+      closeModal('bulkMatrixModal');
+      renderInventoryTable();
+      renderPosCatalog();
+      renderAnalyticsDashboard();
+      updateUnsavedChangesBadge();
+    };
+
+    tx.onerror = (e) => alert("Bulk generation failed: " + e.target.error);
+  }
+
+  // --- 10. SINGLE VARIANT DROPDOWN & SKU LOGIC ---
+  function handleTypeSelectChange() {
+    const select = document.getElementById('mProdTypeSelect');
+    const customInput = document.getElementById('mProdTypeCustom');
+    if (select.value === '__CUSTOM__') {
+      customInput.style.display = 'block';
+      customInput.focus();
+    } else {
+      customInput.style.display = 'none';
+      customInput.value = '';
+    }
+    if (!isEditMode) autoGenerateSku();
+  }
+
+  function handleSizeSelectChange() {
+    const select = document.getElementById('mProdSizeSelect');
+    const customInput = document.getElementById('mProdSizeCustom');
+    if (select.value === '__CUSTOM__') {
+      customInput.style.display = 'block';
+      customInput.focus();
+    } else {
+      customInput.style.display = 'none';
+      customInput.value = '';
+    }
+    if (!isEditMode) autoGenerateSku();
+  }
+
+  function handleColorSelectChange() {
+    const select = document.getElementById('mProdColorSelect');
+    const customInput = document.getElementById('mProdColorCustom');
+    if (select.value === '__CUSTOM__') {
+      customInput.style.display = 'block';
+      customInput.focus();
+    } else {
+      customInput.style.display = 'none';
+      customInput.value = '';
+    }
+    if (!isEditMode) autoGenerateSku();
+  }
+
+  function getEffectiveTypeValue() {
+    const select = document.getElementById('mProdTypeSelect');
+    if (select.value === '__CUSTOM__') {
+      return document.getElementById('mProdTypeCustom').value.trim() || 'General';
+    }
+    return select.value;
+  }
+
+  function getEffectiveSizeValue() {
+    const select = document.getElementById('mProdSizeSelect');
+    if (select.value === '__CUSTOM__') {
+      return document.getElementById('mProdSizeCustom').value.trim() || 'Custom';
+    }
+    return select.value;
+  }
+
+  function getEffectiveColorValue() {
+    const select = document.getElementById('mProdColorSelect');
+    if (select.value === '__CUSTOM__') {
+      return document.getElementById('mProdColorCustom').value.trim() || 'Custom';
+    }
+    return select.value;
+  }
+
+  function cleanColorCode(colorText) {
+    const map = {
+      "ပန်း": "PNK", "pink": "PNK",
+      "ဝါ": "YEL", "yellow": "YEL",
+      "ပြာ": "BLU", "blue": "BLU",
+      "ခဲ": "GRY", "grey": "GRY", "gray": "GRY",
+      "ဖြူ": "WHT", "white": "WHT",
+      "နီ": "RED", "red": "RED",
+      "စိမ်း": "GRN", "green": "GRN",
+      "နက်": "BLK", "black": "BLK",
+      "လိမ္မော်": "ORG", "orange": "ORG",
+      "ခရမ်း": "PUR", "purple": "PUR",
+      "ကြား": "STR", "striped": "STR",
+      "ပွင့်": "FLR", "floral": "FLR"
+    };
+    const normalized = String(colorText).toLowerCase().trim();
+    return map[normalized] || String(colorText).toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 3) || 'DEF';
+  }
+
+  function autoGenerateSku() {
+    if (isEditMode) return;
+    const code = document.getElementById('mProdItemCode').value.trim() || 'I000000';
+    const size = getEffectiveSizeValue().replace(/[^a-zA-Z0-9]/g, '');
+    const color = cleanColorCode(getEffectiveColorValue());
+    document.getElementById('mProdSku').value = `${code}-${size}-${color}`;
+  }
+
+  // --- 11. DISCOUNT ENGINE LOGIC ---
+  function handleDiscountTypeChange() {
+    const type = document.getElementById('orderDiscountType').value;
+    const valInput = document.getElementById('orderDiscountVal');
+    const tieredRow = document.getElementById('tieredDiscountRow');
+
+    if (type === 'none') {
+      valInput.style.display = 'none';
+      valInput.value = '';
+      tieredRow.style.display = 'none';
+    } else if (type === 'percentage') {
+      valInput.style.display = 'block';
+      valInput.placeholder = "Enter % (e.g. 10)";
+      valInput.value = valInput.value || '10';
+      tieredRow.style.display = 'none';
+    } else if (type === 'flat') {
+      valInput.style.display = 'block';
+      valInput.placeholder = "Enter MMK (e.g. 5000)";
+      valInput.value = valInput.value || '5000';
+      tieredRow.style.display = 'none';
+    } else if (type === 'tiered') {
+      valInput.style.display = 'none';
+      tieredRow.style.display = 'grid';
+    }
+
+    renderCart();
+  }
+
+  function calculateDiscountBreakdown(subtotal) {
+    const type = document.getElementById('orderDiscountType').value;
+    let discountAmount = 0;
+    let label = "Discount:";
+
+    if (type === 'percentage') {
+      const pct = parseFloat(document.getElementById('orderDiscountVal').value) || 0;
+      discountAmount = Math.round(subtotal * (pct / 100));
+      label = `Discount (${pct}%):`;
+    } else if (type === 'flat') {
+      const flat = parseFloat(document.getElementById('orderDiscountVal').value) || 0;
+      discountAmount = Math.min(subtotal, flat);
+      label = `Flat Discount:`;
+    } else if (type === 'tiered') {
+      const cashback = parseFloat(document.getElementById('orderTierCashback').value) || 0;
+      const threshold = parseFloat(document.getElementById('orderTierThreshold').value) || 100000;
+      if (threshold > 0 && subtotal >= threshold) {
+        const tiers = Math.floor(subtotal / threshold);
+        discountAmount = tiers * cashback;
+        label = `Cashback (${tiers}x Tier):`;
+      }
+    }
+
+    discountAmount = Math.min(subtotal, Math.max(0, discountAmount));
+    const netTotal = Math.max(0, subtotal - discountAmount);
+
+    return { type, discountAmount, netTotal, label };
+  }
+
+  // --- 12. POS FILTERS & CATALOG (HIDES ZERO-STOCK ITEMS) ---
+  function setPosSex(sex, el) {
+    activeSex = sex;
+    document.querySelectorAll('#posSexChips .chip').forEach(c => c.classList.remove('active'));
+    el.classList.add('active');
+    renderPosCatalog();
+  }
+
+  function setPosType(type, el) {
+    activeType = type;
+    document.querySelectorAll('#posTypeChips .chip').forEach(c => c.classList.remove('active'));
+    el.classList.add('active');
+    renderPosCatalog();
+  }
+
+  function setPosSize(size, el) {
+    activeSize = size;
+    document.querySelectorAll('#posSizeChips .chip').forEach(c => c.classList.remove('active'));
+    el.classList.add('active');
+    renderPosCatalog();
+  }
+
+  function resetPosFilters() {
+    document.getElementById('posSearchInput').value = '';
+    activeSex = "All";
+    activeType = "All";
+    activeSize = "All";
+    document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+    document.querySelectorAll('#posSexChips div:first-child, #posTypeChips div:first-child, #posSizeChips div:first-child').forEach(c => c.classList.add('active'));
+    renderPosCatalog();
+  }
+
+  function filterPosCatalog() {
+    renderPosCatalog();
+  }
+
+  async function renderPosCatalog() {
+    const products = await dbGetAll("products");
+    const query = (document.getElementById('posSearchInput').value || '').toLowerCase().trim();
+    const container = document.getElementById('posProductGrid');
+
+    const filtered = products.filter(p => {
+      const matchSex = activeSex === "All" || p.Sex === activeSex;
+      const matchType = activeType === "All" || p.Type === activeType;
+      const matchSize = activeSize === "All" || String(p.Size) === activeSize;
+      const searchStr = `${p.ProductID} ${p.Name_MM} ${p.ColorPattern} ${p.Type} ${p.Sex} ${p.Remark || ''}`.toLowerCase();
+      const matchQuery = !query || searchStr.includes(query);
+      const matchStock = (Number(p.Stock) || 0) > 0; // Strict filter: In-stock only
+      return matchSex && matchType && matchSize && matchQuery && matchStock;
+    });
+
+    if (filtered.length === 0) {
+      container.innerHTML = `<div style="grid-column: 1/-1; text-align:center; color:#888; padding: 20px;">No in-stock baby clothing items found.</div>`;
+      return;
+    }
+
+    container.innerHTML = filtered.map(p => {
+      const stock = Number(p.Stock) || 0;
+      const badgeClass = stock <= 2 ? 'badge-stock-low' : 'badge-stock-ok';
+      const badgeText = `${stock} left`;
+      const priceToUse = isWholesaleActive ? (p.WholesalePrice || p.SellingPrice) : p.SellingPrice;
+
+      return `
+        <div class="product-card">
+          <div>
+            <div class="product-title">${p.Name_MM}</div>
+            <div class="product-meta">Sex: <b>${p.Sex || 'Unisex'}</b> | Type: <b>${p.Type || '-'}</b></div>
+            <div class="product-meta">Size: <b>${p.Size}</b> | Len: <b>${p.Length || 'တို'}</b> | Col: <b>${p.ColorPattern}</b></div>
+            <div class="product-meta">SKU: <span style="font-family:monospace;">${p.ProductID}</span></div>
+          </div>
+          <div style="margin-top: 8px; display:flex; justify-content:space-between; align-items:center;">
+            <div>
+              <div class="product-price">${Number(priceToUse).toLocaleString()} K</div>
+              <span class="status-badge ${badgeClass}">${badgeText}</span>
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="addToCart('${p.ProductID}')">
+              ➕ Add
+            </button>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  function toggleWholesaleMode() {
+    isWholesaleActive = document.getElementById('cartWholesaleToggle').checked;
+    
+    dbGetAll("products").then(products => {
+      currentCart.forEach(item => {
+        const prod = products.find(p => p.ProductID === item.ProductID);
+        if (prod) {
+          item.UnitPrice = isWholesaleActive ? (prod.WholesalePrice || prod.SellingPrice) : prod.SellingPrice;
+          item.Subtotal = item.Quantity * item.UnitPrice;
+        }
+      });
+      renderCart();
+      renderPosCatalog();
+    });
+  }
+
+  async function addToCart(productId) {
+    const products = await dbGetAll("products");
+    const p = products.find(x => x.ProductID === productId);
+    if (!p) return;
+
+    const availableStock = Number(p.Stock) || 0;
+    const existing = currentCart.find(item => item.ProductID === productId);
+    const unitPrice = isWholesaleActive ? (Number(p.WholesalePrice) || Number(p.SellingPrice)) : Number(p.SellingPrice);
+
+    if (existing) {
+      if (existing.Quantity + 1 > availableStock) {
+        return alert(`Cannot add more! Only ${availableStock} units available for this SKU.`);
+      }
+      existing.Quantity++;
+      existing.Subtotal = existing.Quantity * existing.UnitPrice;
+    } else {
+      if (availableStock <= 0) return alert("Item is out of stock!");
+      currentCart.push({
+        ProductID: p.ProductID,
+        Name_MM: p.Name_MM,
+        Size: p.Size,
+        ColorPattern: p.ColorPattern,
+        UnitPrice: unitPrice,
+        Quantity: 1,
+        Subtotal: unitPrice
+      });
+    }
+    renderCart();
+  }
+
+  function updateCartQty(productId, delta) {
+    const item = currentCart.find(x => x.ProductID === productId);
+    if (!item) return;
+
+    dbGetAll("products").then(products => {
+      const p = products.find(x => x.ProductID === productId);
+      const stock = Number(p ? p.Stock : 0);
+
+      item.Quantity += delta;
+      if (item.Quantity > stock) {
+        item.Quantity = stock;
+        alert(`Maximum available stock is ${stock}.`);
+      }
+      if (item.Quantity <= 0) {
+        currentCart = currentCart.filter(x => x.ProductID !== productId);
+      } else {
+        item.Subtotal = item.Quantity * item.UnitPrice;
+      }
+      renderCart();
+    });
+  }
+
+  function clearCart() {
+    currentCart = [];
+    document.getElementById('orderDiscountType').value = 'none';
+    handleDiscountTypeChange();
+    renderCart();
+  }
+
+  function renderCart() {
+    const tbody = document.getElementById('cartTableBody');
+    const subtotalDisplay = document.getElementById('cartSubtotalDisplay');
+    const discountRow = document.getElementById('cartDiscountRow');
+    const discountLabel = document.getElementById('cartDiscountLabel');
+    const discountDisplay = document.getElementById('cartDiscountDisplay');
+    const totalDisplay = document.getElementById('cartTotalDisplay');
+    const countDisplay = document.getElementById('cartCount');
+    const discountBadge = document.getElementById('discountBadge');
+
+    let subtotal = 0;
+    let totalItems = 0;
+
+    if (currentCart.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#888; padding: 15px;">Cart is empty. Click items on the left to add.</td></tr>`;
+      subtotalDisplay.innerText = "0 MMK";
+      totalDisplay.innerText = "0 MMK";
+      countDisplay.innerText = "0";
+      discountRow.style.display = 'none';
+      discountBadge.innerText = '';
+      return;
+    }
+
+    tbody.innerHTML = currentCart.map(item => {
+      subtotal += item.Subtotal;
+      totalItems += item.Quantity;
+      return `
+        <tr>
+          <td>
+            <b>${item.Name_MM}</b><br>
+            <span style="font-size:10px; color:#666;">${item.Size} | ${item.ColorPattern}</span>
+          </td>
+          <td style="text-align:center; white-space:nowrap;">
+            <button class="cart-qty-btn" onclick="updateCartQty('${item.ProductID}', -1)">-</button>
+            <span style="padding: 0 4px; font-weight:bold;">${item.Quantity}</span>
+            <button class="cart-qty-btn" onclick="updateCartQty('${item.ProductID}', 1)">+</button>
+          </td>
+          <td style="text-align:right; font-weight:bold;">${item.Subtotal.toLocaleString()}</td>
+          <td style="text-align:center;"><button style="border:none; background:none; color:red; cursor:pointer;" onclick="updateCartQty('${item.ProductID}', -999)">&times;</button></td>
+        </tr>
+      `;
+    }).join('');
+
+    const disc = calculateDiscountBreakdown(subtotal);
+
+    subtotalDisplay.innerText = `${subtotal.toLocaleString()} MMK`;
+    countDisplay.innerText = totalItems.toString();
+
+    if (disc.discountAmount > 0) {
+      discountRow.style.display = 'flex';
+      discountLabel.innerText = disc.label;
+      discountDisplay.innerText = `-${disc.discountAmount.toLocaleString()} MMK`;
+      discountBadge.innerText = `Saved ${disc.discountAmount.toLocaleString()} K`;
+    } else {
+      discountRow.style.display = 'none';
+      discountBadge.innerText = '';
+    }
+
+    totalDisplay.innerText = `${disc.netTotal.toLocaleString()} MMK`;
+  }
+
+  // --- 13. OPTION A: CUSTOMER SUGGESTIONS WITH LAST PURCHASE DETAIL ---
+  let nameSuggestDebounce;
+
+  async function handleCustomerNameInput() {
+    const input = document.getElementById("custName").value.trim();
+    const popup = document.getElementById("custSuggestionsPopup");
+
+    if (document.getElementById("custBoundId").value) {
+      unbindCustomer(false);
+    }
+
+    clearTimeout(nameSuggestDebounce);
+
+    if (input.length < 1) {
+      popup.style.display = "none";
+      popup.innerHTML = "";
+      return;
+    }
+
+    nameSuggestDebounce = setTimeout(async () => {
+      const customers = await dbGetAll("customers");
+      const orders = await dbGetAll("orders");
+      const query = input.toLowerCase();
+
+      const matches = customers.filter(c => 
+        (c.FullName && c.FullName.toLowerCase().includes(query)) ||
+        (c.Phone && String(c.Phone).includes(query)) ||
+        (c.Remark && c.Remark.toLowerCase().includes(query))
+      ).slice(0, 6);
+
+      if (matches.length === 0) {
+        popup.style.display = "none";
+        popup.innerHTML = "";
+        return;
+      }
+
+      popup.innerHTML = matches.map(c => {
+        const custOrders = orders.filter(o => o.CustomerID === c.CustomerID && o.Status !== "Cancelled");
+        custOrders.sort((a, b) => new Date(b.Date) - new Date(a.Date));
+        const lastOrder = custOrders[0];
+
+        let lastOrderText = "No previous purchases";
+        if (lastOrder && Array.isArray(lastOrder.ItemList) && lastOrder.ItemList.length > 0) {
+          const summary = lastOrder.ItemList.map(i => `${i.Name_MM} (${i.Size}) x${i.Quantity}`).join(', ');
+          const dateStr = new Date(lastOrder.Date).toLocaleDateString();
+          lastOrderText = `📦 Last: ${summary} • ${dateStr}`;
+        }
+
+        const phoneDisplay = c.Phone ? ` • 📞 ${c.Phone}` : '';
+        const cityDisplay = c.TownshipCity ? ` • 📍 ${c.TownshipCity}` : '';
+
+        return `
+          <div class="suggestion-item" onclick="selectSuggestedCustomer('${c.CustomerID}')">
+            <div class="suggestion-name">
+              <span>👤 ${c.FullName}${phoneDisplay}${cityDisplay}</span>
+              <span style="font-size:10px; color:#e65c00; font-family:monospace;">${c.CustomerID}</span>
+            </div>
+            <div class="suggestion-last-order">${lastOrderText}</div>
+          </div>
+        `;
+      }).join('');
+
+      popup.style.display = "block";
+    }, 150);
+  }
+
+  async function selectSuggestedCustomer(customerId) {
+    const customers = await dbGetAll("customers");
+    const cust = customers.find(c => c.CustomerID === customerId);
+    if (!cust) return;
+
+    document.getElementById("custBoundId").value = cust.CustomerID;
+    document.getElementById("custName").value = cust.FullName || "";
+    document.getElementById("custPhone").value = cust.Phone || "";
+    document.getElementById("custTownship").value = cust.TownshipCity || "";
+    document.getElementById("custAddress").value = cust.DefaultAddress || "";
+    document.getElementById("custRemark").value = cust.Remark || "";
+
+    const orders = await dbGetAll("orders");
+    const totalSpent = orders
+      .filter(o => o.CustomerID === cust.CustomerID && o.Status !== "Cancelled")
+      .reduce((sum, o) => sum + (Number(o.TotalAmount) || 0), 0);
+
+    const badge = document.getElementById("custLookupBadge");
+    document.getElementById("custFoundId").innerText = `${cust.FullName} (${cust.CustomerID})`;
+    document.getElementById("custFoundSpend").innerText = totalSpent ? `${Number(totalSpent).toLocaleString()} MMK Spent` : "Returning Profile";
+    badge.style.display = "block";
+
+    const popup = document.getElementById("custSuggestionsPopup");
+    popup.style.display = "none";
+    popup.innerHTML = "";
+  }
+
+  function unbindCustomer(clearFields = true) {
+    document.getElementById("custBoundId").value = "";
+    document.getElementById("custLookupBadge").style.display = "none";
+    if (clearFields) {
+      document.getElementById("custPhone").value = "";
+      document.getElementById("custTownship").value = "";
+      document.getElementById("custAddress").value = "";
+      document.getElementById("custRemark").value = "";
+    }
+  }
+
+  // --- 14. ATOMIC ORDER SUBMIT ---
+  async function submitOrderIntake() {
+    const name = document.getElementById('custName').value.trim();
+    const phone = document.getElementById('custPhone').value.trim();
+    const address = document.getElementById('custAddress').value.trim();
+    const township = document.getElementById('custTownship').value.trim();
+    const custRemark = document.getElementById('custRemark').value.trim();
+    const payment = document.getElementById('orderPaymentType').value;
+    const status = document.getElementById('orderStatus').value;
+    const remark = document.getElementById('orderRemark').value.trim();
+    const boundId = document.getElementById('custBoundId').value;
+
+    if (!name) return alert("Customer Name is required.");
+    if (currentCart.length === 0) return alert("Cannot complete sale: Cart is empty.");
+
+    const subtotal = currentCart.reduce((sum, i) => sum + i.Subtotal, 0);
+    const disc = calculateDiscountBreakdown(subtotal);
+    const timestamp = new Date().toISOString();
+    const salesId = await generateNextSalesId();
+    
+    const customerId = boundId || await generateNextCustomerId();
+
+    const orderPayload = {
+      SalesID: salesId,
+      Date: timestamp,
+      CustomerID: customerId,
+      CustomerName: name,
+      Phone: phone,
+      DeliveryAddress: address,
+      TownshipCity: township,
+      ItemList: currentCart,
+      Subtotal: subtotal,
+      DiscountType: disc.type,
+      DiscountAmount: disc.discountAmount,
+      DiscountLabel: disc.label,
+      TotalAmount: disc.netTotal,
+      PaymentType: payment,
+      Status: status,
+      Remark: remark,
+      LastModified: timestamp,
+      _syncStatus: "pending_upload"
+    };
+
+    const tx = db.transaction(["orders", "products", "customers"], "readwrite");
+    const orderStore = tx.objectStore("orders");
+    const prodStore = tx.objectStore("products");
+    const custStore = tx.objectStore("customers");
+
+    for (let item of currentCart) {
+      const pReq = prodStore.get(item.ProductID);
+      pReq.onsuccess = () => {
+        const prod = pReq.result;
+        if (prod) {
+          prod.Stock = Math.max(0, (Number(prod.Stock) || 0) - item.Quantity);
+          prod.LastModified = timestamp;
+          prod._syncStatus = "pending_upload";
+          prodStore.put(prod);
+        }
+      };
+    }
+
+    orderStore.put(orderPayload);
+
+    const cReq = custStore.get(customerId);
+    cReq.onsuccess = () => {
+      const existing = cReq.result;
+      if (existing) {
+        existing.FullName = name;
+        existing.Phone = phone || existing.Phone || "";
+        existing.DefaultAddress = address || existing.DefaultAddress || "";
+        existing.TownshipCity = township || existing.TownshipCity || "";
+        existing.Remark = custRemark || existing.Remark || "";
+        existing.LastOrderDate = timestamp;
+        existing._syncStatus = "pending_upload";
+        custStore.put(existing);
+      } else {
+        custStore.put({
+          CustomerID: customerId,
+          FullName: name,
+          Phone: phone || "",
+          DefaultAddress: address || "",
+          TownshipCity: township || "",
+          Remark: custRemark || "",
+          TotalSpend: disc.netTotal,
+          LastOrderDate: timestamp,
+          _syncStatus: "pending_upload"
+        });
+      }
+    };
+
+    tx.oncomplete = () => {
+      lastSavedOrder = orderPayload;
+      clearCart();
+      document.getElementById('custName').value = '';
+      document.getElementById('custPhone').value = '';
+      document.getElementById('custAddress').value = '';
+      document.getElementById('custTownship').value = '';
+      document.getElementById('custRemark').value = '';
+      document.getElementById('orderRemark').value = '';
+      document.getElementById('custBoundId').value = '';
+      document.getElementById('custLookupBadge').style.display = 'none';
+
+      renderPosCatalog();
+      renderInventoryTable();
+      renderOrdersTable();
+      renderCustomersTable();
+      renderAnalyticsDashboard();
+      updateUnsavedChangesBadge();
+      openVoucherModal(orderPayload);
+    };
+
+    tx.onerror = (e) => alert("Transaction failed: " + e.target.error);
+  }
+
+  // --- 15. INVENTORY MANAGEMENT TABLE (WITH OUT-OF-STOCK TOGGLE) ---
+  async function renderInventoryTable() {
+    const products = await dbGetAll("products");
+    const query = (document.getElementById('invSearchInput')?.value || '').toLowerCase().trim();
+    const showOutOfStock = document.getElementById('invShowOutOfStock')?.checked || false;
+    const tbody = document.getElementById('inventoryTableBody');
+
+    const filtered = products.filter(p => {
+      const isAvailable = (Number(p.Stock) || 0) > 0;
+      const matchStock = showOutOfStock ? true : isAvailable; // Default hides 0 stock
+      const str = `${p.ProductID} ${p.Name_MM} ${p.Type} ${p.Sex} ${p.Length} ${p.Size} ${p.ColorPattern} ${p.Remark || ''}`.toLowerCase();
+      return matchStock && (!query || str.includes(query));
+    });
+
+    if (filtered.length === 0) {
+      const msg = showOutOfStock ? "No product SKUs found." : "No in-stock product SKUs found (Check 'Show Out of Stock' to view all).";
+      tbody.innerHTML = `<tr><td colspan="13" style="text-align: center; color:#888;">${msg}</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = filtered.map(p => {
+      const stock = Number(p.Stock) || 0;
+      const isOut = stock <= 0;
+      const badgeClass = isOut ? 'badge-stock-out' : (stock <= 2 ? 'badge-stock-low' : 'badge-stock-ok');
+
+      return `
+        <tr class="clickable" onclick="openEditProductModal('${p.ProductID}')" title="Click to edit prices & details">
+          <td><b>${p.ProductID}</b></td>
+          <td>${p.Name_MM}</td>
+          <td>${p.Sex || 'Unisex'}</td>
+          <td>${p.Type || '-'}</td>
+          <td>${p.Length || 'တို'}</td>
+          <td><b>${p.Size}</b></td>
+          <td>${p.ColorPattern}</td>
+          <td><span style="font-size:11px; color:#555;">${p.Remark || '-'}</span></td>
+          <td>${Number(p.TotalCapital || 0).toLocaleString()}</td>
+          <td><b>${Number(p.SellingPrice || 0).toLocaleString()}</b></td>
+          <td>${Number(p.WholesalePrice || 0).toLocaleString()}</td>
+          <td style="text-align:center; white-space:nowrap;" onclick="event.stopPropagation();">
+            <button class="cart-qty-btn" onclick="adjustProductStock('${p.ProductID}', -1)">-</button>
+            <span style="font-weight:bold; padding: 0 6px; font-size:12px;">${stock}</span>
+            <button class="cart-qty-btn" onclick="adjustProductStock('${p.ProductID}', 1)">+</button>
+          </td>
+          <td><span class="status-badge ${badgeClass}">${stock} left</span></td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  async function adjustProductStock(productId, delta) {
+    const tx = db.transaction("products", "readwrite");
+    const store = tx.objectStore("products");
+    const req = store.get(productId);
+
+    req.onsuccess = () => {
+      const p = req.result;
+      if (p) {
+        p.Stock = Math.max(0, (Number(p.Stock) || 0) + delta);
+        p.LastModified = new Date().toISOString();
+        p._syncStatus = "pending_upload";
+        store.put(p);
+      }
+    };
+
+    tx.oncomplete = () => {
+      renderInventoryTable();
+      renderPosCatalog();
+      renderAnalyticsDashboard();
+      updateUnsavedChangesBadge();
+    };
+  }
+
+  // --- 16. ORDERS MANAGEMENT TABLE ---
+  async function renderOrdersTable() {
+    const orders = await dbGetAll("orders");
+    const query = (document.getElementById('orderSearchInput')?.value || '').toLowerCase().trim();
+    const tbody = document.getElementById('ordersTableBody');
+
+    orders.sort((a, b) => new Date(b.Date) - new Date(a.Date));
+
+    const filtered = orders.filter(o => {
+      const str = `${o.SalesID} ${o.CustomerName} ${o.Phone || ''} ${o.Status}`.toLowerCase();
+      return !query || str.includes(query);
+    });
+
+    if (filtered.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="10" style="text-align: center; color:#888;">No recorded sales orders found.</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = filtered.map(o => {
+      const items = Array.isArray(o.ItemList) ? o.ItemList : [];
+      const itemSummary = items.map(i => `${i.Name_MM} (${i.Size}) x${i.Quantity}`).join(', ');
+      const dateStr = new Date(o.Date).toLocaleDateString();
+      const discountText = o.DiscountAmount > 0 ? `<span style="color:#2e7d32; font-weight:bold;">-${Number(o.DiscountAmount).toLocaleString()}</span>` : '-';
+
+      return `
+        <tr>
+          <td><b>${o.SalesID}</b></td>
+          <td>${dateStr}</td>
+          <td><b>${o.CustomerName}</b></td>
+          <td>${o.Phone || '-'}</td>
+          <td style="max-width: 220px; font-size: 11px;">${itemSummary || '-'}</td>
+          <td>${discountText}</td>
+          <td><b>${Number(o.TotalAmount).toLocaleString()} MMK</b></td>
+          <td>${o.PaymentType}</td>
+          <td>
+            <select onchange="quickUpdateOrderStatus('${o.SalesID}', this.value)" style="padding: 2px 4px; font-size: 11px;">
+              <option value="Confirmed" ${o.Status === 'Confirmed' ? 'selected' : ''}>Confirmed</option>
+              <option value="Pending" ${o.Status === 'Pending' ? 'selected' : ''}>Pending</option>
+              <option value="Shipped" ${o.Status === 'Shipped' ? 'selected' : ''}>Shipped</option>
+              <option value="Delivered" ${o.Status === 'Delivered' ? 'selected' : ''}>Delivered</option>
+              <option value="Cancelled" ${o.Status === 'Cancelled' ? 'selected' : ''}>Cancelled</option>
+            </select>
+          </td>
+          <td style="white-space:nowrap;">
+            <button class="btn btn-warning btn-sm" onclick='openEditOrderModal("${o.SalesID}")'>✏️ Edit</button>
+            <button class="btn btn-success btn-sm" onclick='openVoucherModal(${JSON.stringify(o).replace(/'/g, "&apos;")})'>📸 Voucher</button>
+            <button class="btn btn-secondary btn-sm" onclick="reprintSlip('${o.SalesID}')">🖨️ Slip</button>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  async function quickUpdateOrderStatus(salesId, newStatus) {
+    const orders = await dbGetAll("orders");
+    const o = orders.find(x => x.SalesID === salesId);
+    if (!o) return;
+
+    if (newStatus === "Cancelled" && o.Status !== "Cancelled") {
+      if (confirm("Marking as Cancelled will return all items back into shelf inventory stock. Proceed?")) {
+        await refundOrderStock(o.ItemList);
+      } else {
+        renderOrdersTable();
+        return;
+      }
+    } else if (newStatus !== "Cancelled" && o.Status === "Cancelled") {
+      if (confirm(`Reactivating this order will re-deduct items from shelf stock. Proceed?`)) {
+        await deductOrderStock(o.ItemList);
+      } else {
+        renderOrdersTable();
+        return;
+      }
+    }
+
+    o.Status = newStatus;
+    o.LastModified = new Date().toISOString();
+    o._syncStatus = "pending_upload";
+    await dbPut("orders", o);
+    renderOrdersTable();
+    renderInventoryTable();
+    renderPosCatalog();
+    renderCustomersTable();
+    renderAnalyticsDashboard();
+  }
+
+  // --- 17. CUSTOMERS MANAGEMENT TABLE ---
+  async function renderCustomersTable() {
+    const customers = await dbGetAll("customers");
+    const orders = await dbGetAll("orders");
+    const query = (document.getElementById('custSearchInput')?.value || '').toLowerCase().trim();
+    const tbody = document.getElementById('customersTableBody');
+
+    if (!tbody) return;
+
+    const filtered = customers.filter(c => {
+      const str = `${c.CustomerID} ${c.FullName} ${c.Phone || ''} ${c.TownshipCity || ''} ${c.Remark || ''}`.toLowerCase();
+      return !query || str.includes(query);
+    });
+
+    if (filtered.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="9" style="text-align: center; color:#888;">No customer profiles recorded yet.</td></tr>`;
+      return;
+    }
+
+    tbody.innerHTML = filtered.map(c => {
+      const custOrders = orders.filter(o => o.CustomerID === c.CustomerID && o.Status !== "Cancelled");
+      const orderCount = custOrders.length;
+      const totalSpend = custOrders.reduce((sum, o) => sum + (Number(o.TotalAmount) || 0), 0);
+
+      custOrders.sort((a, b) => new Date(b.Date) - new Date(a.Date));
+      const latestOrder = custOrders[0];
+      let latestSummary = "-";
+      if (latestOrder && Array.isArray(latestOrder.ItemList) && latestOrder.ItemList.length > 0) {
+        latestSummary = `${latestOrder.ItemList.map(i => `${i.Name_MM} (${i.Size})`).join(', ')} • <span style="color:#888;">${new Date(latestOrder.Date).toLocaleDateString()}</span>`;
+      }
+
+      return `
+        <tr class="clickable" onclick="openCustomerModal('${c.CustomerID}')">
+          <td><b style="font-family:monospace; color:var(--primary);">${c.CustomerID}</b></td>
+          <td><b>${c.FullName}</b></td>
+          <td>${c.Phone || '-'}</td>
+          <td>${c.TownshipCity || '-'}</td>
+          <td style="text-align:center; font-weight:bold;">${orderCount}</td>
+          <td><b>${totalSpend.toLocaleString()} MMK</b></td>
+          <td style="font-size:11px; max-width: 220px;">${latestSummary}</td>
+          <td><span style="font-size:11px; color:#555;">${c.Remark || '-'}</span></td>
+          <td style="white-space:nowrap;" onclick="event.stopPropagation();">
+            <button class="btn btn-warning btn-sm" onclick="openCustomerModal('${c.CustomerID}')">✏️ Edit / History</button>
+            <button class="btn btn-primary btn-sm" onclick="startPosForCustomerDirectly('${c.CustomerID}')">🛒 New Sale</button>
+          </td>
+        </tr>
+      `;
+    }).join('');
+  }
+
+  // --- 18. CUSTOMER MODAL VIEW & PREVIOUS PURCHASES DRAWER ---
+  async function openCustomerModal(customerId) {
+    const customers = await dbGetAll("customers");
+    const orders = await dbGetAll("orders");
+    const cust = customers.find(c => c.CustomerID === customerId);
+    if (!cust) return;
+
+    currentModalCustomer = cust;
+
+    document.getElementById('customerModalTitle').innerText = `👤 Customer Profile: ${cust.FullName} (${cust.CustomerID})`;
+    document.getElementById('mCustId').value = cust.CustomerID;
+    document.getElementById('mCustName').value = cust.FullName || '';
+    document.getElementById('mCustPhone').value = cust.Phone || '';
+    document.getElementById('mCustTownship').value = cust.TownshipCity || '';
+    document.getElementById('mCustRemark').value = cust.Remark || '';
+    document.getElementById('mCustAddress').value = cust.DefaultAddress || '';
+
+    const custOrders = orders.filter(o => o.CustomerID === cust.CustomerID);
+    custOrders.sort((a, b) => new Date(b.Date) - new Date(a.Date));
+    const hBody = document.getElementById('mCustHistoryBody');
+
+    if (custOrders.length === 0) {
+      hBody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: #888; padding: 12px;">No prior orders recorded for this customer.</td></tr>`;
+    } else {
+      hBody.innerHTML = custOrders.map(o => {
+        const items = Array.isArray(o.ItemList) ? o.ItemList : [];
+        const itemsStr = items.map(i => `${i.Name_MM} (${i.Size}) x${i.Quantity}`).join(', ');
+        const dateStr = new Date(o.Date).toLocaleDateString();
+
+        return `
+          <tr>
+            <td><b>${o.SalesID}</b></td>
+            <td>${dateStr}</td>
+            <td style="font-size:11px;">${itemsStr}</td>
+            <td><b>${Number(o.TotalAmount).toLocaleString()} MMK</b></td>
+            <td>${o.PaymentType}</td>
+            <td><span class="status-badge ${o.Status === 'Cancelled' ? 'badge-stock-out' : 'badge-stock-ok'}">${o.Status}</span></td>
+            <td>
+              <button class="btn btn-success btn-sm" onclick='openVoucherModal(${JSON.stringify(o).replace(/'/g, "&apos;")})'>📸 Voucher</button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    document.getElementById('customerModal').style.display = 'flex';
+  }
+
+  async function openNewCustomerModal() {
+    const nextId = await generateNextCustomerId();
+    currentModalCustomer = null;
+
+    document.getElementById('customerModalTitle').innerText = "➕ Create New Customer Profile";
+    document.getElementById('mCustId').value = nextId;
+    document.getElementById('mCustName').value = '';
+    document.getElementById('mCustPhone').value = '';
+    document.getElementById('mCustTownship').value = '';
+    document.getElementById('mCustRemark').value = '';
+    document.getElementById('mCustAddress').value = '';
+
+    document.getElementById('mCustHistoryBody').innerHTML = `<tr><td colspan="7" style="text-align: center; color: #888; padding: 12px;">New customer profile (no previous purchases).</td></tr>`;
+    document.getElementById('customerModal').style.display = 'flex';
+  }
+
+  async function saveCustomerModal() {
+    const customerId = document.getElementById('mCustId').value;
+    const name = document.getElementById('mCustName').value.trim();
+    const phone = document.getElementById('mCustPhone').value.trim();
+    const township = document.getElementById('mCustTownship').value.trim();
+    const remark = document.getElementById('mCustRemark').value.trim();
+    const address = document.getElementById('mCustAddress').value.trim();
+
+    if (!name) return alert("Customer Name is required.");
+
+    const customers = await dbGetAll("customers");
+    const existing = customers.find(c => c.CustomerID === customerId);
+
+    const payload = {
+      CustomerID: customerId,
+      FullName: name,
+      Phone: phone,
+      TownshipCity: township,
+      Remark: remark,
+      DefaultAddress: address,
+      TotalSpend: existing ? (existing.TotalSpend || 0) : 0,
+      LastOrderDate: existing ? (existing.LastOrderDate || new Date().toISOString()) : new Date().toISOString(),
+      _syncStatus: "pending_upload"
+    };
+
+    await dbPut("customers", payload);
+    alert("✅ Customer profile saved successfully!");
+    closeModal('customerModal');
+    renderCustomersTable();
+  }
+
+  function startPosFromCustomerModal() {
+    const custId = document.getElementById('mCustId').value;
+    closeModal('customerModal');
+    startPosForCustomerDirectly(custId);
+  }
+
+  function startPosForCustomerDirectly(customerId) {
+    selectSuggestedCustomer(customerId);
+    switchTab('posTab');
+  }
+
+  // --- 19. EDIT EXISTING ORDER LOGIC ---
+  async function openEditOrderModal(salesId) {
+    const orders = await dbGetAll("orders");
+    const o = orders.find(x => x.SalesID === salesId);
+    if (!o) return;
+
+    editingOrderOriginal = JSON.parse(JSON.stringify(o));
+    editingOrderItems = JSON.parse(JSON.stringify(o.ItemList || []));
+
+    document.getElementById('editOrderModalTitle').innerText = `✏️ Edit Order: ${o.SalesID}`;
+    document.getElementById('eoSalesId').value = o.SalesID;
+    document.getElementById('eoCustId').value = o.CustomerID || '';
+    document.getElementById('eoCustName').value = o.CustomerName || '';
+    document.getElementById('eoPhone').value = o.Phone || '';
+    document.getElementById('eoTownship').value = o.TownshipCity || '';
+    document.getElementById('eoAddress').value = o.DeliveryAddress || '';
+    document.getElementById('eoPaymentType').value = o.PaymentType || 'KPay';
+    document.getElementById('eoStatus').value = o.Status || 'Confirmed';
+    document.getElementById('eoRemark').value = o.Remark || '';
+
+    document.getElementById('eoItemSearchInput').value = '';
+    document.getElementById('eoQuickAddList').style.display = 'none';
+
+    const discType = o.DiscountType || 'none';
+    document.getElementById('eoDiscountType').value = discType;
+    handleEditOrderDiscountChange();
+
+    if (discType === 'percentage' || discType === 'flat') {
+      document.getElementById('eoDiscountVal').value = o.DiscountAmount || '';
+    }
+
+    renderEditOrderItems();
+    document.getElementById('editOrderModal').style.display = 'flex';
+  }
+
+  async function filterEditOrderCatalog() {
+    const query = document.getElementById('eoItemSearchInput').value.toLowerCase().trim();
+    const listContainer = document.getElementById('eoQuickAddList');
+
+    if (!query) {
+      listContainer.style.display = 'none';
+      listContainer.innerHTML = '';
+      return;
+    }
+
+    const products = await dbGetAll("products");
+    const matches = products.filter(p => {
+      const str = `${p.ProductID} ${p.Name_MM} ${p.ColorPattern} ${p.Size} ${p.Type}`.toLowerCase();
+      return str.includes(query);
+    });
+
+    if (matches.length === 0) {
+      listContainer.innerHTML = `<div style="padding:8px; text-align:center; color:#888;">No matching products found.</div>`;
+      listContainer.style.display = 'block';
+      return;
+    }
+
+    listContainer.innerHTML = matches.map(p => {
+      const stock = Number(p.Stock) || 0;
+      const isOut = stock <= 0;
+      const price = Number(p.SellingPrice || 0);
+
+      return `
+        <div class="quick-add-item">
+          <div>
+            <b>${p.Name_MM}</b> (${p.Size} | ${p.ColorPattern})<br>
+            <span style="color:#666; font-family:monospace;">${p.ProductID}</span> — <b>${price.toLocaleString()} K</b> 
+            <span style="color:${isOut ? 'red' : 'green'};">(${stock} on shelf)</span>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="addItemToEditedOrder('${p.ProductID}')" ${isOut ? 'disabled style="background:#ccc;"' : ''}>
+            ➕ Add
+          </button>
+        </div>
+      `;
+    }).join('');
+
+    listContainer.style.display = 'block';
+  }
+
+  async function addItemToEditedOrder(productId) {
+    const products = await dbGetAll("products");
+    const p = products.find(x => x.ProductID === productId);
+    if (!p) return;
+
+    const availableStock = Number(p.Stock) || 0;
+    const existing = editingOrderItems.find(x => x.ProductID === productId);
+
+    if (existing) {
+      existing.Quantity++;
+      existing.Subtotal = existing.Quantity * existing.UnitPrice;
+    } else {
+      if (availableStock <= 0) return alert("Product is out of stock!");
+      editingOrderItems.push({
+        ProductID: p.ProductID,
+        Name_MM: p.Name_MM,
+        Size: p.Size,
+        ColorPattern: p.ColorPattern,
+        UnitPrice: Number(p.SellingPrice || 0),
+        Quantity: 1,
+        Subtotal: Number(p.SellingPrice || 0)
+      });
+    }
+
+    document.getElementById('eoItemSearchInput').value = '';
+    document.getElementById('eoQuickAddList').style.display = 'none';
+    renderEditOrderItems();
+  }
+
+  function handleEditOrderDiscountChange() {
+    const type = document.getElementById('eoDiscountType').value;
+    const valInput = document.getElementById('eoDiscountVal');
+    const tieredRow = document.getElementById('eoTieredRow');
+
+    if (type === 'none') {
+      valInput.style.display = 'none';
+      valInput.value = '';
+      tieredRow.style.display = 'none';
+    } else if (type === 'percentage') {
+      valInput.style.display = 'block';
+      valInput.placeholder = "% Off";
+      tieredRow.style.display = 'none';
+    } else if (type === 'flat') {
+      valInput.style.display = 'block';
+      valInput.placeholder = "Flat MMK";
+      tieredRow.style.display = 'none';
+    } else if (type === 'tiered') {
+      valInput.style.display = 'none';
+      tieredRow.style.display = 'grid';
+    }
+
+    renderEditOrderTotals();
+  }
+
+  function updateEditOrderItemQty(productId, delta) {
+    const item = editingOrderItems.find(x => x.ProductID === productId);
+    if (!item) return;
+
+    item.Quantity += delta;
+    if (item.Quantity <= 0) {
+      editingOrderItems = editingOrderItems.filter(x => x.ProductID !== productId);
+    } else {
+      item.Subtotal = item.Quantity * item.UnitPrice;
+    }
+
+    renderEditOrderItems();
+  }
+
+  function renderEditOrderItems() {
+    const tbody = document.getElementById('eoItemsBody');
+    if (editingOrderItems.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:red; padding:10px;">All items removed from this order! Use the search box above to add items.</td></tr>`;
+      renderEditOrderTotals();
+      return;
+    }
+
+    tbody.innerHTML = editingOrderItems.map(item => `
+      <tr>
+        <td>
+          <b>${item.Name_MM}</b><br>
+          <span style="font-size:10px; color:#666;">${item.ProductID} (${item.Size})</span>
+        </td>
+        <td style="text-align:center; white-space:nowrap;">
+          <button class="cart-qty-btn" onclick="updateEditOrderItemQty('${item.ProductID}', -1)">-</button>
+          <span style="padding: 0 4px; font-weight:bold;">${item.Quantity}</span>
+          <button class="cart-qty-btn" onclick="updateEditOrderItemQty('${item.ProductID}', 1)">+</button>
+        </td>
+        <td style="text-align:right;">${Number(item.UnitPrice).toLocaleString()}</td>
+        <td style="text-align:right; font-weight:bold;">${Number(item.Subtotal).toLocaleString()}</td>
+        <td style="text-align:center;"><button style="border:none; background:none; color:red; cursor:pointer;" onclick="updateEditOrderItemQty('${item.ProductID}', -999)">&times;</button></td>
+      </tr>
+    `).join('');
+
+    renderEditOrderTotals();
+  }
+
+  function renderEditOrderTotals() {
+    const subtotal = editingOrderItems.reduce((sum, i) => sum + i.Subtotal, 0);
+    const type = document.getElementById('eoDiscountType').value;
+    let discountAmount = 0;
+    let label = "Discount:";
+
+    if (type === 'percentage') {
+      const pct = parseFloat(document.getElementById('eoDiscountVal').value) || 0;
+      discountAmount = Math.round(subtotal * (pct / 100));
+      label = `Discount (${pct}%):`;
+    } else if (type === 'flat') {
+      const flat = parseFloat(document.getElementById('eoDiscountVal').value) || 0;
+      discountAmount = Math.min(subtotal, flat);
+      label = "Flat Discount:";
+    } else if (type === 'tiered') {
+      const cashback = parseFloat(document.getElementById('eoTierCashback').value) || 0;
+      const threshold = parseFloat(document.getElementById('eoTierThreshold').value) || 100000;
+      if (threshold > 0 && subtotal >= threshold) {
+        const tiers = Math.floor(subtotal / threshold);
+        discountAmount = tiers * cashback;
+        label = `Cashback (${tiers}x Tier):`;
+      }
+    }
+
+    discountAmount = Math.min(subtotal, Math.max(0, discountAmount));
+    const netTotal = Math.max(0, subtotal - discountAmount);
+
+    document.getElementById('eoSubtotalDisplay').innerText = `${subtotal.toLocaleString()} MMK`;
+    
+    const discRow = document.getElementById('eoDiscountRow');
+    if (discountAmount > 0) {
+      discRow.style.display = 'flex';
+      document.getElementById('eoDiscountLabel').innerText = label;
+      document.getElementById('eoDiscountDisplay').innerText = `-${discountAmount.toLocaleString()} MMK`;
+    } else {
+      discRow.style.display = 'none';
+    }
+
+    document.getElementById('eoTotalDisplay').innerText = `${netTotal.toLocaleString()} MMK`;
+  }
+
+  // --- 20. SAVE EDITED ORDER (ADVANCED REBALANCING ENGINE) ---
+  async function saveEditedOrder() {
+    const salesId = document.getElementById('eoSalesId').value;
+    const custId = document.getElementById('eoCustId').value;
+    const name = document.getElementById('eoCustName').value.trim();
+    const phone = document.getElementById('eoPhone').value.trim();
+    const township = document.getElementById('eoTownship').value.trim();
+    const address = document.getElementById('eoAddress').value.trim();
+    const payment = document.getElementById('eoPaymentType').value;
+    const newStatus = document.getElementById('eoStatus').value;
+    const remark = document.getElementById('eoRemark').value.trim();
+
+    if (!name) return alert("Customer Name is required.");
+
+    const subtotal = editingOrderItems.reduce((sum, i) => sum + i.Subtotal, 0);
+    const type = document.getElementById('eoDiscountType').value;
+    let discountAmount = 0;
+    let label = "Discount:";
+
+    if (type === 'percentage') {
+      const pct = parseFloat(document.getElementById('eoDiscountVal').value) || 0;
+      discountAmount = Math.round(subtotal * (pct / 100));
+      label = `Discount (${pct}%):`;
+    } else if (type === 'flat') {
+      const flat = parseFloat(document.getElementById('eoDiscountVal').value) || 0;
+      discountAmount = Math.min(subtotal, flat);
+      label = "Flat Discount:";
+    } else if (type === 'tiered') {
+      const cashback = parseFloat(document.getElementById('eoTierCashback').value) || 0;
+      const threshold = parseFloat(document.getElementById('eoTierThreshold').value) || 100000;
+      if (threshold > 0 && subtotal >= threshold) {
+        const tiers = Math.floor(subtotal / threshold);
+        discountAmount = tiers * cashback;
+        label = `Cashback (${tiers}x Tier):`;
+      }
+    }
+    discountAmount = Math.min(subtotal, Math.max(0, discountAmount));
+    const netTotal = Math.max(0, subtotal - discountAmount);
+
+    const oldStatus = editingOrderOriginal.Status;
+    const updatedOrder = {
+      ...editingOrderOriginal,
+      CustomerID: custId || editingOrderOriginal.CustomerID,
+      CustomerName: name,
+      Phone: phone,
+      TownshipCity: township,
+      DeliveryAddress: address,
+      PaymentType: payment,
+      Status: newStatus,
+      Remark: remark,
+      ItemList: editingOrderItems,
+      Subtotal: subtotal,
+      DiscountType: type,
+      DiscountAmount: discountAmount,
+      DiscountLabel: label,
+      TotalAmount: netTotal,
+      LastModified: new Date().toISOString(),
+      _syncStatus: "pending_upload"
+    };
+
+    const tx = db.transaction(["orders", "products", "customers"], "readwrite");
+    const orderStore = tx.objectStore("orders");
+    const prodStore = tx.objectStore("products");
+    const custStore = tx.objectStore("customers");
+
+    const originalItemMap = new Map();
+    (editingOrderOriginal.ItemList || []).forEach(i => originalItemMap.set(i.ProductID, i.Quantity));
+
+    const newItemMap = new Map();
+    editingOrderItems.forEach(i => newItemMap.set(i.ProductID, i.Quantity));
+
+    const allProductIds = new Set([...originalItemMap.keys(), ...newItemMap.keys()]);
+
+    for (let pid of allProductIds) {
+      const oldQty = originalItemMap.get(pid) || 0;
+      const newQty = newItemMap.get(pid) || 0;
+      const deltaStock = oldQty - newQty;
+
+      const pReq = prodStore.get(pid);
+      pReq.onsuccess = () => {
+        const prod = pReq.result;
+        if (prod) {
+          let currentStock = Number(prod.Stock) || 0;
+
+          if (newStatus === "Cancelled" && oldStatus !== "Cancelled") {
+            prod.Stock = currentStock + oldQty;
+          } else if (newStatus !== "Cancelled" && oldStatus === "Cancelled") {
+            prod.Stock = Math.max(0, currentStock - newQty);
+          } else if (newStatus !== "Cancelled" && oldStatus !== "Cancelled") {
+            if (deltaStock !== 0) {
+              prod.Stock = Math.max(0, currentStock + deltaStock);
+            }
+          }
+
+          prod.LastModified = new Date().toISOString();
+          prod._syncStatus = "pending_upload";
+          prodStore.put(prod);
+        }
+      };
+    }
+
+    orderStore.put(updatedOrder);
+
+    const targetCustId = custId || editingOrderOriginal.CustomerID;
+    if (targetCustId) {
+      const cReq = custStore.get(targetCustId);
+      cReq.onsuccess = () => {
+        const cust = cReq.result;
+        if (cust) {
+          cust.FullName = name;
+          if (phone) cust.Phone = phone;
+          if (township) cust.TownshipCity = township;
+          if (address) cust.DefaultAddress = address;
+          cust._syncStatus = "pending_upload";
+          custStore.put(cust);
+        }
+      };
+    }
+
+    tx.oncomplete = () => {
+      alert(`✅ Order ${salesId} updated successfully!`);
+      closeModal('editOrderModal');
+      renderOrdersTable();
+      renderInventoryTable();
+      renderPosCatalog();
+      renderCustomersTable();
+      renderAnalyticsDashboard();
+      updateUnsavedChangesBadge();
+    };
+
+    tx.onerror = (e) => alert("Failed to update order: " + e.target.error);
+  }
+
+  async function refundOrderStock(items) {
+    const tx = db.transaction("products", "readwrite");
+    const store = tx.objectStore("products");
+    for (let item of (items || [])) {
+      const req = store.get(item.ProductID);
+      req.onsuccess = () => {
+        const prod = req.result;
+        if (prod) {
+          prod.Stock = (Number(prod.Stock) || 0) + Number(item.Quantity);
+          prod.LastModified = new Date().toISOString();
+          prod._syncStatus = "pending_upload";
+          store.put(prod);
+        }
+      };
+    }
+  }
+
+  async function deductOrderStock(items) {
+    const tx = db.transaction("products", "readwrite");
+    const store = tx.objectStore("products");
+    for (let item of (items || [])) {
+      const req = store.get(item.ProductID);
+      req.onsuccess = () => {
+        const prod = req.result;
+        if (prod) {
+          prod.Stock = Math.max(0, (Number(prod.Stock) || 0) - Number(item.Quantity));
+          prod.LastModified = new Date().toISOString();
+          prod._syncStatus = "pending_upload";
+          store.put(prod);
+        }
+      };
+    }
+  }
+
+  // --- 21. SINGLE VARIANT PRODUCT MODAL LOGIC ---
+  async function openNewProductModal() {
+    isEditMode = false;
+    document.getElementById('productModalTitle').innerText = "➕ Create Product SKU & Cost Calculator";
+
+    setKeyFieldsDisabled(false);
+
+    const nextCode = await generateNextItemCode();
+    document.getElementById('mProdItemCode').value = nextCode;
+    document.getElementById('mProdName').value = '';
+    document.getElementById('mProdSex').value = 'Unisex';
+    
+    const typeSelect = document.getElementById('mProdTypeSelect');
+    if (typeSelect && typeSelect.options.length > 0) typeSelect.selectedIndex = 0;
+    document.getElementById('mProdTypeCustom').style.display = 'none';
+    document.getElementById('mProdTypeCustom').value = '';
+
+    document.getElementById('mProdLength').value = 'တို';
+    
+    const sizeSelect = document.getElementById('mProdSizeSelect');
+    if (sizeSelect && sizeSelect.options.length > 0) sizeSelect.selectedIndex = 0;
+    document.getElementById('mProdSizeCustom').style.display = 'none';
+    document.getElementById('mProdSizeCustom').value = '';
+
+    const colorSelect = document.getElementById('mProdColorSelect');
+    if (colorSelect && colorSelect.options.length > 0) colorSelect.selectedIndex = 0;
+    document.getElementById('mProdColorCustom').style.display = 'none';
+    document.getElementById('mProdColorCustom').value = '';
+
+    document.getElementById('mProdRemark').value = '';
+    document.getElementById('mProdStock').value = '5';
+
+    document.getElementById('mProdBuyingYuan').value = '';
+    document.getElementById('mProdSupplierPct').value = '0';
+    document.getElementById('mProdYuanRate').value = appSettings.DefaultYuanRate || '620';
+    document.getElementById('mProdCargoFee').value = appSettings.DefaultCargoFee || '2500';
+    document.getElementById('mProdTotalCapital').value = '';
+    document.getElementById('mProdNormalPrice').value = '';
+    document.getElementById('mProdSellingPrice').value = '';
+    document.getElementById('mProdWholesalePrice').value = '';
+
+    autoGenerateSku();
+    document.getElementById('productModal').style.display = 'flex';
+  }
+
+  async function openEditProductModal(productId) {
+    const products = await dbGetAll("products");
+    const p = products.find(x => x.ProductID === productId);
+    if (!p) return;
+
+    isEditMode = true;
+    document.getElementById('productModalTitle').innerText = `✏️ Edit SKU: ${p.ProductID}`;
+
+    setKeyFieldsDisabled(true);
+
+    document.getElementById('mProdSku').value = p.ProductID;
+    document.getElementById('mProdItemCode').value = p.ItemCode || '';
+    document.getElementById('mProdName').value = p.Name_MM || '';
+    document.getElementById('mProdSex').value = p.Sex || 'Unisex';
+    document.getElementById('mProdLength').value = p.Length || 'တို';
+
+    const typeSelect = document.getElementById('mProdTypeSelect');
+    const typeCustom = document.getElementById('mProdTypeCustom');
+    if ([...typeSelect.options].some(opt => opt.value === p.Type)) {
+      typeSelect.value = p.Type;
+      typeCustom.style.display = 'none';
+      typeCustom.value = '';
+    } else {
+      typeSelect.value = '__CUSTOM__';
+      typeCustom.style.display = 'block';
+      typeCustom.value = p.Type || '';
+    }
+
+    const sizeSelect = document.getElementById('mProdSizeSelect');
+    const sizeCustom = document.getElementById('mProdSizeCustom');
+    if ([...sizeSelect.options].some(opt => opt.value === String(p.Size))) {
+      sizeSelect.value = String(p.Size);
+      sizeCustom.style.display = 'none';
+      sizeCustom.value = '';
+    } else {
+      sizeSelect.value = '__CUSTOM__';
+      sizeCustom.style.display = 'block';
+      sizeCustom.value = p.Size || '';
+    }
+
+    const colorSelect = document.getElementById('mProdColorSelect');
+    const colorCustom = document.getElementById('mProdColorCustom');
+    if ([...colorSelect.options].some(opt => opt.value === p.ColorPattern)) {
+      colorSelect.value = p.ColorPattern;
+      colorCustom.style.display = 'none';
+      colorCustom.value = '';
+    } else {
+      colorSelect.value = '__CUSTOM__';
+      colorCustom.style.display = 'block';
+      colorCustom.value = p.ColorPattern || '';
+    }
+
+    document.getElementById('mProdRemark').value = p.Remark || '';
+    document.getElementById('mProdStock').value = p.Stock !== undefined ? p.Stock : 0;
+
+    document.getElementById('mProdBuyingYuan').value = p.BuyingYuan || '';
+    document.getElementById('mProdSupplierPct').value = p.SupplierPct || '0';
+    document.getElementById('mProdYuanRate').value = p.YuanRate || (appSettings.DefaultYuanRate || '620');
+    document.getElementById('mProdCargoFee').value = p.CargoFee || (appSettings.DefaultCargoFee || '2500');
+    document.getElementById('mProdTotalCapital').value = p.TotalCapital || '';
+    document.getElementById('mProdNormalPrice').value = p.NormalPrice || '';
+    document.getElementById('mProdSellingPrice').value = p.SellingPrice || '';
+    document.getElementById('mProdWholesalePrice').value = p.WholesalePrice || '';
+
+    document.getElementById('productModal').style.display = 'flex';
+  }
+
+  function setKeyFieldsDisabled(disabled) {
+    document.getElementById('mProdItemCode').disabled = disabled;
+    document.getElementById('mProdSizeSelect').disabled = disabled;
+    document.getElementById('mProdSizeCustom').disabled = disabled;
+    document.getElementById('mProdColorSelect').disabled = disabled;
+    document.getElementById('mProdColorCustom').disabled = disabled;
+  }
+
+  function closeModal(id) {
+    document.getElementById(id).style.display = 'none';
+  }
+
+  async function saveProductModal() {
+    const sku = document.getElementById('mProdSku').value.trim();
+    const code = document.getElementById('mProdItemCode').value.trim();
+    const name = document.getElementById('mProdName').value.trim();
+    const sex = document.getElementById('mProdSex').value;
+    const type = getEffectiveTypeValue();
+    const length = document.getElementById('mProdLength').value;
+    const size = getEffectiveSizeValue();
+    const color = getEffectiveColorValue();
+    const remark = document.getElementById('mProdRemark').value.trim();
+    const stock = Number(document.getElementById('mProdStock').value) || 0;
+
+    const buyingYuan = parseFloat(document.getElementById('mProdBuyingYuan').value) || 0;
+    const supplierPct = parseFloat(document.getElementById('mProdSupplierPct').value) || 0;
+    const yuanRate = parseFloat(document.getElementById('mProdYuanRate').value) || 0;
+    const cargoFee = parseFloat(document.getElementById('mProdCargoFee').value) || 0;
+    const totalCapital = Number(document.getElementById('mProdTotalCapital').value) || 0;
+    const normalPrice = Number(document.getElementById('mProdNormalPrice').value) || 0;
+    const sellingPrice = Number(document.getElementById('mProdSellingPrice').value) || normalPrice;
+    const wholesalePrice = Number(document.getElementById('mProdWholesalePrice').value) || totalCapital;
+
+    if (!name) return alert("Product Name is required.");
+    if (!sku) return alert("Product SKU is required.");
+
+    const productRecord = {
+      ProductID: sku,
+      ItemCode: code,
+      Name_MM: name,
+      Sex: sex,
+      Type: type,
+      Length: length,
+      Size: size,
+      ColorPattern: color,
+      Remark: remark,
+      Stock: stock,
+      BuyingYuan: buyingYuan,
+      SupplierPct: supplierPct,
+      YuanRate: yuanRate,
+      CargoFee: cargoFee,
+      TotalCapital: totalCapital,
+      NormalPrice: normalPrice,
+      SellingPrice: sellingPrice,
+      WholesalePrice: wholesalePrice,
+      LastModified: new Date().toISOString(),
+      _syncStatus: "pending_upload"
+    };
+
+    await dbPut("products", productRecord);
+    closeModal('productModal');
+    renderInventoryTable();
+    renderPosCatalog();
+    renderAnalyticsDashboard();
+    updateUnsavedChangesBadge();
+  }
+
+  // --- 22. VOUCHER SCREENSHOT ENGINE ---
+  function openVoucherModal(order) {
+    if (!order) return alert("Please select or complete an order first.");
+    
+    if (typeof order.ItemList === "string") {
+      try { order.ItemList = JSON.parse(order.ItemList); } catch(e) { order.ItemList = []; }
+    }
+
+    const subtotal = order.Subtotal || (order.ItemList || []).reduce((sum, i) => sum + (i.Subtotal || 0), 0);
+    const discountAmount = Number(order.DiscountAmount) || 0;
+
+    document.getElementById('vSalesId').innerText = order.SalesID;
+    document.getElementById('vDate').innerText = new Date(order.Date).toLocaleString();
+    document.getElementById('vCustName').innerText = order.CustomerName;
+    document.getElementById('vPhone').innerText = order.Phone || 'None';
+    document.getElementById('vAddress').innerText = `${order.DeliveryAddress || ''}${order.TownshipCity ? ', ' + order.TownshipCity : ''}` || 'Not specified';
+    document.getElementById('vPaymentType').innerText = order.PaymentType;
+    document.getElementById('vSubtotal').innerText = `${Number(subtotal).toLocaleString()} MMK`;
+    
+    const vDiscRow = document.getElementById('vDiscountRow');
+    if (discountAmount > 0) {
+      vDiscRow.style.display = 'flex';
+      document.getElementById('vDiscountLabel').innerText = order.DiscountLabel || 'Discount:';
+      document.getElementById('vDiscountAmount').innerText = `-${discountAmount.toLocaleString()} MMK`;
+    } else {
+      vDiscRow.style.display = 'none';
+    }
+
+    document.getElementById('vTotalAmount').innerText = `${Number(order.TotalAmount).toLocaleString()} MMK`;
+    document.getElementById('vRemark').innerText = order.Remark || 'None';
+
+    const tbody = document.getElementById('vItemsBody');
+    const items = order.ItemList || [];
+    tbody.innerHTML = items.map(i => `
+      <tr>
+        <td>
+          <b>${i.Name_MM}</b><br>
+          <span style="font-size:10px; color:#666;">Size: ${i.Size} | Color: ${i.ColorPattern}</span>
+        </td>
+        <td style="text-align:center; font-weight:bold;">${i.Quantity}</td>
+        <td style="text-align:right; font-weight:bold;">${Number(i.Subtotal).toLocaleString()}</td>
+      </tr>
+    `).join('');
+
+    document.getElementById('voucherStatusLabel').innerText = '';
+    document.getElementById('voucherModal').style.display = 'flex';
+  }
+
+  async function generateVoucherCanvas() {
+    const card = document.getElementById('voucherCardToCapture');
+    return await html2canvas(card, {
+      scale: 2,
+      backgroundColor: "#ffffff",
+      useCORS: true
+    });
+  }
+
+  async function downloadVoucherImage() {
+    const status = document.getElementById('voucherStatusLabel');
+    status.innerText = "📸 Generating image file...";
+    
+    try {
+      const canvas = await generateVoucherCanvas();
+      const salesId = document.getElementById('vSalesId').innerText || 'Order';
+      const link = document.createElement('a');
+      link.download = `Voucher_${salesId}.png`;
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+      status.innerText = "✅ Voucher image downloaded successfully!";
+    } catch(err) {
+      console.error(err);
+      status.innerText = "❌ Failed to generate image.";
+    }
+  }
+
+  async function shareVoucherImage() {
+    const status = document.getElementById('voucherStatusLabel');
+    status.innerText = "📸 Preparing share sheet...";
+
+    try {
+      const canvas = await generateVoucherCanvas();
+      const salesId = document.getElementById('vSalesId').innerText || 'Order';
+
+      canvas.toBlob(async (blob) => {
+        if (!blob) return status.innerText = "❌ Image generation failed.";
+
+        const file = new File([blob], `Voucher_${salesId}.png`, { type: 'image/png' });
+
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          await navigator.share({
+            files: [file],
+            title: `Voucher #${salesId}`,
+            text: `Order Voucher #${salesId} from BabyStore`
+          });
+          status.innerText = "✅ Shared successfully!";
+        } else {
+          downloadVoucherImage();
+          status.innerText = "ℹ️ Web Share not supported on this browser. File downloaded instead.";
+        }
+      }, 'image/png');
+
+    } catch (err) {
+      console.error(err);
+      status.innerText = "❌ Sharing cancelled or unsupported.";
+    }
+  }
+
+  async function copyVoucherToClipboard() {
+    const status = document.getElementById('voucherStatusLabel');
+    status.innerText = "📸 Copying to clipboard...";
+
+    try {
+      const canvas = await generateVoucherCanvas();
+      canvas.toBlob(async (blob) => {
+        if (!blob) return status.innerText = "❌ Image generation failed.";
+        
+        if (navigator.clipboard && navigator.clipboard.write) {
+          await navigator.clipboard.write([
+            new ClipboardItem({ 'image/png': blob })
+          ]);
+          status.innerText = "✅ Voucher image copied to clipboard!";
+        } else {
+          status.innerText = "⚠️ Direct image copying not supported in this browser. Use 'Save Image'.";
+        }
+      }, 'image/png');
+    } catch(err) {
+      console.error(err);
+      status.innerText = "⚠️ Failed to copy to clipboard.";
+    }
+  }
+
+  // --- 23. PRINT RECEIPT SLIP ---
+  function printReceipt() {
+    if (!lastSavedOrder) return alert("Please complete a sale first.");
+    renderReceiptSlip(lastSavedOrder);
+  }
+
+  async function reprintSlip(salesId) {
+    const orders = await dbGetAll("orders");
+    const o = orders.find(x => x.SalesID === salesId);
+    if (o) renderReceiptSlip(o);
+  }
+
+  function renderReceiptSlip(o) {
+    const subtotal = o.Subtotal || (o.ItemList || []).reduce((sum, i) => sum + (i.Subtotal || 0), 0);
+    const discountAmount = Number(o.DiscountAmount) || 0;
+
+    document.getElementById('slipSalesId').innerText = o.SalesID;
+    document.getElementById('slipDate').innerText = new Date(o.Date).toLocaleString();
+    document.getElementById('slipCustName').innerText = o.CustomerName;
+    document.getElementById('slipPhone').innerText = o.Phone || 'N/A';
+    document.getElementById('slipAddress').innerText = `${o.DeliveryAddress || ''}, ${o.TownshipCity || ''}`;
+    document.getElementById('slipPaymentType').innerText = o.PaymentType;
+    document.getElementById('slipSubtotal').innerText = `${Number(subtotal).toLocaleString()} MMK`;
+
+    const slipDiscRow = document.getElementById('slipDiscountRow');
+    if (discountAmount > 0) {
+      slipDiscRow.style.display = 'flex';
+      document.getElementById('slipDiscountLabel').innerText = o.DiscountLabel || 'Discount:';
+      document.getElementById('slipDiscountAmount').innerText = `-${discountAmount.toLocaleString()} MMK`;
+    } else {
+      slipDiscRow.style.display = 'none';
+    }
+
+    document.getElementById('slipTotalAmount').innerText = `${Number(o.TotalAmount).toLocaleString()} MMK`;
+
+    const tbody = document.getElementById('slipItemsBody');
+    const items = o.ItemList || [];
+    tbody.innerHTML = items.map(i => `
+      <tr>
+        <td>${i.Name_MM} (${i.Size})</td>
+        <td style="text-align:center;">${i.Quantity}</td>
+        <td style="text-align:right;">${Number(i.Subtotal).toLocaleString()}</td>
+      </tr>
+    `).join('');
+
+    document.body.className = 'printing-slip';
+    window.print();
+    document.body.className = '';
+  }
+
+  // --- 24. GOOGLE APPS SCRIPT SMART SYNC (NON-DESTRUCTIVE DELTA MERGE) ---
+  const GAS_ENDPOINT_URL = "https://script.google.com/macros/s/AKfycbwcGZ52bW8YkQ7NcBrWsd5niURDTLWbSoZC4Wa5CrsmYElxO29hTjCHC5rJgQ2NkFXBVw/exec";
+
+  async function downloadFromGoogleSheets() {
+    const [localProds, localOrders, localCusts] = await Promise.all([
+      dbGetAll("products"),
+      dbGetAll("orders"),
+      dbGetAll("customers")
+    ]);
+
+    const totalUnsaved = localProds.filter(p => p._syncStatus === "pending_upload").length +
+                         localOrders.filter(o => o._syncStatus === "pending_upload").length +
+                         localCusts.filter(c => c._syncStatus === "pending_upload").length;
+
+    if (totalUnsaved > 0) {
+      const confirmDownload = confirm(
+        `⚠️ WARNING: You have ${totalUnsaved} unsaved local record(s) pending upload.\n\n` +
+        `Downloading will merge cloud records without wiping your unsaved sales. Proceed?`
+      );
+      if (!confirmDownload) return;
+    }
+
+    const status = document.getElementById('syncStatus');
+    status.className = "status-badge badge-unsaved";
+    status.innerText = "⏳ Merging Sheets...";
+
+    try {
+      const response = await fetch(GAS_ENDPOINT_URL, { method: "GET" });
+      const res = await response.json();
+
+      if (res.status !== "success") throw new Error(res.message || "Failed to pull data");
+
+      const { products, orders, customers, settings } = res.data;
+
+      // 1. SMART MERGE: Products
+      await smartMergeCollection("products", "ProductID", products || []);
+
+      // 2. SMART MERGE: Orders
+      const normalizedOrders = (orders || []).map(o => {
+        if (typeof o.ItemList === "string") {
+          try { o.ItemList = JSON.parse(o.ItemList); } catch(e) { o.ItemList = []; }
+        }
+        return o;
+      });
+      await smartMergeCollection("orders", "SalesID", normalizedOrders);
+
+      // 3. SMART MERGE: Customers
+      let legacyCounter = 1;
+      const normalizedCustomers = (customers || []).map(c => {
+        let custId = c.CustomerID;
+        if (!custId) {
+          custId = "C" + String(legacyCounter).padStart(6, "0");
+          legacyCounter++;
+        }
+        return {
+          ...c,
+          CustomerID: custId,
+          FullName: c.FullName || "Customer",
+          Phone: c.Phone ? String(c.Phone).trim() : "",
+          DefaultAddress: c.DefaultAddress || "",
+          TownshipCity: c.TownshipCity || "",
+          Remark: c.Remark || "",
+          TotalSpend: Number(c.TotalSpend) || 0,
+          LastOrderDate: c.LastOrderDate || new Date().toISOString()
+        };
+      });
+      await smartMergeCollection("customers", "CustomerID", normalizedCustomers);
+
+      // 4. SMART MERGE: Settings
+      if (settings && typeof settings === "object") {
+        const tx = db.transaction("settings", "readwrite");
+        const sStore = tx.objectStore("settings");
+        Object.keys(settings).forEach(k => {
+          appSettings[k] = settings[k];
+          sStore.put({ key: k, value: settings[k] });
+        });
+        await new Promise(r => { tx.oncomplete = r; });
+        applyDynamicSettingsToUI();
+      }
+
+      renderPosCatalog();
+      renderInventoryTable();
+      renderOrdersTable();
+      renderCustomersTable();
+      renderAnalyticsDashboard();
+      await updateUnsavedChangesBadge();
+
+      alert("✅ Cloud data & Settings merged successfully!");
+    } catch (err) {
+      alert("Download Error: " + err.message);
+      await updateUnsavedChangesBadge();
+    }
+  }
+
+  async function smartMergeCollection(storeName, keyField, cloudItems) {
+    const localItems = await dbGetAll(storeName);
+    const localMap = new Map(localItems.map(item => [item[keyField], item]));
+
+    const tx = db.transaction(storeName, "readwrite");
+    const store = tx.objectStore(storeName);
+
+    for (let cloudItem of cloudItems) {
+      const key = cloudItem[keyField];
+      const local = localMap.get(key);
+
+      if (!local) {
+        cloudItem._syncStatus = "synced";
+        store.put(cloudItem);
+      } else if (local._syncStatus !== "pending_upload") {
+        cloudItem._syncStatus = "synced";
+        store.put(cloudItem);
+      }
+    }
+
+    return new Promise((resolve, reject) => {
+      tx.oncomplete = () => resolve(true);
+      tx.onerror = () => reject(tx.error);
+    });
+  }
+
+  async function uploadToGoogleSheets() {
+    if (!confirm("This will backup local records into Google Sheets. Continue?")) return;
+    const status = document.getElementById('syncStatus');
+    status.className = "status-badge badge-unsaved";
+    status.innerText = "⏳ Uploading...";
+
+    try {
+      const [products, orders, customers] = await Promise.all([
+        dbGetAll("products"),
+        dbGetAll("orders"),
+        dbGetAll("customers")
+      ]);
+
+      const payload = {
+        products: products.map(cleanRecordForSync),
+        orders: orders.map(cleanRecordForSync),
+        customers: customers.map(cleanRecordForSync)
+      };
+
+      const response = await fetch(GAS_ENDPOINT_URL, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify(payload)
+      });
+
+      const res = await response.json();
+      if (res.status !== "success") throw new Error(res.message || "Failed to push data");
+
+      await markAllAsSynced("products", products);
+      await markAllAsSynced("orders", orders);
+      await markAllAsSynced("customers", customers);
+
+      await updateUnsavedChangesBadge();
+      alert("✅ Google Sheets backup updated successfully!");
+    } catch (err) {
+      alert("Upload Error: " + err.message);
+      await updateUnsavedChangesBadge();
+    }
+  }
+
+  function cleanRecordForSync(record) {
+    const copy = { ...record };
+    delete copy._syncStatus;
+    return copy;
+  }
+
+  async function markAllAsSynced(storeName, items) {
+    const tx = db.transaction(storeName, "readwrite");
+    const store = tx.objectStore(storeName);
+    for (let item of items) {
+      item._syncStatus = "synced";
+      store.put(item);
+    }
+    return new Promise((resolve) => {
+      tx.oncomplete = () => resolve(true);
+    });
+  }
+
+  // --- 25. LOCAL JSON BACKUP EXPORT & IMPORT ENGINE ---
+  async function exportLocalJsonBackup() {
+    try {
+      const [products, orders, customers, settings] = await Promise.all([
+        dbGetAll("products"),
+        dbGetAll("orders"),
+        dbGetAll("customers"),
+        dbGetAll("settings")
+      ]);
+
+      const backupData = {
+        version: "5.2",
+        exportDate: new Date().toISOString(),
+        products,
+        orders,
+        customers,
+        settings
+      };
+
+      const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `BabyStore_Backup_${new Date().toISOString().slice(0, 10)}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      alert("Export Backup Failed: " + err.message);
+    }
+  }
+
+  function importLocalJsonBackup(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      try {
+        const data = JSON.parse(e.target.result);
+        if (!data.products || !data.orders || !data.customers) {
+          throw new Error("Invalid backup file structure.");
+        }
+
+        if (!confirm("Restore database from this JSON file? Pending un-synced items will be replaced.")) return;
+
+        await dbReplaceAll("products", data.products);
+        await dbReplaceAll("orders", data.orders);
+        await dbReplaceAll("customers", data.customers);
+        if (data.settings) await dbReplaceAll("settings", data.settings);
+
+        await loadSettings();
+        renderPosCatalog();
+        renderInventoryTable();
+        renderOrdersTable();
+        renderCustomersTable();
+        renderAnalyticsDashboard();
+        await updateUnsavedChangesBadge();
+
+        alert("✅ Database restored successfully from JSON backup file!");
+      } catch (err) {
+        alert("Restore Failed: " + err.message);
+      } finally {
+        event.target.value = "";
+      }
+    };
+    reader.readAsText(file);
+  }
+
+  function dbReplaceAll(storeName, items) {
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(storeName, "readwrite");
+      const store = tx.objectStore(storeName);
+      store.clear().onsuccess = () => {
+        for (let item of items) store.put(item);
+      };
+      tx.oncomplete = () => resolve(true);
+      tx.onerror = () => reject(tx.error);
+    });
+  }
+
+  // --- 26. ANALYTICS & BUSINESS INTELLIGENCE CONTROLLER ---
+  function setAnalyticsPeriod(period, el) {
+    activeAnalyticsPeriod = period;
+    document.querySelectorAll('#analyticsPeriodChips .chip').forEach(c => c.classList.remove('active'));
+    el.classList.add('active');
+
+    const customDateBox = document.getElementById('analyticsCustomDateInputs');
+    if (period === 'custom') {
+      customDateBox.style.display = 'flex';
+      const today = new Date().toISOString().slice(0, 10);
+      if (!document.getElementById('analyticsStartDate').value) {
+        document.getElementById('analyticsStartDate').value = today;
+      }
+      if (!document.getElementById('analyticsEndDate').value) {
+        document.getElementById('analyticsEndDate').value = today;
+      }
+    } else {
+      customDateBox.style.display = 'none';
+    }
+
+    renderAnalyticsDashboard();
+  }
+
+  async function renderAnalyticsDashboard() {
+    const orders = await dbGetAll("orders");
+    const products = await dbGetAll("products");
+
+    const now = new Date();
+    const todayStr = now.toISOString().slice(0, 10);
+
+    const validOrders = orders.filter(o => {
+      if (o.Status === "Cancelled") return false;
+      const orderDate = new Date(o.Date);
+      const orderDateStr = orderDate.toISOString().slice(0, 10);
+
+      if (activeAnalyticsPeriod === 'today') {
+        return orderDateStr === todayStr;
+      } else if (activeAnalyticsPeriod === 'this_month') {
+        return orderDate.getFullYear() === now.getFullYear() && orderDate.getMonth() === now.getMonth();
+      } else if (activeAnalyticsPeriod === 'last_30') {
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(now.getDate() - 30);
+        return orderDate >= thirtyDaysAgo;
+      } else if (activeAnalyticsPeriod === 'custom') {
+        const start = document.getElementById('analyticsStartDate').value;
+        const end = document.getElementById('analyticsEndDate').value;
+        if (start && orderDateStr < start) return false;
+        if (end && orderDateStr > end) return false;
+        return true;
+      }
+      return true;
+    });
+
+    let totalRevenue = 0;
+    let totalItemsSold = 0;
+    let totalEstimatedCost = 0;
+
+    const prodMap = new Map(products.map(p => [p.ProductID, p]));
+    const categoryCountMap = new Map();
+    const sizeCountMap = new Map();
+    const paymentCountMap = new Map();
+    const variantSalesMap = new Map();
+
+    validOrders.forEach(o => {
+      totalRevenue += Number(o.TotalAmount) || 0;
+      
+      const pType = o.PaymentType || 'Other';
+      paymentCountMap.set(pType, (paymentCountMap.get(pType) || 0) + (Number(o.TotalAmount) || 0));
+
+      const items = Array.isArray(o.ItemList) ? o.ItemList : [];
+      items.forEach(i => {
+        const qty = Number(i.Quantity) || 0;
+        totalItemsSold += qty;
+
+        const prod = prodMap.get(i.ProductID);
+        const itemCapital = prod ? (Number(prod.TotalCapital) || 0) : 0;
+        totalEstimatedCost += (qty * itemCapital);
+
+        const cat = (prod && prod.Type) ? prod.Type : "Other";
+        categoryCountMap.set(cat, (categoryCountMap.get(cat) || 0) + qty);
+
+        const sz = i.Size || "Other";
+        sizeCountMap.set(sz, (sizeCountMap.get(sz) || 0) + qty);
+
+        const vKey = i.ProductID;
+        const existing = variantSalesMap.get(vKey) || { name: i.Name_MM, size: i.Size, color: i.ColorPattern, qty: 0, revenue: 0 };
+        existing.qty += qty;
+        existing.revenue += Number(i.Subtotal) || 0;
+        variantSalesMap.set(vKey, existing);
+      });
+    });
+
+    const grossProfit = Math.max(0, totalRevenue - totalEstimatedCost);
+    const profitMargin = totalRevenue > 0 ? Math.round((grossProfit / totalRevenue) * 100) : 0;
+    const aov = validOrders.length > 0 ? Math.round(totalRevenue / validOrders.length) : 0;
+
+    let shelfValuation = 0;
+    let totalShelfUnits = 0;
+    products.forEach(p => {
+      const stock = Number(p.Stock) || 0;
+      const capital = Number(p.TotalCapital) || 0;
+      shelfValuation += (stock * capital);
+      totalShelfUnits += stock;
+    });
+
+    document.getElementById('anTotalRevenue').innerText = `${totalRevenue.toLocaleString()} MMK`;
+    document.getElementById('anOrderCount').innerText = `${validOrders.length} valid sales completed`;
+    document.getElementById('anGrossProfit').innerText = `${grossProfit.toLocaleString()} MMK`;
+    document.getElementById('anProfitMargin').innerText = `Profit Margin: ${profitMargin}%`;
+    document.getElementById('anItemsSold').innerText = `${totalItemsSold} Units`;
+    document.getElementById('anAvgOrderVal').innerText = `Avg Order: ${aov.toLocaleString()} MMK`;
+    document.getElementById('anShelfValuation').innerText = `${shelfValuation.toLocaleString()} MMK`;
+    document.getElementById('anTotalShelfUnits').innerText = `${totalShelfUnits} units in stock`;
+
+    renderMetricBars('anCategoryBarsContainer', categoryCountMap, totalItemsSold, 'Units');
+    renderMetricBars('anSizeBarsContainer', sizeCountMap, totalItemsSold, 'Units');
+    renderMetricBars('anPaymentBarsContainer', paymentCountMap, totalRevenue, 'MMK');
+
+    const sortedVariants = [...variantSalesMap.values()].sort((a, b) => b.qty - a.qty).slice(0, 5);
+    const topBody = document.getElementById('anTopProductsBody');
+
+    if (sortedVariants.length === 0) {
+      topBody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#888; padding: 12px;">No item sales in this period.</td></tr>`;
+    } else {
+      topBody.innerHTML = sortedVariants.map((v, idx) => `
+        <tr>
+          <td><b style="color:var(--primary);">#${idx + 1}</b></td>
+          <td><b>${v.name}</b><br><span style="font-size:10px; color:#666;">Size: ${v.size} | ${v.color}</span></td>
+          <td style="text-align:center; font-weight:bold;">${v.qty}</td>
+          <td style="text-align:right; font-weight:bold;">${v.revenue.toLocaleString()} MMK</td>
+        </tr>
+      `).join('');
+    }
+  }
+
+  function renderMetricBars(containerId, dataMap, totalValue, unit) {
+    const container = document.getElementById(containerId);
+    if (!container) return;
+
+    if (dataMap.size === 0 || totalValue <= 0) {
+      container.innerHTML = `<div style="text-align: center; color: #888; padding: 15px;">No recorded activity for this period.</div>`;
+      return;
+    }
+
+    const sortedEntries = [...dataMap.entries()].sort((a, b) => b[1] - a[1]);
+
+    container.innerHTML = sortedEntries.map(([label, val]) => {
+      const pct = Math.round((val / totalValue) * 100) || 0;
+      const displayVal = unit === 'MMK' ? `${val.toLocaleString()} K` : `${val} ${unit}`;
+
+      return `
+        <div class="progress-bar-container">
+          <div class="progress-bar-label">
+            <span>${label}</span>
+            <span>${displayVal} (${pct}%)</span>
+          </div>
+          <div class="progress-bar-track">
+            <div class="progress-bar-fill" style="width: ${pct}%;"></div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+</script>
+
+</body>
+</html>
