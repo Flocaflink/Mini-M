@@ -9,6 +9,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Padauk:wght@400;700&family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="apple-touch-icon" href="./logo.png">
+  <link rel="icon" type="image/png" href="./logo.png">
 
   <!-- LIGHTWEIGHT HTML-TO-CANVAS ENGINE FOR VOUCHER SCREENSHOTS -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -531,7 +533,10 @@
 <div class="app-container">
   <!-- Top Header with Synced Controls, Dynamic Backend URL & Backup Tools -->
   <div class="header-bar">
-    <h2 class="brand-title">🧸 Mini-M Baby Clothing Store Owner Portal</h2>
+    <h2 class="brand-title" style="display: flex; align-items: center; gap: 10px;">
+     <img src="./logo.png" alt="Mini-M Logo" style="height: 48px; max-width: 160px; object-fit: contain; border-radius: 6px;">
+     <span style="font-size: 18px; font-weight: bold;">Owner Operations Portal</span>
+    </h2>
     <div class="sync-controls" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
       <span id="syncStatus" class="status-badge badge-synced">⚡ All Synced</span>
       <button class="btn btn-secondary btn-sm" onclick="downloadFromGoogleSheets()">📥 Download Sheets</button>
@@ -1419,7 +1424,10 @@
     <div class="voucher-capture-wrapper">
       <div id="voucherCardToCapture" class="voucher-card">
         <div class="voucher-header">
-          <div class="voucher-logo">🧸 Mini-M BABY CLOTHING STORE</div>
+          <div class="voucher-header" style="text-align: center;">
+           <img src="./logo.png" alt="Mini-M Logo" style="height: 65px; max-width: 200px; object-fit: contain; margin-bottom: 4px;">
+           <div class="voucher-sub">Official Sales Order Receipt</div>
+          </div>
           <div class="voucher-sub">Official Sales Order Receipt</div>
         </div>
 
@@ -1497,7 +1505,10 @@
 
 <!-- TEMPLATE: PRINTABLE SLIP FALLBACK -->
 <div id="printReceiptSlip">
-  <div class="receipt-title">🧸 BABY STORE</div>
+  <div class="receipt-title">
+   <img src="./logo.png" alt="Mini-M Logo" style="height: 48px; max-width: 160px; object-fit: contain; border-radius: 6px;">
+   <span style="font-size: 18px; font-weight: bold;">Baby Clothing Store</span>
+  </div>
   <div style="text-align: center; font-size: 10px;">Order Sales Slip</div>
   <div class="receipt-divider"></div>
   <div><b>Sales ID:</b> <span id="slipSalesId"></span></div>
