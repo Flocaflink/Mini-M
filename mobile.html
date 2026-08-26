@@ -307,21 +307,34 @@
       font-size: 13px;
     }
 
-    /* Voucher Card */
+    /* Expanded Full-Screen Screenshot Voucher */
     .voucher-card-mobile {
-      width: 100%;
-      max-width: 85vw;
+      width: 92vw;
+      max-width: 460px;
+      min-height: 72vh; /* Fills ~4/5 of the vertical screen */
       margin: 0 auto;
-      background: white;
-      padding: 16px;
-      border-radius: 12px;
+      background: #ffffff;
+      padding: 22px 18px;
+      border-radius: 16px;
       border: 1px solid var(--border);
-      font-size: 14px;
+      box-shadow: 0 4px 18px rgba(0, 0, 0, 0.08);
+      font-size: 13px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between; /* Fills empty space evenly */
+      box-sizing: border-box;
     }
 
     .voucher-card-mobile img {
-      height: 60px; /* Scaled logo */
-      max-width: 200px;
+      height: 65px;
+      max-width: 220px;
+      object-fit: contain;
+      margin-bottom: 6px;
+    }
+
+    .voucher-section-divider {
+      border-top: 1px dashed #e2e8f0;
+      margin: 12px 0;
     }
     
   </style>
