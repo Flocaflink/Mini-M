@@ -649,13 +649,49 @@
     let activeSize = "All";
     let lastSavedOrder = null;
 
-    function initDatabase() {
-      return new Promise((resolve, reject) => {
-        const request = indexedDB.open(DB_NAME, DB_VERSION);
-        request.onsuccess = (e) => { db = e.target.result; resolve(db); };
-        request.onerror = (e) => reject(e.target.error);
-      });
-    }
+    const DB_NAME = "BabyStoreOwnerDB";
+    const DB_VERSION = 6; // Bumped version to force schema migration on all devices
+
+  function initDatabase() {
+    return new Promise((resolve, reject) => {
+      const request = indexedDB.open(DB_NAME, DB_VERSION);
+
+      request.onupgradeneeded = (e) => {
+        const d = e.target.result;
+        
+        if (!d.objectStoreNames.contains("products")) {
+          const pStore = d.createObjectStore("products", { keyPath: "ProductID" });
+          pStore.createIndex("ItemCode", "ItemCode", { unique: false });
+          pStore.createIndex("Type", "Type", { unique: false });
+          pStore.createIndex("Sex", "Sex", { unique: false });
+          pStore.createIndex("Size", "Size", { unique: false });
+        }
+        
+        if (!d.objectStoreNames.contains("orders")) {
+          const oStore = d.createObjectStore("orders", { keyPath: "SalesID" });
+          oStore.createIndex("CustomerID", "CustomerID", { unique: false });
+          oStore.createIndex("Phone", "Phone", { unique: false });
+          oStore.createIndex("Status", "Status", { unique: false });
+        }
+
+        if (!d.objectStoreNames.contains("customers")) {
+          const cStore = d.createObjectStore("customers", { keyPath: "CustomerID" });
+          cStore.createIndex("FullName", "FullName", { unique: false });
+          cStore.createIndex("Phone", "Phone", { unique: false });
+        }
+
+        if (!d.objectStoreNames.contains("settings")) {
+          d.createObjectStore("settings", { keyPath: "key" });
+        }
+      };
+
+      request.onsuccess = (e) => {
+        db = e.target.result;
+        resolve(db);
+      };
+      request.onerror = (e) => reject("IndexedDB Error: " + e.target.error);
+    });
+  }
 
     function dbGetAll(storeName) {
       return new Promise((resolve) => {
