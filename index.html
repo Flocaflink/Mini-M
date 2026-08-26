@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>BabyStore Owner Operations Portal</title>
   
   <!-- IMPORT GOOGLE FONTS FOR MYANMAR & ENGLISH -->
@@ -459,7 +459,7 @@
       .receipt-table th, .receipt-table td { padding: 4px 0; border: none; text-align: left; }
     }
 
-    /* Analytics Dashboard Styles (Pure CSS Metric Bars) */
+    /* Analytics Dashboard Styles */
     .metric-cards-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -529,13 +529,14 @@
 <body>
 
 <div class="app-container">
-  <!-- Top Header with Synced Controls & Backup Tools -->
+  <!-- Top Header with Synced Controls, Dynamic Backend URL & Backup Tools -->
   <div class="header-bar">
     <h2 class="brand-title">🧸 Mini-M Baby Clothing Store Owner Portal</h2>
     <div class="sync-controls" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
       <span id="syncStatus" class="status-badge badge-synced">⚡ All Synced</span>
       <button class="btn btn-secondary btn-sm" onclick="downloadFromGoogleSheets()">📥 Download Sheets</button>
       <button id="btnUploadSheets" class="btn btn-primary btn-sm" onclick="uploadToGoogleSheets()">☁️ Upload Sheets</button>
+      <button class="btn btn-sm" style="background: #2b6cb0; color: white;" onclick="openBackendSetupModal()" title="Configure Google Apps Script Web App URL">⚙️ Backend URL</button>
       <button class="btn btn-sm" style="background: #4a5568; color: white;" onclick="exportLocalJsonBackup()" title="Download offline JSON backup">💾 JSON Backup</button>
       <button class="btn btn-sm" style="background: #718096; color: white;" onclick="document.getElementById('jsonFileInput').click()" title="Restore from local JSON file">📂 Restore</button>
       <input type="file" id="jsonFileInput" style="display: none;" accept=".json" onchange="importLocalJsonBackup(event)">
@@ -927,6 +928,27 @@
 
   <div id="statusMsg" style="text-align: center; font-size: 11px; color: #888; margin-top: 15px;">
     IndexedDB Engine Running Local-First.
+  </div>
+</div>
+
+<!-- ========================================================================= -->
+<!-- MODAL: BACKEND URL SETUP (OPTION A) -->
+<!-- ========================================================================= -->
+<div id="backendSetupModal" class="modal-overlay">
+  <div class="modal-card" style="max-width: 520px;">
+    <div class="modal-header">
+      <h3>⚙️ Connect Google Sheets Backend</h3>
+      <button class="close-btn" onclick="closeModal('backendSetupModal')">&times;</button>
+    </div>
+    <p style="font-size: 12px; color: #666; margin: 0 0 10px 0;">
+      Paste your Google Apps Script Web App execution URL below. This endpoint is saved locally in your browser and is never exposed in the source code.
+    </p>
+    <label>Google Apps Script Web App URL:</label>
+    <input type="url" id="cfgGasUrl" placeholder="https://script.google.com/macros/s/.../exec">
+    <div style="display: flex; gap: 8px; margin-top: 15px;">
+      <button class="btn btn-primary" style="flex: 1;" onclick="saveBackendSetup()">💾 Save Connection</button>
+      <button class="btn" style="background: #ccc;" onclick="closeModal('backendSetupModal')">Cancel</button>
+    </div>
   </div>
 </div>
 
@@ -1865,7 +1887,7 @@
     }
   }
 
-  // --- 9. BULK MATRIX INTAKE ENGINE (OPTION B) ---
+  // --- 9. BULK MATRIX INTAKE ENGINE ---
   async function openBulkMatrixModal() {
     const nextCode = await generateNextItemCode();
     document.getElementById('bmItemCode').value = nextCode;
@@ -2489,7 +2511,7 @@
     totalDisplay.innerText = `${disc.netTotal.toLocaleString()} MMK`;
   }
 
-  // --- 13. OPTION A: CUSTOMER SUGGESTIONS WITH LAST PURCHASE DETAIL ---
+  // --- 13. CUSTOMER SUGGESTIONS WITH LAST PURCHASE DETAIL ---
   let nameSuggestDebounce;
 
   async function handleCustomerNameInput() {
@@ -3236,7 +3258,7 @@
     document.getElementById('eoTotalDisplay').innerText = `${netTotal.toLocaleString()} MMK`;
   }
 
-  // --- 20. SAVE EDITED ORDER (ADVANCED REBALANCING ENGINE) ---
+  // --- 20. SAVE EDITED ORDER ---
   async function saveEditedOrder() {
     const salesId = document.getElementById('eoSalesId').value;
     const custId = document.getElementById('eoCustId').value;
@@ -3763,10 +3785,33 @@
     document.body.className = '';
   }
 
-  // --- 24. GOOGLE APPS SCRIPT SMART SYNC (NON-DESTRUCTIVE DELTA MERGE) ---
-  const GAS_ENDPOINT_URL = "https://script.google.com/macros/s/AKfycbwcGZ52bW8YkQ7NcBrWsd5niURDTLWbSoZC4Wa5CrsmYElxO29hTjCHC5rJgQ2NkFXBVw/exec";
+  // --- 24. GOOGLE APPS SCRIPT DYNAMIC CONNECTOR & SMART SYNC ---
+  function getGasEndpointUrl() {
+    return localStorage.getItem("gas_endpoint_url") || "";
+  }
+
+  function openBackendSetupModal() {
+    document.getElementById("cfgGasUrl").value = getGasEndpointUrl();
+    document.getElementById("backendSetupModal").style.display = "flex";
+  }
+
+  function saveBackendSetup() {
+    const url = document.getElementById("cfgGasUrl").value.trim();
+    if (!url || !url.startsWith("https://script.google.com/")) {
+      return alert("Please enter a valid Google Apps Script Web App URL starting with https://script.google.com/");
+    }
+    localStorage.setItem("gas_endpoint_url", url);
+    closeModal("backendSetupModal");
+    alert("✅ Backend URL saved locally!");
+  }
 
   async function downloadFromGoogleSheets() {
+    const endpoint = getGasEndpointUrl();
+    if (!endpoint) {
+      openBackendSetupModal();
+      return alert("Please configure your Google Apps Script Backend URL first.");
+    }
+
     const [localProds, localOrders, localCusts] = await Promise.all([
       dbGetAll("products"),
       dbGetAll("orders"),
@@ -3790,7 +3835,7 @@
     status.innerText = "⏳ Merging Sheets...";
 
     try {
-      const response = await fetch(GAS_ENDPOINT_URL, { method: "GET" });
+      const response = await fetch(endpoint, { method: "GET" });
       const res = await response.json();
 
       if (res.status !== "success") throw new Error(res.message || "Failed to pull data");
@@ -3884,6 +3929,12 @@
   }
 
   async function uploadToGoogleSheets() {
+    const endpoint = getGasEndpointUrl();
+    if (!endpoint) {
+      openBackendSetupModal();
+      return alert("Please configure your Google Apps Script Backend URL first.");
+    }
+
     if (!confirm("This will backup local records into Google Sheets. Continue?")) return;
     const status = document.getElementById('syncStatus');
     status.className = "status-badge badge-unsaved";
@@ -3902,7 +3953,7 @@
         customers: customers.map(cleanRecordForSync)
       };
 
-      const response = await fetch(GAS_ENDPOINT_URL, {
+      const response = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "text/plain;charset=utf-8" },
         body: JSON.stringify(payload)
@@ -3952,7 +4003,7 @@
       ]);
 
       const backupData = {
-        version: "5.2",
+        version: "5.3",
         exportDate: new Date().toISOString(),
         products,
         orders,
