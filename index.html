@@ -1480,7 +1480,7 @@
     ProductColors: ["ပန်း", "ဝါ", "ပြာ", "ခဲ", "ဖြူ", "နီ", "စိမ်း", "နက်", "လိမ္မော်", "ခရမ်း", "ကြား", "ပွင့်"],
     PaymentMethods: ["KPay", "WavePay", "COD", "AYA Pay"],
     DeliveryServices: ["Royal", "Wepots", "Ninja Van", "Safe", "self"],
-    PaidStatuses: ["paid", "not received yet"]
+    PaidStatuses: ["Paid", "Unpaid"]
   };
 
   function initDatabase() {
@@ -1654,6 +1654,20 @@
       const curVal = eoDelivery.value;
       eoDelivery.innerHTML = deliveryServices.map(d => `<option value="${d}">${d}</option>`).join('');
       if (curVal && [...eoDelivery.options].some(o => o.value === curVal)) eoDelivery.value = curVal;
+    }
+
+    const paidStatuses = appSettings.PaidStatuses || ["paid", "not received yet"];
+    const posPaid = document.getElementById("orderPaidStatus");
+    if (posPaid) {
+      const curVal = posPaid.value;
+      posPaid.innerHTML = paidStatuses.map(p => `<option value="${p}">${p}</option>`).join('');
+      if (curVal && [...posPaid.options].some(o => o.value === curVal)) posPaid.value = curVal;
+    }
+    const eoPaid = document.getElementById("eoPaidStatus");
+    if (eoPaid) {
+      const curVal = eoPaid.value;
+      eoPaid.innerHTML = paidStatuses.map(p => `<option value="${p}">${p}</option>`).join('');
+      if (curVal && [...eoPaid.options].some(o => o.value === curVal)) eoPaid.value = curVal;
     }
 
     const regMargin = appSettings.RegularProfitMargin || 33;
@@ -2725,77 +2739,93 @@
   }
 
   async function renderOrdersTable() {
-  const orders = await dbGetAll("orders");
-  const query = (document.getElementById('orderSearchInput')?.value || '').toLowerCase().trim();
-  const tbody = document.getElementById('ordersTableBody');
+    const orders = await dbGetAll("orders");
+    const query = (document.getElementById('orderSearchInput')?.value || '').toLowerCase().trim();
+    const tbody = document.getElementById('ordersTableBody');
 
-  orders.sort((a, b) => new Date(b.Date) - new Date(a.Date));
+    orders.sort((a, b) => new Date(b.Date) - new Date(a.Date));
 
-  const filtered = orders.filter(o => {
-    const str = `${o.SalesID} ${o.CustomerName} ${o.Phone || ''} ${o.DeliveryName || ''} ${o.PaidStatus || ''} ${o.Status}`.toLowerCase();
-    return !query || str.includes(query);
-  });
+    const filtered = orders.filter(o => {
+      const str = `${o.SalesID} ${o.CustomerName} ${o.Phone || ''} ${o.DeliveryName || ''} ${o.PaidStatus || ''} ${o.Status}`.toLowerCase();
+      return !query || str.includes(query);
+    });
 
-  if (filtered.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="12" style="text-align: center; color:#888;">No recorded sales orders found.</td></tr>`;
-    return;
+    if (filtered.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="12" style="text-align: center; color:#888;">No recorded sales orders found.</td></tr>`;
+      return;
+    }
+
+    const deliveryServices = appSettings.DeliveryServices || ["Royal", "Wepots", "Ninja Van", "Safe", "Self"];
+    const standardPaidStatuses = appSettings.PaidStatuses || ["Paid", "Unpaid"];;
+
+    tbody.innerHTML = filtered.map(o => {
+      const items = Array.isArray(o.ItemList) ? o.ItemList : [];
+      const itemSummary = items.map(i => `${i.Name_MM} (${i.Size}) x${i.Quantity}`).join(', ');
+      const dateStr = new Date(o.Date).toLocaleDateString();
+      const discountText = o.DiscountAmount > 0 ? `<span style="color:#2e7d32; font-weight:bold;">-${Number(o.DiscountAmount).toLocaleString()}</span>` : '-';
+      
+      // Dynamic Courier Handling
+      const currentCourier = o.DeliveryName || 'Not assigned';
+      let courierList = [...deliveryServices];
+      if (currentCourier && !courierList.includes(currentCourier)) {
+        courierList.push(currentCourier);
+      }
+      const courierOptions = courierList.map(d => 
+        `<option value="${d}" ${d === currentCourier ? 'selected' : ''}>${d}</option>`
+      ).join('');
+
+      // Dynamic Paid Status Handling
+      const currentPaidStatus = o.PaidStatus || 'Unpaid';
+      let paidStatusList = [...standardPaidStatuses];
+      if (currentPaidStatus && !paidStatusList.includes(currentPaidStatus)) {
+        paidStatusList.push(currentPaidStatus);
+      }
+      const paidStatusOptions = paidStatusList.map(s => 
+        `<option value="${s}" ${s === currentPaidStatus ? 'selected' : ''}>${s}</option>`
+      ).join('');
+
+      const isPaid = currentPaidStatus.toLowerCase() === 'paid';
+
+      return `
+        <tr>
+          <td><b>${o.SalesID}</b></td>
+          <td>${dateStr}</td>
+          <td><b>${o.CustomerName}</b></td>
+          <td>${o.Phone || '-'}</td>
+          <td style="max-width: 200px; font-size: 11px;">${itemSummary || '-'}</td>
+          <td>${discountText}</td>
+          <td><b>${Number(o.TotalAmount).toLocaleString()} MMK</b></td>
+          <td>${o.PaymentType}</td>
+          <td>
+            <select onchange="quickUpdateOrderCourier('${o.SalesID}', this.value)" style="padding: 2px 4px; font-size: 11px; font-weight:bold;">
+              ${courierOptions}
+            </select>
+          </td>
+          <td>
+            <select onchange="quickUpdateOrderPaidStatus('${o.SalesID}', this.value)" style="padding: 2px 4px; font-size: 11px; font-weight:bold; color: ${isPaid ? '#155724' : '#721c24'};">
+              ${paidStatusOptions}
+            </select>
+          </td>
+          <td>
+            <select onchange="quickUpdateOrderStatus('${o.SalesID}', this.value)" style="padding: 2px 4px; font-size: 11px;">
+              <option value="Confirmed" ${o.Status === 'Confirmed' ? 'selected' : ''}>Confirmed</option>
+              <option value="Pending" ${o.Status === 'Pending' ? 'selected' : ''}>Pending</option>
+              <option value="Shipped" ${o.Status === 'Shipped' ? 'selected' : ''}>Shipped</option>
+              <option value="Delivered" ${o.Status === 'Delivered' ? 'selected' : ''}>Delivered</option>
+              <option value="Cancelled" ${o.Status === 'Cancelled' ? 'selected' : ''}>Cancelled</option>
+            </select>
+          </td>
+          <td style="width: 80px; padding: 4px 6px;">
+            <div class="action-btn-group">
+              <button class="btn btn-warning btn-sm" onclick='openEditOrderModal("${o.SalesID}")'>✏️ Edit</button>
+              <button class="btn btn-success btn-sm" onclick='openVoucherModal(${JSON.stringify(o).replace(/'/g, "&apos;")})'>📸 Voucher</button>
+              <button class="btn btn-secondary btn-sm" onclick="reprintSlip('${o.SalesID}')">🖨️ Slip</button>
+            </div>
+          </td>
+        </tr>
+      `;
+    }).join('');
   }
-
-  const deliveryServices = appSettings.DeliveryServices || ["Royal", "Wepots", "Ninja Van", "Safe", "self"];
-
-  tbody.innerHTML = filtered.map(o => {
-    const items = Array.isArray(o.ItemList) ? o.ItemList : [];
-    const itemSummary = items.map(i => `${i.Name_MM} (${i.Size}) x${i.Quantity}`).join(', ');
-    const dateStr = new Date(o.Date).toLocaleDateString();
-    const discountText = o.DiscountAmount > 0 ? `<span style="color:#2e7d32; font-weight:bold;">-${Number(o.DiscountAmount).toLocaleString()}</span>` : '-';
-    const paidStatusVal = o.PaidStatus || 'not received yet';
-    const currentCourier = o.DeliveryName || deliveryServices[0];
-
-    const courierOptions = deliveryServices.map(d => 
-      `<option value="${d}" ${d === currentCourier ? 'selected' : ''}>${d}</option>`
-    ).join('');
-
-    return `
-      <tr>
-        <td><b>${o.SalesID}</b></td>
-        <td>${dateStr}</td>
-        <td><b>${o.CustomerName}</b></td>
-        <td>${o.Phone || '-'}</td>
-        <td style="max-width: 200px; font-size: 11px;">${itemSummary || '-'}</td>
-        <td>${discountText}</td>
-        <td><b>${Number(o.TotalAmount).toLocaleString()} MMK</b></td>
-        <td>${o.PaymentType}</td>
-        <td>
-          <select onchange="quickUpdateOrderCourier('${o.SalesID}', this.value)" style="padding: 2px 4px; font-size: 11px; font-weight:bold;">
-            ${courierOptions}
-          </select>
-        </td>
-        <td>
-          <select onchange="quickUpdateOrderPaidStatus('${o.SalesID}', this.value)" style="padding: 2px 4px; font-size: 11px; font-weight:bold; color: ${paidStatusVal === 'paid' ? '#155724' : '#721c24'};">
-            <option value="paid" ${paidStatusVal === 'paid' ? 'selected' : ''}>paid</option>
-            <option value="not received yet" ${paidStatusVal === 'not received yet' ? 'selected' : ''}>not received yet</option>
-          </select>
-        </td>
-        <td>
-          <select onchange="quickUpdateOrderStatus('${o.SalesID}', this.value)" style="padding: 2px 4px; font-size: 11px;">
-            <option value="Confirmed" ${o.Status === 'Confirmed' ? 'selected' : ''}>Confirmed</option>
-            <option value="Pending" ${o.Status === 'Pending' ? 'selected' : ''}>Pending</option>
-            <option value="Shipped" ${o.Status === 'Shipped' ? 'selected' : ''}>Shipped</option>
-            <option value="Delivered" ${o.Status === 'Delivered' ? 'selected' : ''}>Delivered</option>
-            <option value="Cancelled" ${o.Status === 'Cancelled' ? 'selected' : ''}>Cancelled</option>
-          </select>
-        </td>
-        <td style="width: 80px; padding: 4px 6px;">
-          <div class="action-btn-group">
-            <button class="btn btn-warning btn-sm" onclick='openEditOrderModal("${o.SalesID}")'>✏️ Edit</button>
-            <button class="btn btn-success btn-sm" onclick='openVoucherModal(${JSON.stringify(o).replace(/'/g, "&apos;")})'>📸 Voucher</button>
-            <button class="btn btn-secondary btn-sm" onclick="reprintSlip('${o.SalesID}')">🖨️ Slip</button>
-          </div>
-        </td>
-      </tr>
-    `;
-  }).join('');
-}
 
   async function quickUpdateOrderPaidStatus(salesId, newPaidStatus) {
     const orders = await dbGetAll("orders");
@@ -3022,11 +3052,28 @@
     document.getElementById('eoCustId').value = o.CustomerID || '';
     document.getElementById('eoCustName').value = o.CustomerName || '';
     document.getElementById('eoPhone').value = o.Phone || '';
-    document.getElementById('eoDeliveryName').value = o.DeliveryName || (appSettings.DeliveryServices ? appSettings.DeliveryServices[0] : 'Royal');
+
+    // Dynamic Courier Handling for Edit Modal
+    const eoDelivery = document.getElementById('eoDeliveryName');
+    const deliveryVal = o.DeliveryName || (appSettings.DeliveryServices ? appSettings.DeliveryServices[0] : 'Royal');
+    if (![...eoDelivery.options].some(opt => opt.value === deliveryVal)) {
+      eoDelivery.add(new Option(deliveryVal, deliveryVal));
+    }
+    eoDelivery.value = deliveryVal;
+
     document.getElementById('eoTownship').value = o.TownshipCity || '';
     document.getElementById('eoAddress').value = o.DeliveryAddress || '';
     document.getElementById('eoPaymentType').value = o.PaymentType || 'KPay';
-    document.getElementById('eoPaidStatus').value = o.PaidStatus || 'not received yet';
+
+    // Dynamic Paid Status Handling for Edit Modal
+    const eoPaid = document.getElementById('eoPaidStatus');
+    const defaultPaidStatus = (appSettings.PaidStatuses && appSettings.PaidStatuses.length > 0) ? appSettings.PaidStatuses[0] : 'paid';
+    const paidVal = o.PaidStatus || defaultPaidStatus;
+    if (![...eoPaid.options].some(opt => opt.value === paidVal)) {
+      eoPaid.add(new Option(paidVal, paidVal));
+    }
+    eoPaid.value = paidVal;
+
     document.getElementById('eoStatus').value = o.Status || 'Confirmed';
     document.getElementById('eoRemark').value = o.Remark || '';
 
@@ -3591,7 +3638,7 @@
     document.getElementById('vDeliveryName').innerText = order.DeliveryName || 'Not assigned';
     document.getElementById('vAddress').innerText = `${order.DeliveryAddress || ''}${order.TownshipCity ? ', ' + order.TownshipCity : ''}` || 'Not specified';
     document.getElementById('vPaymentType').innerText = order.PaymentType;
-    document.getElementById('vPaidStatus').innerText = (order.PaidStatus || 'not received yet').toUpperCase();
+    document.getElementById('vPaidStatus').innerText = (order.PaidStatus || 'Unpaid').toUpperCase();
     document.getElementById('vSubtotal').innerText = `${Number(subtotal).toLocaleString()} MMK`;
     
     const vDiscRow = document.getElementById('vDiscountRow');
