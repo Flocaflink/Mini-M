@@ -2,17 +2,13 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>BabyStore Owner Operations Portal</title>
   
-  <!-- IMPORT GOOGLE FONTS FOR MYANMAR & ENGLISH -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Padauk:wght@400;700&family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
-  <link rel="apple-touch-icon" href="./logo.png">
-  <link rel="icon" type="image/png" href="./logo.png">
 
-  <!-- LIGHTWEIGHT HTML-TO-CANVAS ENGINE FOR VOUCHER SCREENSHOTS -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
   <style>
@@ -49,7 +45,6 @@
       box-shadow: 0 4px 16px rgba(0,0,0,0.08);
     }
 
-    /* Top Header */
     .header-bar {
       display: flex;
       justify-content: space-between;
@@ -69,21 +64,22 @@
       gap: 8px;
     }
 
-    /* Status Badges */
     .status-badge {
       font-size: 11px;
       font-weight: bold;
-      padding: 4px 8px;
+      padding: 3px 8px;
       border-radius: 12px;
       white-space: nowrap;
+      display: inline-block;
     }
     .badge-synced { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
     .badge-unsaved { background-color: #fff3cd; color: #856404; border: 1px solid #ffeeba; }
     .badge-stock-out { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
     .badge-stock-low { background-color: #fff3cd; color: #856404; border: 1px solid #ffeeba; }
     .badge-stock-ok { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+    .badge-paid { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+    .badge-unpaid { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
 
-    /* Navigation Tabs */
     .tab-nav { display: flex; border-bottom: 2px solid #e0e0e0; margin-bottom: 15px; overflow-x: auto; }
     .tab-btn {
       padding: 10px 18px;
@@ -102,7 +98,6 @@
     .tab-content { display: none; }
     .tab-content.active { display: block; }
 
-    /* Layout & Grids */
     .grid-pos {
       display: grid;
       grid-template-columns: 1.2fr 0.8fr;
@@ -146,7 +141,6 @@
       color: #6c757d;
     }
 
-    /* Buttons */
     .btn {
       padding: 8px 14px;
       font-weight: bold;
@@ -167,7 +161,6 @@
     .btn-warning { background: var(--warning); color: white; }
     .btn-sm { padding: 4px 8px; font-size: 11px; }
 
-    /* Filter Chips */
     .chip-group {
       display: flex;
       gap: 5px;
@@ -190,7 +183,6 @@
       border-color: var(--primary);
     }
 
-    /* Product Grid */
     .product-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
@@ -210,28 +202,11 @@
       justify-content: space-between;
       transition: transform 0.1s, box-shadow 0.1s;
     }
-    .product-card:hover {
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    }
-    .product-title {
-      font-size: 13px;
-      font-weight: bold;
-      color: #333;
-      line-height: 1.3;
-      margin-bottom: 4px;
-    }
-    .product-meta {
-      font-size: 11px;
-      color: #666;
-      margin-bottom: 4px;
-    }
-    .product-price {
-      font-weight: bold;
-      color: var(--primary);
-      font-size: 13px;
-    }
+    .product-card:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+    .product-title { font-size: 13px; font-weight: bold; color: #333; line-height: 1.3; margin-bottom: 4px; }
+    .product-meta { font-size: 11px; color: #666; margin-bottom: 4px; }
+    .product-price { font-weight: bold; color: var(--primary); font-size: 13px; }
 
-    /* Cart Table */
     .cart-table {
       width: 100%;
       border-collapse: collapse;
@@ -254,7 +229,6 @@
       cursor: pointer;
     }
 
-    /* Discount Container */
     .discount-container {
       background: #fff8f2;
       border: 1px solid var(--primary-border);
@@ -263,7 +237,6 @@
       margin-top: 10px;
     }
 
-    /* Data Tables */
     table.data-table {
       width: 100%;
       border-collapse: collapse;
@@ -275,14 +248,9 @@
       padding: 6px 8px;
       text-align: left;
     }
-    table.data-table th {
-      background-color: #f1f3f5;
-      color: #333;
-      white-space: nowrap;
-    }
+    table.data-table th { background-color: #f1f3f5; color: #333; white-space: nowrap; }
     tr.clickable:hover { background-color: #fff8f2; cursor: pointer; }
 
-    /* Modals */
     .modal-overlay {
       display: none;
       position: fixed;
@@ -321,7 +289,6 @@
       margin-top: 10px;
     }
 
-    /* Matrix Table Layout */
     .matrix-checkbox-grid {
       display: flex;
       flex-wrap: wrap;
@@ -342,10 +309,7 @@
       cursor: pointer;
       user-select: none;
     }
-    .matrix-checkbox-item input {
-      width: auto;
-      margin: 0;
-    }
+    .matrix-checkbox-item input { width: auto; margin: 0; }
     .matrix-input-cell {
       width: 55px;
       padding: 4px;
@@ -354,7 +318,6 @@
       font-weight: bold;
     }
 
-    /* Live Search Results inside Order Edit Modal */
     .quick-add-search-box {
       background: #fff;
       border: 1px solid #ddd;
@@ -372,14 +335,9 @@
       border-bottom: 1px solid #f0f0f0;
       font-size: 11px;
     }
-    .quick-add-item:hover {
-      background: #fff3eb;
-    }
+    .quick-add-item:hover { background: #fff3eb; }
 
-    /* Floating Customer Dropdown */
-    .customer-suggestion-dropdown {
-      position: relative;
-    }
+    .customer-suggestion-dropdown { position: relative; }
     .suggestion-popup {
       position: absolute;
       top: 100%;
@@ -398,11 +356,8 @@
       padding: 8px 12px;
       border-bottom: 1px solid #f5f5f5;
       cursor: pointer;
-      transition: background 0.15s ease;
     }
-    .suggestion-item:hover {
-      background-color: var(--primary-light);
-    }
+    .suggestion-item:hover { background-color: var(--primary-light); }
     .suggestion-name {
       font-weight: bold;
       font-size: 12px;
@@ -410,13 +365,8 @@
       display: flex;
       justify-content: space-between;
     }
-    .suggestion-last-order {
-      font-size: 11px;
-      color: #666;
-      margin-top: 2px;
-    }
+    .suggestion-last-order { font-size: 11px; color: #666; margin-top: 2px; }
 
-    /* Voucher Formatting */
     .voucher-capture-wrapper {
       padding: 10px;
       display: flex;
@@ -461,7 +411,6 @@
       .receipt-table th, .receipt-table td { padding: 4px 0; border: none; text-align: left; }
     }
 
-    /* Analytics Dashboard Styles */
     .metric-cards-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -483,16 +432,8 @@
       letter-spacing: 0.5px;
       margin-bottom: 6px;
     }
-    .metric-card-value {
-      font-size: 20px;
-      font-weight: bold;
-      color: var(--primary);
-    }
-    .metric-card-sub {
-      font-size: 11px;
-      color: #888;
-      margin-top: 4px;
-    }
+    .metric-card-value { font-size: 20px; font-weight: bold; color: var(--primary); }
+    .metric-card-sub { font-size: 11px; color: #888; margin-top: 4px; }
 
     .analytics-grid-two {
       display: grid;
@@ -504,51 +445,28 @@
       .analytics-grid-two { grid-template-columns: 1fr; }
     }
 
-    .progress-bar-container {
-      margin-bottom: 10px;
-    }
-    .progress-bar-label {
-      display: flex;
-      justify-content: space-between;
-      font-size: 12px;
-      font-weight: 600;
-      margin-bottom: 3px;
-    }
-    .progress-bar-track {
-      background: #edf2f7;
-      height: 14px;
-      border-radius: 7px;
-      overflow: hidden;
-      display: flex;
-    }
-    .progress-bar-fill {
-      background: var(--primary);
-      height: 100%;
-      transition: width 0.3s ease;
-    }
+    .progress-bar-container { margin-bottom: 10px; }
+    .progress-bar-label { display: flex; justify-content: space-between; font-size: 12px; font-weight: 600; margin-bottom: 3px; }
+    .progress-bar-track { background: #edf2f7; height: 14px; border-radius: 7px; overflow: hidden; display: flex; }
+    .progress-bar-fill { background: var(--primary); height: 100%; transition: width 0.3s ease; }
   </style>
 </head>
 <body>
 
 <div class="app-container">
-  <!-- Top Header with Synced Controls, Dynamic Backend URL & Backup Tools -->
   <div class="header-bar">
-    <h2 class="brand-title" style="display: flex; align-items: center; gap: 10px;">
-     <img src="./logo.png" alt="Mini-M Logo" style="height: 64px; max-width: 180px; object-fit: contain; border-radius: 6px;">
-     <span style="font-size: 18px; font-weight: bold;">Owner Operations Portal</span>
-    </h2>
+    <h2 class="brand-title">🧸 Mini-M Baby Clothing Store Owner Portal</h2>
     <div class="sync-controls" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
       <span id="syncStatus" class="status-badge badge-synced">⚡ All Synced</span>
       <button class="btn btn-secondary btn-sm" onclick="downloadFromGoogleSheets()">📥 Download Sheets</button>
       <button id="btnUploadSheets" class="btn btn-primary btn-sm" onclick="uploadToGoogleSheets()">☁️ Upload Sheets</button>
-      <button class="btn btn-sm" style="background: #2b6cb0; color: white;" onclick="openBackendSetupModal()" title="Configure Google Apps Script Web App URL">⚙️ Backend URL</button>
+      <button class="btn btn-sm" style="background: #4a5568; color: white;" onclick="openGasConfigModal()" title="Configure Google Apps Script Web App URL">⚙️ Cloud URL</button>
       <button class="btn btn-sm" style="background: #4a5568; color: white;" onclick="exportLocalJsonBackup()" title="Download offline JSON backup">💾 JSON Backup</button>
       <button class="btn btn-sm" style="background: #718096; color: white;" onclick="document.getElementById('jsonFileInput').click()" title="Restore from local JSON file">📂 Restore</button>
       <input type="file" id="jsonFileInput" style="display: none;" accept=".json" onchange="importLocalJsonBackup(event)">
     </div>
   </div>
 
-  <!-- Navigation Tabs -->
   <div class="tab-nav">
     <button class="tab-btn active" onclick="switchTab('posTab')">🛒 POS & Fast Intake</button>
     <button class="tab-btn" onclick="switchTab('inventoryTab')">📦 Inventory & Stock</button>
@@ -557,20 +475,14 @@
     <button class="tab-btn" onclick="switchTab('analyticsTab')">📊 Analytics</button>
   </div>
 
-  <!-- ========================================================================= -->
-  <!-- TAB 1: POS & FAST ORDER INTAKE -->
-  <!-- ========================================================================= -->
   <div id="posTab" class="tab-content active">
     <div class="grid-pos">
-      
-      <!-- Left Column: Product Catalog & Multi-Attribute Filters -->
       <div class="card-panel">
         <div style="display: flex; gap: 8px;">
           <input type="text" id="posSearchInput" placeholder="🔍 Search SKU, Title, Color, Type, Remark..." oninput="filterPosCatalog()">
           <button class="btn btn-secondary btn-sm" onclick="resetPosFilters()">Reset</button>
         </div>
 
-        <!-- Sex Category Filters -->
         <label>Sex Filter:</label>
         <div class="chip-group" id="posSexChips">
           <div class="chip active" onclick="setPosSex('All', this)">All</div>
@@ -579,21 +491,17 @@
           <div class="chip" onclick="setPosSex('Female', this)">Female</div>
         </div>
 
-        <!-- Type Category Filters (Dynamically Rendered from Settings) -->
         <label>Type Category Filter:</label>
         <div class="chip-group" id="posTypeChips"></div>
 
-        <!-- Size Filters (Dynamically Rendered from Settings) -->
         <label>Size Filter:</label>
         <div class="chip-group" id="posSizeChips"></div>
 
-        <!-- Product Cards Grid -->
         <div class="product-grid" id="posProductGrid">
           <div style="grid-column: 1/-1; text-align: center; color: #888; padding: 20px;">No in-stock products found.</div>
         </div>
       </div>
 
-      <!-- Right Column: Customer Info & Order Cart Drawer -->
       <div class="card-panel">
         <div style="display: flex; justify-content: space-between; align-items: center;">
           <h3 style="margin: 0; color: var(--primary); font-size: 15px;">📝 Order & Customer Details</h3>
@@ -605,7 +513,6 @@
 
         <input type="hidden" id="custBoundId">
 
-        <!-- Customer Name Input with Option A Dropdown Suggestions -->
         <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 8px;">
           <div class="customer-suggestion-dropdown">
             <label>Customer Name <span style="color:red;">*</span>:</label>
@@ -625,9 +532,16 @@
 
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
           <div>
+            <label>Delivery Courier (Sheets Controlled):</label>
+            <select id="posDeliveryName"></select>
+          </div>
+          <div>
             <label>Township / City (Optional):</label>
             <input type="text" id="custTownship" placeholder="e.g. Kamayut, Yangon">
           </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr; gap: 8px;">
           <div>
             <label>Customer Remark (Optional):</label>
             <input type="text" id="custRemark" placeholder="e.g. Prefers fast delivery, KPay">
@@ -637,7 +551,6 @@
         <label>Delivery Address (Optional):</label>
         <textarea id="custAddress" style="height: 45px;" placeholder="Street / House No. / Quarter"></textarea>
 
-        <!-- Cart Items Table -->
         <div style="margin-top: 15px; border-top: 1px dashed #ccc; padding-top: 10px;">
           <div style="display: flex; justify-content: space-between; align-items: center;">
             <b style="font-size: 13px;">🛒 Order Items (<span id="cartCount">0</span>)</b>
@@ -658,7 +571,6 @@
             </tbody>
           </table>
 
-          <!-- DISCOUNT CONFIGURATION SECTION -->
           <div class="discount-container">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
               <b style="font-size: 12px; color: var(--primary);">🎁 Discount / Promotion:</b>
@@ -690,7 +602,6 @@
             </div>
           </div>
 
-          <!-- Total Calculation Breakdown -->
           <div style="margin-top: 10px; padding: 10px; background: #fff; border-radius: 6px; border: 1px solid #ddd; font-size: 13px;">
             <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
               <span style="color: #666;">Subtotal:</span>
@@ -707,11 +618,17 @@
           </div>
         </div>
 
-        <!-- Payment & Remarks -->
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 8px;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-top: 8px;">
           <div>
             <label>Payment Method:</label>
             <select id="orderPaymentType"></select>
+          </div>
+          <div>
+            <label>Paid Status:</label>
+            <select id="orderPaidStatus">
+              <option value="paid">paid</option>
+              <option value="not received yet">not received yet</option>
+            </select>
           </div>
           <div>
             <label>Order Status:</label>
@@ -735,9 +652,6 @@
     </div>
   </div>
 
-  <!-- ========================================================================= -->
-  <!-- TAB 2: INVENTORY & STOCK MANAGEMENT -->
-  <!-- ========================================================================= -->
   <div id="inventoryTab" class="tab-content">
     <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 10px;">
       <div style="display: flex; gap: 12px; flex: 1; max-width: 550px; align-items: center;">
@@ -779,40 +693,36 @@
     </div>
   </div>
 
-  <!-- ========================================================================= -->
-  <!-- TAB 3: ORDERS & FULFILLMENT -->
-  <!-- ========================================================================= -->
   <div id="ordersTab" class="tab-content">
-    <div style="display: flex; gap: 8px; margin-bottom: 10px;">
-      <input type="text" id="orderSearchInput" placeholder="Search Sales ID, Customer Name, or Phone..." oninput="renderOrdersTable()">
-    </div>
-
-    <div style="overflow-x: auto;">
-      <table class="data-table">
-        <thead>
-          <tr>
-            <th>Sales ID</th>
-            <th>Date</th>
-            <th>Customer</th>
-            <th>Phone</th>
-            <th>Items Summary</th>
-            <th>Discount</th>
-            <th>Total Amount</th>
-            <th>Payment</th>
-            <th>Status</th>
-            <th>Action</th>
-          </tr>
-        </thead>
-        <tbody id="ordersTableBody">
-          <tr><td colspan="10" style="text-align: center;">Loading orders...</td></tr>
-        </tbody>
-      </table>
-    </div>
+  <div style="display: flex; gap: 8px; margin-bottom: 10px;">
+    <input type="text" id="orderSearchInput" placeholder="Search Sales ID, Customer Name, Phone, Courier..." oninput="renderOrdersTable()">
   </div>
 
-  <!-- ========================================================================= -->
-  <!-- TAB 4: CUSTOMER MANAGEMENT -->
-  <!-- ========================================================================= -->
+  <div style="overflow-x: auto;">
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Sales ID</th>
+          <th>Date</th>
+          <th>Customer</th>
+          <th>Phone</th>
+          <th>Items Summary</th>
+          <th>Discount</th>
+          <th>Total Amount</th>
+          <th>Payment</th>
+          <th>Courier</th>
+          <th>Paid Status</th>
+          <th>Status</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody id="ordersTableBody">
+        <tr><td colspan="12" style="text-align: center;">Loading orders...</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
   <div id="customersTab" class="tab-content">
     <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 10px;">
       <div style="display: flex; gap: 8px; flex: 1; max-width: 400px;">
@@ -843,9 +753,6 @@
     </div>
   </div>
 
-  <!-- ========================================================================= -->
-  <!-- TAB 5: ANALYTICS & BUSINESS INTELLIGENCE DASHBOARD -->
-  <!-- ========================================================================= -->
   <div id="analyticsTab" class="tab-content">
     <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 16px; background: #fafbfc; border: 1px solid var(--border); padding: 10px; border-radius: 8px;">
       <div class="chip-group" id="analyticsPeriodChips" style="margin: 0;">
@@ -936,30 +843,6 @@
   </div>
 </div>
 
-<!-- ========================================================================= -->
-<!-- MODAL: BACKEND URL SETUP (OPTION A) -->
-<!-- ========================================================================= -->
-<div id="backendSetupModal" class="modal-overlay">
-  <div class="modal-card" style="max-width: 520px;">
-    <div class="modal-header">
-      <h3>⚙️ Connect Google Sheets Backend</h3>
-      <button class="close-btn" onclick="closeModal('backendSetupModal')">&times;</button>
-    </div>
-    <p style="font-size: 12px; color: #666; margin: 0 0 10px 0;">
-      Paste your Google Apps Script Web App execution URL below. This endpoint is saved locally in your browser and is never exposed in the source code.
-    </p>
-    <label>Google Apps Script Web App URL:</label>
-    <input type="url" id="cfgGasUrl" placeholder="https://script.google.com/macros/s/.../exec">
-    <div style="display: flex; gap: 8px; margin-top: 15px;">
-      <button class="btn btn-primary" style="flex: 1;" onclick="saveBackendSetup()">💾 Save Connection</button>
-      <button class="btn" style="background: #ccc;" onclick="closeModal('backendSetupModal')">Cancel</button>
-    </div>
-  </div>
-</div>
-
-<!-- ========================================================================= -->
-<!-- MODAL: BULK MATRIX INTAKE / NEW SHIPMENT GENERATOR -->
-<!-- ========================================================================= -->
 <div id="bulkMatrixModal" class="modal-overlay">
   <div class="modal-card" style="max-width: 820px;">
     <div class="modal-header">
@@ -967,7 +850,6 @@
       <button class="close-btn" onclick="closeModal('bulkMatrixModal')">&times;</button>
     </div>
 
-    <!-- Base Item Information -->
     <div style="background:#f8f9fa; border:1px solid var(--border); padding:10px; border-radius:6px;">
       <div style="font-weight:bold; font-size:12px; color:var(--primary); margin-bottom:4px;">1. Base Product Information (Shared across variants)</div>
       <div style="display: grid; grid-template-columns: 1fr 1.5fr 1fr 1fr; gap: 8px;">
@@ -1009,7 +891,6 @@
       </div>
     </div>
 
-    <!-- Shared Pricing Engine -->
     <div class="calc-box" style="margin-top: 10px;">
       <div style="font-weight:bold; font-size:12px; color:#0d5c75; margin-bottom:4px;">2. Shared Cost & Pricing Engine</div>
       <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 6px;">
@@ -1051,7 +932,6 @@
       </div>
     </div>
 
-    <!-- Dimension Selectors -->
     <div style="margin-top: 10px;">
       <label>3. Select Sizes to Include in Matrix:</label>
       <div id="bmSizeCheckboxGrid" class="matrix-checkbox-grid"></div>
@@ -1060,7 +940,6 @@
       <div id="bmColorCheckboxGrid" class="matrix-checkbox-grid"></div>
     </div>
 
-    <!-- Matrix Fill Controls & Real-Time Counter -->
     <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 12px; flex-wrap: wrap; gap: 8px; background: #fff8f2; padding: 8px 10px; border-radius: 6px; border: 1px solid var(--primary-border);">
       <div style="display: flex; align-items: center; gap: 6px;">
         <span style="font-size: 11px; font-weight: bold;">⚡ Fast Action:</span>
@@ -1073,7 +952,6 @@
       </div>
     </div>
 
-    <!-- Live Matrix Table Grid -->
     <div style="overflow-x: auto; max-height: 240px; margin-top: 10px; border: 1px solid #ddd; border-radius: 6px;">
       <table class="data-table" style="margin: 0; background: white;">
         <thead id="bmMatrixThead"></thead>
@@ -1083,7 +961,6 @@
       </table>
     </div>
 
-    <!-- Action Buttons -->
     <div style="display: flex; gap: 8px; margin-top: 15px;">
       <button class="btn btn-primary" style="flex: 1;" onclick="submitBulkMatrixIntake()">💾 Generate & Save All Variant SKUs</button>
       <button class="btn" style="background:#ccc;" onclick="closeModal('bulkMatrixModal')">Cancel</button>
@@ -1091,9 +968,6 @@
   </div>
 </div>
 
-<!-- ========================================================================= -->
-<!-- MODAL: CUSTOMER PROFILE & PURCHASE HISTORY DRAWER -->
-<!-- ========================================================================= -->
 <div id="customerModal" class="modal-overlay">
   <div class="modal-card" style="max-width: 780px;">
     <div class="modal-header">
@@ -1160,9 +1034,6 @@
   </div>
 </div>
 
-<!-- ========================================================================= -->
-<!-- MODAL: ADD / EDIT PRODUCT SKU (SINGLE VARIANT) -->
-<!-- ========================================================================= -->
 <div id="productModal" class="modal-overlay">
   <div class="modal-card">
     <div class="modal-header">
@@ -1288,9 +1159,6 @@
   </div>
 </div>
 
-<!-- ========================================================================= -->
-<!-- MODAL: EDIT EXISTING ORDER WITH LIVE PRODUCT PICKER & RECONCILIATION -->
-<!-- ========================================================================= -->
 <div id="editOrderModal" class="modal-overlay">
   <div class="modal-card" style="max-width: 720px;">
     <div class="modal-header">
@@ -1314,12 +1182,26 @@
 
     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
       <div>
+        <label>Delivery Courier (Sheets Controlled):</label>
+        <select id="eoDeliveryName"></select>
+      </div>
+      <div>
         <label>Township / City (Optional):</label>
         <input type="text" id="eoTownship">
       </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
       <div>
         <label>Payment Method:</label>
         <select id="eoPaymentType"></select>
+      </div>
+      <div>
+        <label>Paid Status:</label>
+        <select id="eoPaidStatus">
+          <option value="paid">paid</option>
+          <option value="not received yet">not received yet</option>
+        </select>
       </div>
     </div>
 
@@ -1411,9 +1293,30 @@
   </div>
 </div>
 
-<!-- ========================================================================= -->
-<!-- MODAL: DIGITAL SCREENSHOT VOUCHER PREVIEW -->
-<!-- ========================================================================= -->
+<div id="gasConfigModal" class="modal-overlay">
+  <div class="modal-card" style="max-width: 550px;">
+    <div class="modal-header">
+      <h3>⚙️ Google Apps Script Endpoint Config</h3>
+      <button class="close-btn" onclick="closeModal('gasConfigModal')">&times;</button>
+    </div>
+    
+    <div style="font-size: 12px; color: #555; margin-bottom: 12px;">
+      Enter your private Google Apps Script Web App URL. It is stored securely in your local browser storage (<code>localStorage</code>) and will not be leaked to public repositories.
+    </div>
+
+    <label>Google Apps Script Web App URL (/exec):</label>
+    <input type="url" id="gasEndpointInput" placeholder="https://script.google.com/macros/s/.../exec" style="margin-bottom: 10px;">
+
+    <div id="gasConfigStatus" style="font-size: 11px; margin-bottom: 10px; font-weight: bold;"></div>
+
+    <div style="display: flex; gap: 8px;">
+      <button class="btn btn-primary" style="flex: 1;" onclick="saveGasEndpointUrl()">💾 Save Endpoint</button>
+      <button class="btn btn-secondary" onclick="testGasEndpointConnection()">🧪 Test Connection</button>
+      <button class="btn" style="background:#ccc;" onclick="closeModal('gasConfigModal')">Close</button>
+    </div>
+  </div>
+</div>
+
 <div id="voucherModal" class="modal-overlay">
   <div class="modal-card">
     <div class="modal-header">
@@ -1424,10 +1327,7 @@
     <div class="voucher-capture-wrapper">
       <div id="voucherCardToCapture" class="voucher-card">
         <div class="voucher-header">
-          <div class="voucher-header" style="text-align: center;">
-           <img src="./logo.png" alt="Mini-M Logo" style="height: 65px; max-width: 200px; object-fit: contain; margin-bottom: 4px;">
-           <div class="voucher-sub">Official Sales Order Receipt</div>
-          </div>
+          <div class="voucher-logo">🧸 Mini-M BABY CLOTHING STORE</div>
           <div class="voucher-sub">Official Sales Order Receipt</div>
         </div>
 
@@ -1446,6 +1346,10 @@
         <div class="voucher-row">
           <span><b>Phone:</b></span>
           <span id="vPhone"></span>
+        </div>
+        <div class="voucher-row">
+          <span><b>Delivery Courier:</b></span>
+          <span id="vDeliveryName" style="font-weight:bold; color:var(--primary);"></span>
         </div>
         <div class="voucher-row" style="flex-direction: column; gap: 2px;">
           <span><b>Delivery Address:</b></span>
@@ -1481,6 +1385,10 @@
             <span id="vPaymentType" style="font-weight:bold;"></span>
           </div>
           <div class="voucher-row" style="font-size: 11px; color: #555;">
+            <span>Payment Status:</span>
+            <span id="vPaidStatus" style="font-weight:bold;"></span>
+          </div>
+          <div class="voucher-row" style="font-size: 11px; color: #555;">
             <span>Remark / Notes:</span>
             <span id="vRemark"></span>
           </div>
@@ -1503,17 +1411,14 @@
   </div>
 </div>
 
-<!-- TEMPLATE: PRINTABLE SLIP FALLBACK -->
 <div id="printReceiptSlip">
-  <div class="receipt-title">
-   <img src="./logo.png" alt="Mini-M Logo" style="height: 48px; max-width: 160px; object-fit: contain; border-radius: 6px;">
-   <span style="font-size: 18px; font-weight: bold;">Baby Clothing Store</span>
-  </div>
+  <div class="receipt-title">🧸 BABY STORE</div>
   <div style="text-align: center; font-size: 10px;">Order Sales Slip</div>
   <div class="receipt-divider"></div>
   <div><b>Sales ID:</b> <span id="slipSalesId"></span></div>
   <div><b>Date:</b> <span id="slipDate"></span></div>
   <div><b>Customer:</b> <span id="slipCustName"></span> (<span id="slipPhone"></span>)</div>
+  <div><b>Courier:</b> <span id="slipDeliveryName"></span></div>
   <div><b>Address:</b> <span id="slipAddress"></span></div>
   <div class="receipt-divider"></div>
   <table class="receipt-table">
@@ -1539,17 +1444,13 @@
     <span>Total Payable:</span>
     <span id="slipTotalAmount"></span>
   </div>
-  <div style="margin-top: 4px;"><b>Payment:</b> <span id="slipPaymentType"></span></div>
+  <div style="margin-top: 4px;"><b>Payment:</b> <span id="slipPaymentType"></span> (<span id="slipPaidStatus"></span>)</div>
   <div style="text-align: center; margin-top: 15px; font-style: italic; font-size: 10px;">
     Thank you for shopping with us!
   </div>
 </div>
 
-<!-- ========================================================================= -->
-<!-- JAVASCRIPT: INDEXEDDB + DYNAMIC SETTINGS + BULK MATRIX ENGINE -->
-<!-- ========================================================================= -->
 <script>
-  // --- 1. INDEXEDDB SETUP (VERSION 5) ---
   let db;
   const DB_NAME = "BabyStoreOwnerDB";
   const DB_VERSION = 5;
@@ -1562,7 +1463,9 @@
     ProductTypes: ["Dress", "Pant", "Top", "T shirt", "Shirt", "Cap", "Set", "Boiler", "Romper", "Accessories"],
     ProductSizes: ["73", "80", "90", "100", "110", "120", "130", "140", "150"],
     ProductColors: ["ပန်း", "ဝါ", "ပြာ", "ခဲ", "ဖြူ", "နီ", "စိမ်း", "နက်", "လိမ္မော်", "ခရမ်း", "ကြား", "ပွင့်"],
-    PaymentMethods: ["KPay", "WavePay", "COD", "AYA Pay"]
+    PaymentMethods: ["KPay", "WavePay", "COD", "AYA Pay"],
+    DeliveryServices: ["Royal", "Wepots", "Ninja Van", "Safe", "self"],
+    PaidStatuses: ["paid", "not received yet"]
   };
 
   function initDatabase() {
@@ -1624,7 +1527,6 @@
     });
   }
 
-  // --- 2. GLOBAL STATE ---
   let currentCart = [];
   let activeSex = "All";
   let activeType = "All";
@@ -1638,7 +1540,6 @@
   let currentModalCustomer = null;
   let activeAnalyticsPeriod = "today";
 
-  // --- 3. LOAD & RENDER DYNAMIC SETTINGS UI ---
   async function loadSettings() {
     try {
       const saved = await dbGetAll("settings");
@@ -1654,7 +1555,6 @@
   }
 
   function applyDynamicSettingsToUI() {
-    // 1. Render POS Type Filter Chips
     const typeChips = document.getElementById("posTypeChips");
     if (typeChips) {
       const types = ["All", ...(appSettings.ProductTypes || [])];
@@ -1665,7 +1565,6 @@
       `).join('');
     }
 
-    // 2. Render POS Size Filter Chips
     const sizeChips = document.getElementById("posSizeChips");
     if (sizeChips) {
       const sizes = ["All", ...(appSettings.ProductSizes || [])];
@@ -1676,7 +1575,6 @@
       `).join('');
     }
 
-    // 3. Render Product Modal Type Select
     const prodTypeSelect = document.getElementById("mProdTypeSelect");
     if (prodTypeSelect) {
       const curVal = prodTypeSelect.value;
@@ -1688,7 +1586,6 @@
       }
     }
 
-    // 4. Render Product Modal Size Select
     const prodSizeSelect = document.getElementById("mProdSizeSelect");
     if (prodSizeSelect) {
       const curVal = prodSizeSelect.value;
@@ -1700,7 +1597,6 @@
       }
     }
 
-    // 5. Render Product Modal Color Select
     const prodColorSelect = document.getElementById("mProdColorSelect");
     if (prodColorSelect) {
       const curVal = prodColorSelect.value;
@@ -1712,13 +1608,11 @@
       }
     }
 
-    // 6. Render Bulk Matrix Modal Type Select
     const bmType = document.getElementById("bmType");
     if (bmType) {
       bmType.innerHTML = (appSettings.ProductTypes || []).map(t => `<option value="${t}">${t}</option>`).join('');
     }
 
-    // 7. Render POS and Edit Order Payment Selects
     const paymentMethods = appSettings.PaymentMethods || ["KPay", "WavePay", "COD", "AYA Pay"];
     const posPay = document.getElementById("orderPaymentType");
     if (posPay) {
@@ -1733,7 +1627,20 @@
       if (curVal && [...eoPay.options].some(o => o.value === curVal)) eoPay.value = curVal;
     }
 
-    // 8. Update Pricing Labels
+    const deliveryServices = appSettings.DeliveryServices || ["Royal", "Wepots", "Ninja Van", "Safe", "self"];
+    const posDelivery = document.getElementById("posDeliveryName");
+    if (posDelivery) {
+      const curVal = posDelivery.value;
+      posDelivery.innerHTML = deliveryServices.map(d => `<option value="${d}">${d}</option>`).join('');
+      if (curVal && [...posDelivery.options].some(o => o.value === curVal)) posDelivery.value = curVal;
+    }
+    const eoDelivery = document.getElementById("eoDeliveryName");
+    if (eoDelivery) {
+      const curVal = eoDelivery.value;
+      eoDelivery.innerHTML = deliveryServices.map(d => `<option value="${d}">${d}</option>`).join('');
+      if (curVal && [...eoDelivery.options].some(o => o.value === curVal)) eoDelivery.value = curVal;
+    }
+
     const regMargin = appSettings.RegularProfitMargin || 33;
     const wsMargin = appSettings.WholesaleProfitMargin || 15;
     const lblNormal = document.getElementById("lblNormalPriceCalc");
@@ -1744,7 +1651,6 @@
     if (lblBmNormal) lblBmNormal.innerText = `Normal (+${regMargin}%):`;
   }
 
-  // --- 4. DIRTY TRACKING & SYNC INDICATOR ---
   async function updateUnsavedChangesBadge() {
     try {
       const [products, orders, customers] = await Promise.all([
@@ -1775,7 +1681,6 @@
     }
   }
 
-  // --- 5. SEQUENTIAL ID GENERATORS ---
   async function generateNextSalesId() {
     const orders = await dbGetAll("orders");
     let maxNum = 0;
@@ -1821,13 +1726,11 @@
     return "C" + String(maxNum + 1).padStart(6, "0");
   }
 
-  // --- 6. HELPER: ROUND UP TO NEAREST THOUSAND ---
   function roundUpToThousand(num) {
     if (!num || num <= 0) return 0;
     return Math.ceil(num / 1000) * 1000;
   }
 
-  // --- 7. PAGE INITIALIZATION ---
   window.addEventListener("DOMContentLoaded", async () => {
     await initDatabase();
     await loadSettings();
@@ -1869,7 +1772,6 @@
     document.getElementById(tabId).classList.add('active');
   }
 
-  // --- 8. FINANCIAL PRICING CALCULATOR (SINGLE VARIANT) ---
   function calculatePricingEngine() {
     const buyingYuan = parseFloat(document.getElementById('mProdBuyingYuan').value) || 0;
     const supplierPct = parseFloat(document.getElementById('mProdSupplierPct').value) || 0;
@@ -1898,7 +1800,6 @@
     }
   }
 
-  // --- 9. BULK MATRIX INTAKE ENGINE ---
   async function openBulkMatrixModal() {
     const nextCode = await generateNextItemCode();
     document.getElementById('bmItemCode').value = nextCode;
@@ -1920,7 +1821,6 @@
     document.getElementById('bmWholesalePrice').value = '';
     document.getElementById('bmQuickFillQty').value = '5';
 
-    // Populate Size Checkboxes
     const sizeBox = document.getElementById('bmSizeCheckboxGrid');
     const sizes = appSettings.ProductSizes || [];
     sizeBox.innerHTML = sizes.map((s, idx) => `
@@ -1930,7 +1830,6 @@
       </label>
     `).join('');
 
-    // Populate Color Checkboxes
     const colorBox = document.getElementById('bmColorCheckboxGrid');
     const colors = appSettings.ProductColors || [];
     colorBox.innerHTML = colors.map((c, idx) => `
@@ -2154,7 +2053,6 @@
     tx.onerror = (e) => alert("Bulk generation failed: " + e.target.error);
   }
 
-  // --- 10. SINGLE VARIANT DROPDOWN & SKU LOGIC ---
   function handleTypeSelectChange() {
     const select = document.getElementById('mProdTypeSelect');
     const customInput = document.getElementById('mProdTypeCustom');
@@ -2245,7 +2143,6 @@
     document.getElementById('mProdSku').value = `${code}-${size}-${color}`;
   }
 
-  // --- 11. DISCOUNT ENGINE LOGIC ---
   function handleDiscountTypeChange() {
     const type = document.getElementById('orderDiscountType').value;
     const valInput = document.getElementById('orderDiscountVal');
@@ -2302,7 +2199,6 @@
     return { type, discountAmount, netTotal, label };
   }
 
-  // --- 12. POS FILTERS & CATALOG (HIDES ZERO-STOCK ITEMS) ---
   function setPosSex(sex, el) {
     activeSex = sex;
     document.querySelectorAll('#posSexChips .chip').forEach(c => c.classList.remove('active'));
@@ -2349,7 +2245,7 @@
       const matchSize = activeSize === "All" || String(p.Size) === activeSize;
       const searchStr = `${p.ProductID} ${p.Name_MM} ${p.ColorPattern} ${p.Type} ${p.Sex} ${p.Remark || ''}`.toLowerCase();
       const matchQuery = !query || searchStr.includes(query);
-      const matchStock = (Number(p.Stock) || 0) > 0; // Strict filter: In-stock only
+      const matchStock = (Number(p.Stock) || 0) > 0;
       return matchSex && matchType && matchSize && matchQuery && matchStock;
     });
 
@@ -2522,7 +2418,6 @@
     totalDisplay.innerText = `${disc.netTotal.toLocaleString()} MMK`;
   }
 
-  // --- 13. CUSTOMER SUGGESTIONS WITH LAST PURCHASE DETAIL ---
   let nameSuggestDebounce;
 
   async function handleCustomerNameInput() {
@@ -2626,14 +2521,15 @@
     }
   }
 
-  // --- 14. ATOMIC ORDER SUBMIT ---
   async function submitOrderIntake() {
     const name = document.getElementById('custName').value.trim();
     const phone = document.getElementById('custPhone').value.trim();
+    const deliveryName = document.getElementById('posDeliveryName').value;
     const address = document.getElementById('custAddress').value.trim();
     const township = document.getElementById('custTownship').value.trim();
     const custRemark = document.getElementById('custRemark').value.trim();
     const payment = document.getElementById('orderPaymentType').value;
+    const paidStatus = document.getElementById('orderPaidStatus').value;
     const status = document.getElementById('orderStatus').value;
     const remark = document.getElementById('orderRemark').value.trim();
     const boundId = document.getElementById('custBoundId').value;
@@ -2654,6 +2550,7 @@
       CustomerID: customerId,
       CustomerName: name,
       Phone: phone,
+      DeliveryName: deliveryName,
       DeliveryAddress: address,
       TownshipCity: township,
       ItemList: currentCart,
@@ -2663,6 +2560,7 @@
       DiscountLabel: disc.label,
       TotalAmount: disc.netTotal,
       PaymentType: payment,
+      PaidStatus: paidStatus,
       Status: status,
       Remark: remark,
       LastModified: timestamp,
@@ -2740,7 +2638,6 @@
     tx.onerror = (e) => alert("Transaction failed: " + e.target.error);
   }
 
-  // --- 15. INVENTORY MANAGEMENT TABLE (WITH OUT-OF-STOCK TOGGLE) ---
   async function renderInventoryTable() {
     const products = await dbGetAll("products");
     const query = (document.getElementById('invSearchInput')?.value || '').toLowerCase().trim();
@@ -2749,7 +2646,7 @@
 
     const filtered = products.filter(p => {
       const isAvailable = (Number(p.Stock) || 0) > 0;
-      const matchStock = showOutOfStock ? true : isAvailable; // Default hides 0 stock
+      const matchStock = showOutOfStock ? true : isAvailable;
       const str = `${p.ProductID} ${p.Name_MM} ${p.Type} ${p.Sex} ${p.Length} ${p.Size} ${p.ColorPattern} ${p.Remark || ''}`.toLowerCase();
       return matchStock && (!query || str.includes(query));
     });
@@ -2812,58 +2709,100 @@
     };
   }
 
-  // --- 16. ORDERS MANAGEMENT TABLE ---
   async function renderOrdersTable() {
-    const orders = await dbGetAll("orders");
-    const query = (document.getElementById('orderSearchInput')?.value || '').toLowerCase().trim();
-    const tbody = document.getElementById('ordersTableBody');
+  const orders = await dbGetAll("orders");
+  const query = (document.getElementById('orderSearchInput')?.value || '').toLowerCase().trim();
+  const tbody = document.getElementById('ordersTableBody');
 
-    orders.sort((a, b) => new Date(b.Date) - new Date(a.Date));
+  orders.sort((a, b) => new Date(b.Date) - new Date(a.Date));
 
-    const filtered = orders.filter(o => {
-      const str = `${o.SalesID} ${o.CustomerName} ${o.Phone || ''} ${o.Status}`.toLowerCase();
-      return !query || str.includes(query);
-    });
+  const filtered = orders.filter(o => {
+    const str = `${o.SalesID} ${o.CustomerName} ${o.Phone || ''} ${o.DeliveryName || ''} ${o.PaidStatus || ''} ${o.Status}`.toLowerCase();
+    return !query || str.includes(query);
+  });
 
-    if (filtered.length === 0) {
-      tbody.innerHTML = `<tr><td colspan="10" style="text-align: center; color:#888;">No recorded sales orders found.</td></tr>`;
-      return;
-    }
-
-    tbody.innerHTML = filtered.map(o => {
-      const items = Array.isArray(o.ItemList) ? o.ItemList : [];
-      const itemSummary = items.map(i => `${i.Name_MM} (${i.Size}) x${i.Quantity}`).join(', ');
-      const dateStr = new Date(o.Date).toLocaleDateString();
-      const discountText = o.DiscountAmount > 0 ? `<span style="color:#2e7d32; font-weight:bold;">-${Number(o.DiscountAmount).toLocaleString()}</span>` : '-';
-
-      return `
-        <tr>
-          <td><b>${o.SalesID}</b></td>
-          <td>${dateStr}</td>
-          <td><b>${o.CustomerName}</b></td>
-          <td>${o.Phone || '-'}</td>
-          <td style="max-width: 220px; font-size: 11px;">${itemSummary || '-'}</td>
-          <td>${discountText}</td>
-          <td><b>${Number(o.TotalAmount).toLocaleString()} MMK</b></td>
-          <td>${o.PaymentType}</td>
-          <td>
-            <select onchange="quickUpdateOrderStatus('${o.SalesID}', this.value)" style="padding: 2px 4px; font-size: 11px;">
-              <option value="Confirmed" ${o.Status === 'Confirmed' ? 'selected' : ''}>Confirmed</option>
-              <option value="Pending" ${o.Status === 'Pending' ? 'selected' : ''}>Pending</option>
-              <option value="Shipped" ${o.Status === 'Shipped' ? 'selected' : ''}>Shipped</option>
-              <option value="Delivered" ${o.Status === 'Delivered' ? 'selected' : ''}>Delivered</option>
-              <option value="Cancelled" ${o.Status === 'Cancelled' ? 'selected' : ''}>Cancelled</option>
-            </select>
-          </td>
-          <td style="white-space:nowrap;">
-            <button class="btn btn-warning btn-sm" onclick='openEditOrderModal("${o.SalesID}")'>✏️ Edit</button>
-            <button class="btn btn-success btn-sm" onclick='openVoucherModal(${JSON.stringify(o).replace(/'/g, "&apos;")})'>📸 Voucher</button>
-            <button class="btn btn-secondary btn-sm" onclick="reprintSlip('${o.SalesID}')">🖨️ Slip</button>
-          </td>
-        </tr>
-      `;
-    }).join('');
+  if (filtered.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="12" style="text-align: center; color:#888;">No recorded sales orders found.</td></tr>`;
+    return;
   }
+
+  const deliveryServices = appSettings.DeliveryServices || ["Royal", "Wepots", "Ninja Van", "Safe", "self"];
+
+  tbody.innerHTML = filtered.map(o => {
+    const items = Array.isArray(o.ItemList) ? o.ItemList : [];
+    const itemSummary = items.map(i => `${i.Name_MM} (${i.Size}) x${i.Quantity}`).join(', ');
+    const dateStr = new Date(o.Date).toLocaleDateString();
+    const discountText = o.DiscountAmount > 0 ? `<span style="color:#2e7d32; font-weight:bold;">-${Number(o.DiscountAmount).toLocaleString()}</span>` : '-';
+    const paidStatusVal = o.PaidStatus || 'not received yet';
+    const currentCourier = o.DeliveryName || deliveryServices[0];
+
+    const courierOptions = deliveryServices.map(d => 
+      `<option value="${d}" ${d === currentCourier ? 'selected' : ''}>${d}</option>`
+    ).join('');
+
+    return `
+      <tr>
+        <td><b>${o.SalesID}</b></td>
+        <td>${dateStr}</td>
+        <td><b>${o.CustomerName}</b></td>
+        <td>${o.Phone || '-'}</td>
+        <td style="max-width: 200px; font-size: 11px;">${itemSummary || '-'}</td>
+        <td>${discountText}</td>
+        <td><b>${Number(o.TotalAmount).toLocaleString()} MMK</b></td>
+        <td>${o.PaymentType}</td>
+        <td>
+          <select onchange="quickUpdateOrderCourier('${o.SalesID}', this.value)" style="padding: 2px 4px; font-size: 11px; font-weight:bold;">
+            ${courierOptions}
+          </select>
+        </td>
+        <td>
+          <select onchange="quickUpdateOrderPaidStatus('${o.SalesID}', this.value)" style="padding: 2px 4px; font-size: 11px; font-weight:bold; color: ${paidStatusVal === 'paid' ? '#155724' : '#721c24'};">
+            <option value="paid" ${paidStatusVal === 'paid' ? 'selected' : ''}>paid</option>
+            <option value="not received yet" ${paidStatusVal === 'not received yet' ? 'selected' : ''}>not received yet</option>
+          </select>
+        </td>
+        <td>
+          <select onchange="quickUpdateOrderStatus('${o.SalesID}', this.value)" style="padding: 2px 4px; font-size: 11px;">
+            <option value="Confirmed" ${o.Status === 'Confirmed' ? 'selected' : ''}>Confirmed</option>
+            <option value="Pending" ${o.Status === 'Pending' ? 'selected' : ''}>Pending</option>
+            <option value="Shipped" ${o.Status === 'Shipped' ? 'selected' : ''}>Shipped</option>
+            <option value="Delivered" ${o.Status === 'Delivered' ? 'selected' : ''}>Delivered</option>
+            <option value="Cancelled" ${o.Status === 'Cancelled' ? 'selected' : ''}>Cancelled</option>
+          </select>
+        </td>
+        <td style="white-space:nowrap;">
+          <button class="btn btn-warning btn-sm" onclick='openEditOrderModal("${o.SalesID}")'>✏️ Edit</button>
+          <button class="btn btn-success btn-sm" onclick='openVoucherModal(${JSON.stringify(o).replace(/'/g, "&apos;")})'>📸 Voucher</button>
+          <button class="btn btn-secondary btn-sm" onclick="reprintSlip('${o.SalesID}')">🖨️ Slip</button>
+        </td>
+      </tr>
+    `;
+  }).join('');
+}
+
+  async function quickUpdateOrderPaidStatus(salesId, newPaidStatus) {
+    const orders = await dbGetAll("orders");
+    const o = orders.find(x => x.SalesID === salesId);
+    if (!o) return;
+
+    o.PaidStatus = newPaidStatus;
+    o.LastModified = new Date().toISOString();
+    o._syncStatus = "pending_upload";
+    await dbPut("orders", o);
+    renderOrdersTable();
+  }
+
+  async function quickUpdateOrderCourier(salesId, newCourier) {
+  const orders = await dbGetAll("orders");
+  const o = orders.find(x => x.SalesID === salesId);
+  if (!o) return;
+
+  o.DeliveryName = newCourier;
+  o.LastModified = new Date().toISOString();
+  o._syncStatus = "pending_upload";
+  await dbPut("orders", o);
+  renderOrdersTable();
+}
 
   async function quickUpdateOrderStatus(salesId, newStatus) {
     const orders = await dbGetAll("orders");
@@ -2897,7 +2836,6 @@
     renderAnalyticsDashboard();
   }
 
-  // --- 17. CUSTOMERS MANAGEMENT TABLE ---
   async function renderCustomersTable() {
     const customers = await dbGetAll("customers");
     const orders = await dbGetAll("orders");
@@ -2947,7 +2885,6 @@
     }).join('');
   }
 
-  // --- 18. CUSTOMER MODAL VIEW & PREVIOUS PURCHASES DRAWER ---
   async function openCustomerModal(customerId) {
     const customers = await dbGetAll("customers");
     const orders = await dbGetAll("orders");
@@ -3053,7 +2990,6 @@
     switchTab('posTab');
   }
 
-  // --- 19. EDIT EXISTING ORDER LOGIC ---
   async function openEditOrderModal(salesId) {
     const orders = await dbGetAll("orders");
     const o = orders.find(x => x.SalesID === salesId);
@@ -3067,9 +3003,11 @@
     document.getElementById('eoCustId').value = o.CustomerID || '';
     document.getElementById('eoCustName').value = o.CustomerName || '';
     document.getElementById('eoPhone').value = o.Phone || '';
+    document.getElementById('eoDeliveryName').value = o.DeliveryName || (appSettings.DeliveryServices ? appSettings.DeliveryServices[0] : 'Royal');
     document.getElementById('eoTownship').value = o.TownshipCity || '';
     document.getElementById('eoAddress').value = o.DeliveryAddress || '';
     document.getElementById('eoPaymentType').value = o.PaymentType || 'KPay';
+    document.getElementById('eoPaidStatus').value = o.PaidStatus || 'not received yet';
     document.getElementById('eoStatus').value = o.Status || 'Confirmed';
     document.getElementById('eoRemark').value = o.Remark || '';
 
@@ -3269,15 +3207,16 @@
     document.getElementById('eoTotalDisplay').innerText = `${netTotal.toLocaleString()} MMK`;
   }
 
-  // --- 20. SAVE EDITED ORDER ---
   async function saveEditedOrder() {
     const salesId = document.getElementById('eoSalesId').value;
     const custId = document.getElementById('eoCustId').value;
     const name = document.getElementById('eoCustName').value.trim();
     const phone = document.getElementById('eoPhone').value.trim();
+    const deliveryName = document.getElementById('eoDeliveryName').value;
     const township = document.getElementById('eoTownship').value.trim();
     const address = document.getElementById('eoAddress').value.trim();
     const payment = document.getElementById('eoPaymentType').value;
+    const paidStatus = document.getElementById('eoPaidStatus').value;
     const newStatus = document.getElementById('eoStatus').value;
     const remark = document.getElementById('eoRemark').value.trim();
 
@@ -3314,9 +3253,11 @@
       CustomerID: custId || editingOrderOriginal.CustomerID,
       CustomerName: name,
       Phone: phone,
+      DeliveryName: deliveryName,
       TownshipCity: township,
       DeliveryAddress: address,
       PaymentType: payment,
+      PaidStatus: paidStatus,
       Status: newStatus,
       Remark: remark,
       ItemList: editingOrderItems,
@@ -3436,7 +3377,6 @@
     }
   }
 
-  // --- 21. SINGLE VARIANT PRODUCT MODAL LOGIC ---
   async function openNewProductModal() {
     isEditMode = false;
     document.getElementById('productModalTitle').innerText = "➕ Create Product SKU & Cost Calculator";
@@ -3615,7 +3555,6 @@
     updateUnsavedChangesBadge();
   }
 
-  // --- 22. VOUCHER SCREENSHOT ENGINE ---
   function openVoucherModal(order) {
     if (!order) return alert("Please select or complete an order first.");
     
@@ -3630,8 +3569,10 @@
     document.getElementById('vDate').innerText = new Date(order.Date).toLocaleString();
     document.getElementById('vCustName').innerText = order.CustomerName;
     document.getElementById('vPhone').innerText = order.Phone || 'None';
+    document.getElementById('vDeliveryName').innerText = order.DeliveryName || 'Not assigned';
     document.getElementById('vAddress').innerText = `${order.DeliveryAddress || ''}${order.TownshipCity ? ', ' + order.TownshipCity : ''}` || 'Not specified';
     document.getElementById('vPaymentType').innerText = order.PaymentType;
+    document.getElementById('vPaidStatus').innerText = (order.PaidStatus || 'not received yet').toUpperCase();
     document.getElementById('vSubtotal').innerText = `${Number(subtotal).toLocaleString()} MMK`;
     
     const vDiscRow = document.getElementById('vDiscountRow');
@@ -3746,7 +3687,6 @@
     }
   }
 
-  // --- 23. PRINT RECEIPT SLIP ---
   function printReceipt() {
     if (!lastSavedOrder) return alert("Please complete a sale first.");
     renderReceiptSlip(lastSavedOrder);
@@ -3766,8 +3706,10 @@
     document.getElementById('slipDate').innerText = new Date(o.Date).toLocaleString();
     document.getElementById('slipCustName').innerText = o.CustomerName;
     document.getElementById('slipPhone').innerText = o.Phone || 'N/A';
+    document.getElementById('slipDeliveryName').innerText = o.DeliveryName || 'Standard';
     document.getElementById('slipAddress').innerText = `${o.DeliveryAddress || ''}, ${o.TownshipCity || ''}`;
     document.getElementById('slipPaymentType').innerText = o.PaymentType;
+    document.getElementById('slipPaidStatus').innerText = (o.PaidStatus || 'not received yet').toUpperCase();
     document.getElementById('slipSubtotal').innerText = `${Number(subtotal).toLocaleString()} MMK`;
 
     const slipDiscRow = document.getElementById('slipDiscountRow');
@@ -3796,122 +3738,137 @@
     document.body.className = '';
   }
 
-  // --- 24. GOOGLE APPS SCRIPT DYNAMIC CONNECTOR & SMART SYNC ---
-  function getGasEndpointUrl() {
-    return localStorage.getItem("gas_endpoint_url") || "";
-  }
+  function openGasConfigModal() {
+  const url = localStorage.getItem("gas_endpoint_url") || "";
+  document.getElementById("gasEndpointInput").value = url;
+  document.getElementById("gasConfigStatus").innerText = "";
+  document.getElementById("gasConfigModal").style.display = "flex";
+}
 
-  function openBackendSetupModal() {
-    document.getElementById("cfgGasUrl").value = getGasEndpointUrl();
-    document.getElementById("backendSetupModal").style.display = "flex";
-  }
+function getGasEndpointUrl() {
+  return localStorage.getItem("gas_endpoint_url") || "";
+}
 
-  function saveBackendSetup() {
-    const url = document.getElementById("cfgGasUrl").value.trim();
-    if (!url || !url.startsWith("https://script.google.com/")) {
-      return alert("Please enter a valid Google Apps Script Web App URL starting with https://script.google.com/");
+function saveGasEndpointUrl() {
+  const url = document.getElementById("gasEndpointInput").value.trim();
+  localStorage.setItem("gas_endpoint_url", url);
+  document.getElementById("gasConfigStatus").innerHTML = "<span style='color:green;'>✅ Saved to local storage!</span>";
+}
+
+async function testGasEndpointConnection() {
+  const url = document.getElementById("gasEndpointInput").value.trim();
+  const status = document.getElementById("gasConfigStatus");
+  if (!url) {
+    status.innerHTML = "<span style='color:red;'>⚠️ Please enter a URL first.</span>";
+    return;
+  }
+  status.innerHTML = "⏳ Testing connection...";
+  try {
+    const res = await fetch(url);
+    const data = await res.json();
+    if (data.status === "success") {
+      status.innerHTML = "<span style='color:green;'>✅ Connection successful!</span>";
+    } else {
+      status.innerHTML = `<span style='color:orange;'>⚠️ Response: ${data.message || 'Unknown response'}</span>`;
     }
-    localStorage.setItem("gas_endpoint_url", url);
-    closeModal("backendSetupModal");
-    alert("✅ Backend URL saved locally!");
+  } catch (err) {
+    status.innerHTML = `<span style='color:red;'>❌ Connection failed: ${err.message}</span>`;
   }
+}
 
   async function downloadFromGoogleSheets() {
-    const endpoint = getGasEndpointUrl();
-    if (!endpoint) {
-      openBackendSetupModal();
-      return alert("Please configure your Google Apps Script Backend URL first.");
-    }
-
-    const [localProds, localOrders, localCusts] = await Promise.all([
-      dbGetAll("products"),
-      dbGetAll("orders"),
-      dbGetAll("customers")
-    ]);
-
-    const totalUnsaved = localProds.filter(p => p._syncStatus === "pending_upload").length +
-                         localOrders.filter(o => o._syncStatus === "pending_upload").length +
-                         localCusts.filter(c => c._syncStatus === "pending_upload").length;
-
-    if (totalUnsaved > 0) {
-      const confirmDownload = confirm(
-        `⚠️ WARNING: You have ${totalUnsaved} unsaved local record(s) pending upload.\n\n` +
-        `Downloading will merge cloud records without wiping your unsaved sales. Proceed?`
-      );
-      if (!confirmDownload) return;
-    }
-
-    const status = document.getElementById('syncStatus');
-    status.className = "status-badge badge-unsaved";
-    status.innerText = "⏳ Merging Sheets...";
-
-    try {
-      const response = await fetch(endpoint, { method: "GET" });
-      const res = await response.json();
-
-      if (res.status !== "success") throw new Error(res.message || "Failed to pull data");
-
-      const { products, orders, customers, settings } = res.data;
-
-      // 1. SMART MERGE: Products
-      await smartMergeCollection("products", "ProductID", products || []);
-
-      // 2. SMART MERGE: Orders
-      const normalizedOrders = (orders || []).map(o => {
-        if (typeof o.ItemList === "string") {
-          try { o.ItemList = JSON.parse(o.ItemList); } catch(e) { o.ItemList = []; }
-        }
-        return o;
-      });
-      await smartMergeCollection("orders", "SalesID", normalizedOrders);
-
-      // 3. SMART MERGE: Customers
-      let legacyCounter = 1;
-      const normalizedCustomers = (customers || []).map(c => {
-        let custId = c.CustomerID;
-        if (!custId) {
-          custId = "C" + String(legacyCounter).padStart(6, "0");
-          legacyCounter++;
-        }
-        return {
-          ...c,
-          CustomerID: custId,
-          FullName: c.FullName || "Customer",
-          Phone: c.Phone ? String(c.Phone).trim() : "",
-          DefaultAddress: c.DefaultAddress || "",
-          TownshipCity: c.TownshipCity || "",
-          Remark: c.Remark || "",
-          TotalSpend: Number(c.TotalSpend) || 0,
-          LastOrderDate: c.LastOrderDate || new Date().toISOString()
-        };
-      });
-      await smartMergeCollection("customers", "CustomerID", normalizedCustomers);
-
-      // 4. SMART MERGE: Settings
-      if (settings && typeof settings === "object") {
-        const tx = db.transaction("settings", "readwrite");
-        const sStore = tx.objectStore("settings");
-        Object.keys(settings).forEach(k => {
-          appSettings[k] = settings[k];
-          sStore.put({ key: k, value: settings[k] });
-        });
-        await new Promise(r => { tx.oncomplete = r; });
-        applyDynamicSettingsToUI();
-      }
-
-      renderPosCatalog();
-      renderInventoryTable();
-      renderOrdersTable();
-      renderCustomersTable();
-      renderAnalyticsDashboard();
-      await updateUnsavedChangesBadge();
-
-      alert("✅ Cloud data & Settings merged successfully!");
-    } catch (err) {
-      alert("Download Error: " + err.message);
-      await updateUnsavedChangesBadge();
-    }
+  const gasUrl = getGasEndpointUrl();
+  if (!gasUrl) {
+    alert("⚠️ Web App URL is missing. Please click '⚙️ Cloud URL' to configure your Google Apps Script endpoint.");
+    openGasConfigModal();
+    return;
   }
+
+  const [localProds, localOrders, localCusts] = await Promise.all([
+    dbGetAll("products"),
+    dbGetAll("orders"),
+    dbGetAll("customers")
+  ]);
+
+  const totalUnsaved = localProds.filter(p => p._syncStatus === "pending_upload").length +
+                       localOrders.filter(o => o._syncStatus === "pending_upload").length +
+                       localCusts.filter(c => c._syncStatus === "pending_upload").length;
+
+  if (totalUnsaved > 0) {
+    const confirmDownload = confirm(
+      `⚠️ WARNING: You have ${totalUnsaved} unsaved local record(s) pending upload.\n\n` +
+      `Downloading will merge cloud records without wiping your unsaved sales. Proceed?`
+    );
+    if (!confirmDownload) return;
+  }
+
+  const status = document.getElementById('syncStatus');
+  status.className = "status-badge badge-unsaved";
+  status.innerText = "⏳ Merging Sheets...";
+
+  try {
+    const response = await fetch(gasUrl, { method: "GET" });
+    const res = await response.json();
+
+    if (res.status !== "success") throw new Error(res.message || "Failed to pull data");
+
+    const { products, orders, customers, settings } = res.data;
+
+    await smartMergeCollection("products", "ProductID", products || []);
+
+    const normalizedOrders = (orders || []).map(o => {
+      if (typeof o.ItemList === "string") {
+        try { o.ItemList = JSON.parse(o.ItemList); } catch(e) { o.ItemList = []; }
+      }
+      return o;
+    });
+    await smartMergeCollection("orders", "SalesID", normalizedOrders);
+
+    let legacyCounter = 1;
+    const normalizedCustomers = (customers || []).map(c => {
+      let custId = c.CustomerID;
+      if (!custId) {
+        custId = "C" + String(legacyCounter).padStart(6, "0");
+        legacyCounter++;
+      }
+      return {
+        ...c,
+        CustomerID: custId,
+        FullName: c.FullName || "Customer",
+        Phone: c.Phone ? String(c.Phone).trim() : "",
+        DefaultAddress: c.DefaultAddress || "",
+        TownshipCity: c.TownshipCity || "",
+        Remark: c.Remark || "",
+        TotalSpend: Number(c.TotalSpend) || 0,
+        LastOrderDate: c.LastOrderDate || new Date().toISOString()
+      };
+    });
+    await smartMergeCollection("customers", "CustomerID", normalizedCustomers);
+
+    if (settings && typeof settings === "object") {
+      const tx = db.transaction("settings", "readwrite");
+      const sStore = tx.objectStore("settings");
+      Object.keys(settings).forEach(k => {
+        appSettings[k] = settings[k];
+        sStore.put({ key: k, value: settings[k] });
+      });
+      await new Promise(r => { tx.oncomplete = r; });
+      applyDynamicSettingsToUI();
+    }
+
+    renderPosCatalog();
+    renderInventoryTable();
+    renderOrdersTable();
+    renderCustomersTable();
+    renderAnalyticsDashboard();
+    await updateUnsavedChangesBadge();
+
+    alert("✅ Cloud data & Settings merged successfully!");
+  } catch (err) {
+    alert("Download Error: " + err.message);
+    await updateUnsavedChangesBadge();
+  }
+}
 
   async function smartMergeCollection(storeName, keyField, cloudItems) {
     const localItems = await dbGetAll(storeName);
@@ -3940,50 +3897,51 @@
   }
 
   async function uploadToGoogleSheets() {
-    const endpoint = getGasEndpointUrl();
-    if (!endpoint) {
-      openBackendSetupModal();
-      return alert("Please configure your Google Apps Script Backend URL first.");
-    }
-
-    if (!confirm("This will backup local records into Google Sheets. Continue?")) return;
-    const status = document.getElementById('syncStatus');
-    status.className = "status-badge badge-unsaved";
-    status.innerText = "⏳ Uploading...";
-
-    try {
-      const [products, orders, customers] = await Promise.all([
-        dbGetAll("products"),
-        dbGetAll("orders"),
-        dbGetAll("customers")
-      ]);
-
-      const payload = {
-        products: products.map(cleanRecordForSync),
-        orders: orders.map(cleanRecordForSync),
-        customers: customers.map(cleanRecordForSync)
-      };
-
-      const response = await fetch(endpoint, {
-        method: "POST",
-        headers: { "Content-Type": "text/plain;charset=utf-8" },
-        body: JSON.stringify(payload)
-      });
-
-      const res = await response.json();
-      if (res.status !== "success") throw new Error(res.message || "Failed to push data");
-
-      await markAllAsSynced("products", products);
-      await markAllAsSynced("orders", orders);
-      await markAllAsSynced("customers", customers);
-
-      await updateUnsavedChangesBadge();
-      alert("✅ Google Sheets backup updated successfully!");
-    } catch (err) {
-      alert("Upload Error: " + err.message);
-      await updateUnsavedChangesBadge();
-    }
+  const gasUrl = getGasEndpointUrl();
+  if (!gasUrl) {
+    alert("⚠️ Web App URL is missing. Please click '⚙️ Cloud URL' to configure your Google Apps Script endpoint.");
+    openGasConfigModal();
+    return;
   }
+
+  if (!confirm("This will backup local records into Google Sheets. Continue?")) return;
+  const status = document.getElementById('syncStatus');
+  status.className = "status-badge badge-unsaved";
+  status.innerText = "⏳ Uploading...";
+
+  try {
+    const [products, orders, customers] = await Promise.all([
+      dbGetAll("products"),
+      dbGetAll("orders"),
+      dbGetAll("customers")
+    ]);
+
+    const payload = {
+      products: products.map(cleanRecordForSync),
+      orders: orders.map(cleanRecordForSync),
+      customers: customers.map(cleanRecordForSync)
+    };
+
+    const response = await fetch(gasUrl, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify(payload)
+    });
+
+    const res = await response.json();
+    if (res.status !== "success") throw new Error(res.message || "Failed to push data");
+
+    await markAllAsSynced("products", products);
+    await markAllAsSynced("orders", orders);
+    await markAllAsSynced("customers", customers);
+
+    await updateUnsavedChangesBadge();
+    alert("✅ Google Sheets backup updated successfully!");
+  } catch (err) {
+    alert("Upload Error: " + err.message);
+    await updateUnsavedChangesBadge();
+  }
+}
 
   function cleanRecordForSync(record) {
     const copy = { ...record };
@@ -4003,7 +3961,6 @@
     });
   }
 
-  // --- 25. LOCAL JSON BACKUP EXPORT & IMPORT ENGINE ---
   async function exportLocalJsonBackup() {
     try {
       const [products, orders, customers, settings] = await Promise.all([
@@ -4083,7 +4040,6 @@
     });
   }
 
-  // --- 26. ANALYTICS & BUSINESS INTELLIGENCE CONTROLLER ---
   function setAnalyticsPeriod(period, el) {
     activeAnalyticsPeriod = period;
     document.querySelectorAll('#analyticsPeriodChips .chip').forEach(c => c.classList.remove('active'));
