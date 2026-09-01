@@ -161,6 +161,21 @@
     .btn-warning { background: var(--warning); color: white; }
     .btn-sm { padding: 4px 8px; font-size: 11px; }
 
+    .action-btn-group {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      width: 75px;
+    }
+
+    .action-btn-group .btn {
+      width: 100%;
+      padding: 2px 4px;
+      font-size: 10px;
+      justify-content: flex-start;
+      line-height: 1.2;
+    }
+
     .chip-group {
       display: flex;
       gap: 5px;
@@ -2879,7 +2894,7 @@
           <td style="white-space:nowrap;" onclick="event.stopPropagation();">
             <button class="btn btn-warning btn-sm" onclick="openCustomerModal('${c.CustomerID}')">✏️ Edit / History</button>
             <button class="btn btn-primary btn-sm" onclick="startPosForCustomerDirectly('${c.CustomerID}')">🛒 New Sale</button>
-          </td>
+          </td>>
         </tr>
       `;
     }).join('');
