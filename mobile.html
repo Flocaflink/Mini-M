@@ -72,6 +72,41 @@
       margin-bottom: 3px;
     }
 
+    /* Sync Spinner & Progress Toast Overlay */
+    .sync-loading-overlay {
+      position: fixed;
+      top: 60px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(33, 37, 41, 0.92);
+      color: #fff;
+      padding: 10px 18px;
+      border-radius: 25px;
+      display: none;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+      z-index: 1200;
+      animation: fadeInDown 0.2s ease-out;
+    }
+    @keyframes fadeInDown {
+      from { opacity: 0; transform: translate(-50%, -10px); }
+      to { opacity: 1; transform: translate(-50%, 0); }
+    }
+    .spinner-icon {
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.75s linear infinite;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
     /* Header Bar */
     .mobile-header {
       position: sticky;
@@ -347,6 +382,11 @@
       <button class="btn btn-dark btn-sm" onclick="openDrawer('mSyncDrawer')">☁️ Cloud</button>
     </div>
   </header>
+
+      <div id="mSyncLoadingOverlay" class="sync-loading-overlay">
+      <div class="spinner-icon"></div>
+      <span id="mSyncLoadingText">Syncing data...</span>
+    </div>
 
   <!-- ========================================================================= -->
   <!-- TAB 1: MOBILE POS VIEW -->
@@ -667,9 +707,9 @@
       </div>
 
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 14px;">
-        <button class="btn btn-secondary" onclick="downloadFromGoogleSheetsMobile()">📥 Download Sheets</button>
-        <button class="btn btn-success" onclick="uploadToGoogleSheetsMobile()">☁️ Upload Sheets</button>
-      </div>
+        <button id="btnMDownload" class="btn btn-secondary" onclick="downloadFromGoogleSheetsMobile()">📥 Download Sheets</button>
+        <button id="btnMUpload" class="btn btn-success" onclick="uploadToGoogleSheetsMobile()">☁️ Upload Sheets</button>
+      </div>>
 
       <div style="border-top: 1px dashed #cbd5e0; margin-top: 14px; padding-top: 10px;">
         <label>Offline JSON Backups:</label>
@@ -2149,7 +2189,16 @@
 
     async function downloadFromGoogleSheetsMobile() {
       const endpoint = localStorage.getItem("gas_endpoint_url");
-      if (!endpoint) return alert("Please configure and save your Google Apps Script URL first.");
+      if (!endpoint) {
+        alert("Please configure and save your Google Apps Script URL first.");
+        return;
+      }
+
+      // 1. Immediately close drawer so the UI never appears stuck
+      closeDrawer('mSyncDrawer');
+
+      // 2. Display non-blocking feedback toast
+      setSyncLoading(true, "Downloading Sheets...");
 
       try {
         const res = await (await fetch(endpoint, { method: "GET" })).json();
@@ -2198,11 +2247,13 @@
         renderMobileOrdersList();
         renderMobileCustomersList();
         await updateUnsavedBadge();
+    
+        setSyncLoading(false);
         alert("✅ Cloud data and settings merged successfully!");
-        closeDrawer('mSyncDrawer');
       } catch(e) {
-        alert("Sync Download Error: " + e.message);
+        setSyncLoading(false);
         await updateUnsavedBadge();
+        alert("Sync Download Error: " + e.message);
       }
     }
 
@@ -2229,9 +2280,41 @@
       });
     }
 
+    function setSyncLoading(active, text = "Syncing...") {
+      const overlay = document.getElementById("mSyncLoadingOverlay");
+      const overlayText = document.getElementById("mSyncLoadingText");
+      const badge = document.getElementById("mSyncStatus");
+      const btnDown = document.getElementById("btnMDownload");
+      const btnUp = document.getElementById("btnMUpload");
+
+      if (active) {
+        if (overlayText) overlayText.innerText = text;
+        if (overlay) overlay.style.display = "flex";
+        if (badge) {
+          badge.className = "status-badge badge-unsaved";
+          badge.innerText = "⏳ In Progress";
+        }
+        if (btnDown) btnDown.disabled = true;
+        if (btnUp) btnUp.disabled = true;
+      } else {
+        if (overlay) overlay.style.display = "none";
+        if (btnDown) btnDown.disabled = false;
+        if (btnUp) btnUp.disabled = false;
+      }
+    }
+
     async function uploadToGoogleSheetsMobile() {
       const endpoint = localStorage.getItem("gas_endpoint_url");
-      if (!endpoint) return alert("Please configure and save your Google Apps Script URL first.");
+      if (!endpoint) {
+        alert("Please configure and save your Google Apps Script URL first.");
+        return;
+      }
+
+      // 1. Immediately close drawer
+      closeDrawer('mSyncDrawer');
+
+      // 2. Show active upload notification
+      setSyncLoading(true, "Uploading to Sheets...");
 
       try {
         const [products, orders, customers] = await Promise.all([
@@ -2257,13 +2340,14 @@
         await markStoreAsSynced("customers", customers);
 
         await updateUnsavedBadge();
+        setSyncLoading(false);
         alert("✅ Google Sheets backup updated successfully!");
-        closeDrawer('mSyncDrawer');
       } catch(e) {
-        alert("Upload Error: " + e.message);
+        setSyncLoading(false);
         await updateUnsavedBadge();
+        alert("Upload Error: " + e.message);
       }
-    }
+    } 
 
     function cleanSyncRecord(record) {
       const copy = { ...record };
