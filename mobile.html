@@ -17,18 +17,18 @@
 
   <style>
     :root {
-      --primary: #f4718e;
-      --primary-hover: #e05877;
-      --primary-light: #fff0f3;
-      --primary-border: #ffd1dc;
-      --accent-blue: #4ca9ff;
+      --primary: #e65c00;
+      --primary-hover: #cf5300;
+      --primary-light: #fff3eb;
+      --primary-border: #ffd8be;
+      --accent-blue: #0d5c75;
       --success: #2e7d32;
       --warning: #b78103;
       --danger: #c62828;
       --text: #2c3e50;
-      --bg: #f7f9fb;
+      --bg: #f5f7fa;
       --card-bg: #ffffff;
-      --border: #e2e8f0;
+      --border: #dcdfe6;
       --safe-bottom: env(safe-area-inset-bottom, 0px);
     }
 
@@ -43,12 +43,12 @@
       -webkit-font-smoothing: antialiased;
     }
 
-    /* Base Form Anti-Zoom for iOS (>= 16px font-size) */
+    /* Form Anti-Zoom for iOS (>= 16px font-size) */
     input, select, textarea {
-      font-size: 16px !important;
+      font-size: 15px !important;
       font-family: inherit;
       width: 100%;
-      padding: 10px 12px;
+      padding: 9px 11px;
       border: 1px solid var(--border);
       border-radius: 8px;
       box-sizing: border-box;
@@ -59,13 +59,17 @@
       outline: none;
       border-color: var(--primary);
     }
+    input:disabled, select:disabled {
+      background: #e9ecef;
+      color: #6c757d;
+    }
     label {
       font-size: 12px;
       font-weight: 700;
-      color: #555;
+      color: #444;
       display: block;
       margin-top: 8px;
-      margin-bottom: 4px;
+      margin-bottom: 3px;
     }
 
     /* Header Bar */
@@ -79,12 +83,13 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.04);
     }
     .brand-logo-img {
-      height: 40px;
-      max-width: 130px;
+      height: 32px;
+      width: auto;
       object-fit: contain;
+      border-radius: 4px;
     }
 
     /* Badges */
@@ -94,12 +99,13 @@
       padding: 3px 8px;
       border-radius: 12px;
       display: inline-block;
+      white-space: nowrap;
     }
-    .badge-synced { background: #d4edda; color: #155724; }
-    .badge-unsaved { background: #fff3cd; color: #856404; }
-    .badge-stock-out { background: #f8d7da; color: #721c24; }
-    .badge-stock-low { background: #fff3cd; color: #856404; }
-    .badge-stock-ok { background: #d4edda; color: #155724; }
+    .badge-synced { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+    .badge-unsaved { background: #fff3cd; color: #856404; border: 1px solid #ffeeba; }
+    .badge-stock-out { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+    .badge-stock-low { background: #fff3cd; color: #856404; border: 1px solid #ffeeba; }
+    .badge-stock-ok { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
 
     /* Sticky Bottom Navigation Bar */
     .bottom-nav {
@@ -143,12 +149,12 @@
     .tab-view { display: none; padding: 12px; }
     .tab-view.active { display: block; }
 
-    /* Touch Controls & Buttons */
+    /* Buttons */
     .btn {
-      min-height: 44px;
-      padding: 10px 16px;
+      min-height: 42px;
+      padding: 8px 14px;
       font-weight: 700;
-      font-size: 14px;
+      font-size: 13px;
       border: none;
       border-radius: 8px;
       cursor: pointer;
@@ -164,15 +170,16 @@
     .btn-success { background: var(--success); color: white; }
     .btn-warning { background: var(--warning); color: white; }
     .btn-dark { background: #4a5568; color: white; }
+    .btn-sm { min-height: 32px; padding: 4px 8px; font-size: 11px; }
 
     .stepper-btn {
-      min-width: 44px;
-      min-height: 44px;
-      border: 1px solid var(--border);
-      background: #f8fafc;
-      font-size: 18px;
+      min-width: 36px;
+      min-height: 36px;
+      border: 1px solid #ccc;
+      background: #f8f9fa;
+      font-size: 16px;
       font-weight: bold;
-      border-radius: 8px;
+      border-radius: 6px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -185,17 +192,17 @@
       display: flex;
       gap: 6px;
       overflow-x: auto;
-      padding: 4px 0 8px 0;
+      padding: 4px 0 6px 0;
       -webkit-overflow-scrolling: touch;
       scrollbar-width: none;
     }
     .chip-scroll-group::-webkit-scrollbar { display: none; }
     .chip {
-      padding: 6px 14px;
-      border-radius: 20px;
+      padding: 5px 12px;
+      border-radius: 16px;
       background: white;
       border: 1px solid var(--border);
-      font-size: 13px;
+      font-size: 12px;
       white-space: nowrap;
       cursor: pointer;
     }
@@ -206,7 +213,7 @@
       font-weight: bold;
     }
 
-    /* Product Grid / Feed */
+    /* Product Grid */
     .product-feed {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -216,18 +223,15 @@
     .product-mobile-card {
       background: white;
       border: 1px solid var(--border);
-      border-radius: 10px;
+      border-radius: 8px;
       padding: 10px;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.02);
-    }
-    .product-mobile-card:active {
-      border-color: var(--primary-border);
+      box-shadow: 0 1px 4px rgba(0,0,0,0.03);
     }
 
-    /* Persistent Bottom Cart Action Bar */
+    /* Persistent Bottom Floating Cart Bar */
     .floating-cart-bar {
       position: fixed;
       bottom: calc(64px + var(--safe-bottom));
@@ -260,12 +264,12 @@
     .drawer-card {
       background: white;
       width: 100%;
-      max-height: 90vh;
+      max-height: 92vh;
       border-radius: 16px 16px 0 0;
       padding: 16px 16px calc(20px + var(--safe-bottom)) 16px;
       overflow-y: auto;
       box-shadow: 0 -4px 20px rgba(0,0,0,0.2);
-      animation: slideUp 0.25s ease-out;
+      animation: slideUp 0.22s ease-out;
     }
     @keyframes slideUp {
       from { transform: translateY(100%); }
@@ -291,7 +295,7 @@
       cursor: pointer;
     }
 
-    /* Suggestion Dropdown in Mobile */
+    /* Suggestion Dropdown */
     .cust-mobile-suggest-list {
       background: white;
       border: 1px solid var(--primary-border);
@@ -302,41 +306,32 @@
       display: none;
     }
     .cust-mobile-suggest-item {
-      padding: 10px;
+      padding: 8px 10px;
       border-bottom: 1px solid #f0f0f0;
-      font-size: 13px;
+      font-size: 12px;
     }
+    .cust-mobile-suggest-item:hover { background-color: var(--primary-light); }
 
-    /* Expanded Full-Screen Screenshot Voucher */
+    /* Voucher Formatting */
     .voucher-card-mobile {
-      width: 92vw;
-      max-width: 460px;
-      min-height: 72vh; /* Fills ~4/5 of the vertical screen */
+      width: 100%;
+      max-width: 360px;
       margin: 0 auto;
       background: #ffffff;
-      padding: 22px 18px;
-      border-radius: 16px;
+      padding: 18px 14px;
+      border-radius: 12px;
       border: 1px solid var(--border);
-      box-shadow: 0 4px 18px rgba(0, 0, 0, 0.08);
-      font-size: 13px;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between; /* Fills empty space evenly */
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
+      font-size: 12px;
       box-sizing: border-box;
     }
-
-    .voucher-card-mobile img {
-      height: 65px;
-      max-width: 220px;
-      object-fit: contain;
-      margin-bottom: 6px;
+    .calc-box-mobile {
+      background: #f8f9fa;
+      border: 1px solid #e2e8f0;
+      padding: 10px;
+      border-radius: 8px;
+      margin-top: 10px;
     }
-
-    .voucher-section-divider {
-      border-top: 1px dashed #e2e8f0;
-      margin: 12px 0;
-    }
-    
   </style>
 </head>
 <body>
@@ -344,12 +339,12 @@
   <!-- Top Mobile App Header -->
   <header class="mobile-header">
     <div style="display: flex; align-items: center; gap: 8px;">
-      <img src="./logo.png" alt="Mini-M" class="brand-logo-img" onerror="this.style.display='none'">
+      <img src="logo.png" alt="Mini-M" class="brand-logo-img" onerror="this.style.display='none'">
       <span style="font-weight: bold; font-size: 15px; color: var(--primary);">Mini-M POS</span>
     </div>
     <div style="display: flex; align-items: center; gap: 6px;">
       <span id="mSyncStatus" class="status-badge badge-synced">⚡ Synced</span>
-      <button class="btn btn-dark" style="min-height: 32px; padding: 4px 8px; font-size: 12px;" onclick="openDrawer('mSyncDrawer')">☁️ Sync</button>
+      <button class="btn btn-dark btn-sm" onclick="openDrawer('mSyncDrawer')">☁️ Cloud</button>
     </div>
   </header>
 
@@ -357,10 +352,18 @@
   <!-- TAB 1: MOBILE POS VIEW -->
   <!-- ========================================================================= -->
   <div id="mPosView" class="tab-view active">
-    <!-- Top Search & Quick Filters -->
-    <input type="text" id="mPosSearch" placeholder="🔍 Search SKU, title, color..." oninput="renderMobilePosCatalog()">
-    
-    <label style="margin-top: 6px;">Sex:</label>
+    <div style="display: flex; gap: 6px;">
+      <input type="text" id="mPosSearch" placeholder="🔍 Search SKU, Title, Color, Type..." oninput="renderMobilePosCatalog()">
+      <button class="btn btn-secondary btn-sm" onclick="resetMobilePosFilters()">Reset</button>
+    </div>
+
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px;">
+      <label style="margin: 0;">Sex Filter:</label>
+      <label style="margin: 0; font-size: 11px; display: flex; align-items: center; gap: 4px; cursor: pointer;">
+        <input type="checkbox" id="mWholesaleToggle" onchange="toggleMobileWholesaleMode()" style="width:auto; margin:0;">
+        <b>Wholesale Price</b>
+      </label>
+    </div>
     <div class="chip-scroll-group" id="mPosSexChips">
       <div class="chip active" onclick="setMobilePosSex('All', this)">All</div>
       <div class="chip" onclick="setMobilePosSex('Unisex', this)">Unisex</div>
@@ -368,10 +371,10 @@
       <div class="chip" onclick="setMobilePosSex('Female', this)">Female</div>
     </div>
 
-    <label>Type:</label>
+    <label>Type Category:</label>
     <div class="chip-scroll-group" id="mPosTypeChips"></div>
 
-    <label>Size:</label>
+    <label>Size Filter:</label>
     <div class="chip-scroll-group" id="mPosSizeChips"></div>
 
     <!-- Product Feed (In-Stock Only) -->
@@ -387,7 +390,7 @@
       <span id="mCartItemCountBadge">0 Items</span>
     </div>
     <div style="display: flex; align-items: center; gap: 8px;">
-      <span id="mCartBarTotalDisplay" style="color: #ffd1dc;">0 MMK</span>
+      <span id="mCartBarTotalDisplay" style="color: #ffd8be;">0 MMK</span>
       <span>Checkout ➔</span>
     </div>
   </div>
@@ -397,12 +400,12 @@
   <!-- ========================================================================= -->
   <div id="mInventoryView" class="tab-view">
     <div style="display: flex; gap: 8px; margin-bottom: 8px;">
-      <input type="text" id="mInvSearch" placeholder="🔍 Search SKU or name..." oninput="renderMobileInventoryList()">
-      <button class="btn btn-primary" style="white-space: nowrap; font-size: 12px;" onclick="openDrawer('mProductAddDrawer')">➕ SKU</button>
+      <input type="text" id="mInvSearch" placeholder="🔍 Search SKU, name, color, type..." oninput="renderMobileInventoryList()">
+      <button class="btn btn-primary btn-sm" style="white-space: nowrap;" onclick="openProductDrawerForAdd()">➕ SKU</button>
     </div>
 
-    <label style="display: flex; align-items: center; gap: 6px; font-size: 13px; margin-bottom: 10px; cursor: pointer;">
-      <input type="checkbox" id="mInvShowOut" style="width: auto;" onchange="renderMobileInventoryList()">
+    <label style="display: flex; align-items: center; gap: 6px; font-size: 12px; margin-bottom: 10px; cursor: pointer;">
+      <input type="checkbox" id="mInvShowOut" style="width: auto; margin: 0;" onchange="renderMobileInventoryList()">
       <b>Show Out-of-Stock (0 Stock)</b>
     </label>
 
@@ -413,7 +416,7 @@
   <!-- TAB 3: MOBILE ORDERS VIEW -->
   <!-- ========================================================================= -->
   <div id="mOrdersView" class="tab-view">
-    <input type="text" id="mOrderSearch" placeholder="🔍 Search Sales ID, Customer..." oninput="renderMobileOrdersList()">
+    <input type="text" id="mOrderSearch" placeholder="🔍 Search Sales ID, Customer, Phone, Courier..." oninput="renderMobileOrdersList()">
     <div id="mOrdersList" style="display: flex; flex-direction: column; gap: 8px; margin-top: 10px;"></div>
   </div>
 
@@ -422,8 +425,8 @@
   <!-- ========================================================================= -->
   <div id="mCustomersView" class="tab-view">
     <div style="display: flex; gap: 8px; margin-bottom: 10px;">
-      <input type="text" id="mCustSearch" placeholder="🔍 Search Name or Phone..." oninput="renderMobileCustomersList()">
-      <button class="btn btn-primary" style="white-space: nowrap; font-size: 12px;" onclick="openNewCustomerDrawer()">➕ Client</button>
+      <input type="text" id="mCustSearch" placeholder="🔍 Search Name, Phone, Township..." oninput="renderMobileCustomersList()">
+      <button class="btn btn-primary btn-sm" style="white-space: nowrap;" onclick="openNewCustomerDrawer()">➕ Client</button>
     </div>
     <div id="mCustomersList" style="display: flex; flex-direction: column; gap: 8px;"></div>
   </div>
@@ -456,19 +459,19 @@
   <div id="mCheckoutDrawer" class="drawer-overlay">
     <div class="drawer-card">
       <div class="drawer-header">
-        <h3>🛒 Complete Sale</h3>
+        <h3>🛒 Order & Customer Details</h3>
         <button class="close-drawer-btn" onclick="closeDrawer('mCheckoutDrawer')">&times;</button>
       </div>
 
-      <!-- Customer Lookup -->
+      <input type="hidden" id="mCustBoundId">
+
       <label>Customer Name <span style="color:red;">*</span>:</label>
       <input type="text" id="mCustName" placeholder="e.g. Daw Nwe Nwe Yee" autocomplete="off" oninput="handleMobileCustInput()">
-      <input type="hidden" id="mCustBoundId">
       <div id="mCustSuggestList" class="cust-mobile-suggest-list"></div>
 
-      <div id="mCustBadge" style="display:none; font-size: 12px; margin-top: 4px; color: var(--success); font-weight: bold;">
-        ✅ Bound: <span id="mCustFoundText"></span>
-        <button type="button" style="border:none; background:none; color:red; cursor:pointer;" onclick="unbindMobileCustomer()">✕ Clear</button>
+      <div id="mCustBadge" style="display:none; font-size: 11px; margin-top: 4px; color: var(--success); font-weight: bold;">
+        ✅ Selected: <span id="mCustFoundText"></span> (<span id="mCustFoundSpend"></span>)
+        <button type="button" style="border:none; background:none; color:red; cursor:pointer; font-size:11px; margin-left:4px;" onclick="unbindMobileCustomer()">✕ Clear</button>
       </div>
 
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
@@ -482,47 +485,93 @@
         </div>
       </div>
 
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+        <div>
+          <label>Courier Service:</label>
+          <select id="mOrderDeliveryName"></select>
+        </div>
+        <div>
+          <label>Payment Method:</label>
+          <select id="mOrderPaymentType"></select>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+        <div>
+          <label>Paid Status:</label>
+          <select id="mOrderPaidStatus">
+            <option value="paid">paid</option>
+            <option value="not received yet">not received yet</option>
+          </select>
+        </div>
+        <div>
+          <label>Order Status:</label>
+          <select id="mOrderStatus">
+            <option value="Confirmed">Confirmed</option>
+            <option value="Pending">Pending</option>
+            <option value="Shipped">Shipped</option>
+          </select>
+        </div>
+      </div>
+
       <label>Delivery Address:</label>
-      <textarea id="mCustAddress" style="height: 48px;" placeholder="Street / House No."></textarea>
+      <textarea id="mCustAddress" style="height: 48px;" placeholder="Street / House No. / Quarter"></textarea>
+
+      <label>Order Remark / Notes:</label>
+      <input type="text" id="mOrderRemark" placeholder="e.g. Call before delivery">
 
       <!-- Cart Item Steppers -->
-      <label style="margin-top: 10px;">Cart Items:</label>
-      <div id="mCartDrawerItemsList" style="display: flex; flex-direction: column; gap: 6px;"></div>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 12px;">
+        <b style="font-size: 13px;">Cart Items (<span id="mCartItemsCountLbl">0</span>)</b>
+        <button class="btn btn-sm" style="background:#e9ecef; color:#333;" onclick="clearMobileCart()">Clear</button>
+      </div>
+      <div id="mCartDrawerItemsList" style="display: flex; flex-direction: column; gap: 6px; margin-top: 6px;"></div>
 
       <!-- Discount Configuration -->
       <div style="background: var(--primary-light); padding: 10px; border-radius: 8px; margin-top: 10px; border: 1px solid var(--primary-border);">
-        <label style="margin-top: 0; color: var(--primary);">🎁 Discount Type:</label>
-        <select id="mOrderDiscountType" onchange="renderMobileCartDrawer()">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+          <b style="font-size: 12px; color: var(--primary);">🎁 Discount / Promotion:</b>
+          <span id="mDrawerDiscountBadge" style="font-size: 11px; font-weight: bold; color: var(--success);"></span>
+        </div>
+        <select id="mOrderDiscountType" onchange="handleMobileDiscountChange()">
           <option value="none">No Discount</option>
-          <option value="percentage">% Off</option>
-          <option value="flat">Flat Cash (MMK)</option>
+          <option value="percentage">Percentage (%) Off</option>
+          <option value="flat">Direct Flat Cash (MMK)</option>
+          <option value="tiered">Tiered Cashback (e.g. 5K per 100K)</option>
         </select>
-        <input type="number" id="mOrderDiscountVal" placeholder="Discount Amount or %" style="margin-top: 6px; display: none;" oninput="renderMobileCartDrawer()">
+        <input type="number" id="mOrderDiscountVal" placeholder="Amount or %" style="margin-top: 6px; display: none;" oninput="renderMobileCartDrawer()">
+        
+        <div id="mTieredDiscountRow" style="display: none; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 6px;">
+          <div>
+            <label style="font-size: 10px; margin: 0;">Cashback (MMK):</label>
+            <input type="number" id="mOrderTierCashback" value="5000" oninput="renderMobileCartDrawer()">
+          </div>
+          <div>
+            <label style="font-size: 10px; margin: 0;">For Every (MMK):</label>
+            <input type="number" id="mOrderTierThreshold" value="100000" oninput="renderMobileCartDrawer()">
+          </div>
+        </div>
       </div>
 
       <!-- Totals Summary -->
       <div style="margin-top: 10px; padding: 10px; background: #f8fafc; border-radius: 8px; border: 1px solid var(--border);">
         <div style="display: flex; justify-content: space-between; font-size: 13px;">
-          <span>Subtotal:</span>
+          <span style="color: #666;">Subtotal:</span>
           <span id="mDrawerSubtotalDisplay" style="font-weight: bold;">0 MMK</span>
         </div>
         <div id="mDrawerDiscountRow" style="display: none; justify-content: space-between; font-size: 13px; color: var(--success); margin-top: 4px;">
-          <span>Discount:</span>
+          <span id="mDrawerDiscountLabel">Discount:</span>
           <span id="mDrawerDiscountDisplay" style="font-weight: bold;">-0 MMK</span>
         </div>
         <div style="display: flex; justify-content: space-between; font-size: 16px; font-weight: bold; border-top: 1px dashed #cbd5e0; padding-top: 6px; margin-top: 6px;">
-          <span>Total Payable:</span>
+          <span>Net Total:</span>
           <span id="mDrawerTotalDisplay" style="color: var(--primary);">0 MMK</span>
         </div>
       </div>
 
-      <!-- Payment & Actions -->
-      <label>Payment Method:</label>
-      <select id="mOrderPaymentType"></select>
-
       <div style="display: flex; gap: 8px; margin-top: 14px;">
         <button class="btn btn-primary" style="flex: 1;" onclick="submitMobileOrder()">💾 Complete Sale</button>
-        <button class="btn btn-dark" onclick="clearMobileCart()">Clear</button>
+        <button class="btn btn-secondary" onclick="closeDrawer('mCheckoutDrawer')">Close</button>
       </div>
     </div>
   </div>
@@ -539,72 +588,124 @@
 
       <div id="mVoucherCaptureTarget" class="voucher-card-mobile">
         <div style="text-align: center; border-bottom: 2px dashed var(--primary); padding-bottom: 8px; margin-bottom: 8px;">
-          <img src="./logo.png" style="height: 50px; max-width: 160px; object-fit: contain;" onerror="this.style.display='none'">
-          <div style="font-size: 10px; color: #666;">Official Sales Receipt</div>
+          <img src="logo.png" style="height: 42px; max-width: 140px; object-fit: contain; margin: 0 auto 4px auto; display: block;" onerror="this.style.display='none'">
+          <div style="font-size: 11px; color: #666;">Official Sales Order Receipt</div>
         </div>
 
         <div style="display: flex; justify-content: space-between; margin-bottom: 3px;">
-          <b>Order ID:</b> <span id="mvSalesId" style="font-family: monospace;"></span>
+          <b>Order ID:</b> <span id="mvSalesId" style="font-family: monospace; font-weight: bold;"></span>
         </div>
         <div style="display: flex; justify-content: space-between; margin-bottom: 3px;">
-          <b>Customer:</b> <span id="mvCustName"></span>
+          <b>Date:</b> <span id="mvDate"></span>
         </div>
-        <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 3px;">
+          <b>Customer:</b> <span id="mvCustName" style="font-weight: bold;"></span>
+        </div>
+        <div style="display: flex; justify-content: space-between; margin-bottom: 3px;">
           <b>Phone:</b> <span id="mvPhone"></span>
+        </div>
+        <div style="display: flex; justify-content: space-between; margin-bottom: 3px;">
+          <b>Courier:</b> <span id="mvDelivery" style="font-weight: bold; color: var(--primary);"></span>
+        </div>
+        <div style="display: flex; flex-direction: column; margin-bottom: 6px;">
+          <b>Address:</b> <span id="mvAddress" style="color: #444;"></span>
         </div>
 
         <div id="mvItemsList" style="border-top: 1px solid #eee; border-bottom: 1px solid #eee; padding: 6px 0; margin-bottom: 6px;"></div>
 
-        <div style="display: flex; justify-content: space-between; font-size: 14px; font-weight: bold;">
-          <span>Total:</span>
+        <div style="display: flex; justify-content: space-between; font-size: 12px; color: #555;">
+          <span>Subtotal:</span>
+          <span id="mvSubtotal"></span>
+        </div>
+        <div id="mvDiscountRow" style="display: none; justify-content: space-between; font-size: 12px; color: var(--success);">
+          <span id="mvDiscountLabel">Discount:</span>
+          <span id="mvDiscountAmount"></span>
+        </div>
+        <div style="display: flex; justify-content: space-between; font-size: 14px; font-weight: bold; margin-top: 4px; border-top: 1px dashed #ddd; padding-top: 4px;">
+          <span>Total Payable:</span>
           <span id="mvTotal" style="color: var(--primary);"></span>
+        </div>
+        <div style="display: flex; justify-content: space-between; font-size: 11px; color: #555; margin-top: 4px;">
+          <span>Payment:</span>
+          <span id="mvPayment"></span>
+        </div>
+        <div style="display: flex; justify-content: space-between; font-size: 11px; color: #555;">
+          <span>Paid Status:</span>
+          <span id="mvPaidStatus" style="font-weight: bold;"></span>
+        </div>
+
+        <div style="text-align: center; font-size: 10px; color: #777; margin-top: 10px; border-top: 1px solid #f0f0f0; padding-top: 6px;">
+          Thank you for ordering with us! 💕
         </div>
       </div>
 
       <div style="display: flex; gap: 8px; margin-top: 14px;">
         <button class="btn btn-success" style="flex: 1;" onclick="shareMobileVoucher()">📲 Share Voucher</button>
-        <button class="btn btn-dark" onclick="downloadMobileVoucher()">📥 Save</button>
+        <button class="btn btn-primary" onclick="downloadMobileVoucher()">📥 Save Image</button>
       </div>
+      <div id="mvStatusMsg" style="font-size: 11px; text-align: center; color: #666; margin-top: 6px;"></div>
     </div>
   </div>
 
   <!-- ========================================================================= -->
-  <!-- DRAWER: SYNC & BACKEND URL CONFIGURATION -->
+  <!-- DRAWER: SYNC & CLOUD URL CONFIGURATION -->
   <!-- ========================================================================= -->
   <div id="mSyncDrawer" class="drawer-overlay">
     <div class="drawer-card">
       <div class="drawer-header">
-        <h3>⚙️ Cloud Sync & Database</h3>
+        <h3>⚙️ Cloud Sync & Local Storage</h3>
         <button class="close-drawer-btn" onclick="closeDrawer('mSyncDrawer')">&times;</button>
       </div>
 
-      <label>Google Apps Script Backend URL:</label>
+      <label>Google Apps Script Web App URL (/exec):</label>
       <input type="url" id="mGasEndpointInput" placeholder="https://script.google.com/macros/s/.../exec">
-      <button class="btn btn-secondary" style="width: 100%; margin-top: 6px;" onclick="saveMobileGasUrl()">💾 Save Backend URL</button>
+      <div id="mGasSaveStatus" style="font-size: 11px; margin-top: 4px; font-weight: bold;"></div>
+      
+      <div style="display: flex; gap: 8px; margin-top: 6px;">
+        <button class="btn btn-primary" style="flex: 1;" onclick="saveMobileGasUrl()">💾 Save URL</button>
+        <button class="btn btn-secondary btn-sm" onclick="testMobileGasConnection()">🧪 Test</button>
+      </div>
 
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 16px;">
-        <button class="btn btn-primary" onclick="downloadFromGoogleSheetsMobile()">📥 Pull Cloud</button>
-        <button class="btn btn-success" onclick="uploadToGoogleSheetsMobile()">☁️ Push Backup</button>
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 14px;">
+        <button class="btn btn-secondary" onclick="downloadFromGoogleSheetsMobile()">📥 Download Sheets</button>
+        <button class="btn btn-success" onclick="uploadToGoogleSheetsMobile()">☁️ Upload Sheets</button>
+      </div>
+
+      <div style="border-top: 1px dashed #cbd5e0; margin-top: 14px; padding-top: 10px;">
+        <label>Offline JSON Backups:</label>
+        <div style="display: flex; gap: 8px;">
+          <button class="btn btn-dark btn-sm" style="flex: 1;" onclick="exportMobileJsonBackup()">💾 JSON Backup</button>
+          <button class="btn btn-dark btn-sm" style="flex: 1;" onclick="document.getElementById('mJsonFileInput').click()">📂 Restore</button>
+          <input type="file" id="mJsonFileInput" style="display: none;" accept=".json" onchange="importMobileJsonBackup(event)">
+        </div>
       </div>
     </div>
   </div>
 
   <!-- ========================================================================= -->
-  <!-- DRAWER: ADD SINGLE SKU (MOBILE COMPACT) -->
+  <!-- DRAWER: ADD / EDIT PRODUCT SKU -->
   <!-- ========================================================================= -->
   <div id="mProductAddDrawer" class="drawer-overlay">
     <div class="drawer-card">
       <div class="drawer-header">
-        <h3>➕ Add Single Product SKU</h3>
+        <h3 id="mpDrawerTitle">➕ Add Product SKU</h3>
         <button class="close-drawer-btn" onclick="closeDrawer('mProductAddDrawer')">&times;</button>
       </div>
 
-      <label>Product Name (MM/EN) <span style="color:red;">*</span>:</label>
-      <input type="text" id="mpName" placeholder="Duducream ဂါဝန်">
+      <div style="display: grid; grid-template-columns: 1fr 1.5fr; gap: 8px;">
+        <div>
+          <label>Base Item Code:</label>
+          <input type="text" id="mpItemCode" placeholder="I000001" oninput="autoGenerateMobileSku()">
+        </div>
+        <div>
+          <label>Name (MM/EN) <span style="color:red;">*</span>:</label>
+          <input type="text" id="mpName" placeholder="Duducream ဂါဝန်">
+        </div>
+      </div>
 
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
         <div>
-          <label>Sex:</label>
+          <label>Sex Category:</label>
           <select id="mpSex">
             <option value="Unisex">Unisex</option>
             <option value="Female">Female</option>
@@ -612,19 +713,66 @@
           </select>
         </div>
         <div>
-          <label>Type:</label>
-          <select id="mpType"></select>
+          <label>Length:</label>
+          <select id="mpLength">
+            <option value="တို">တို (Short)</option>
+            <option value="ရှည်">ရှည် (Long)</option>
+            <option value="None">None / Regular</option>
+          </select>
         </div>
       </div>
 
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
         <div>
-          <label>Size:</label>
-          <select id="mpSize"></select>
+          <label>Type:</label>
+          <select id="mpType" onchange="autoGenerateMobileSku()"></select>
         </div>
         <div>
-          <label>Color:</label>
-          <select id="mpColor"></select>
+          <label>Size:</label>
+          <select id="mpSize" onchange="autoGenerateMobileSku()"></select>
+        </div>
+      </div>
+
+      <div>
+        <label>Color / Pattern:</label>
+        <select id="mpColor" onchange="autoGenerateMobileSku()"></select>
+      </div>
+
+      <div>
+        <label>SKU (Auto):</label>
+        <input type="text" id="mpSku" readonly style="background:#e9ecef; font-weight:bold; color:var(--primary);">
+      </div>
+
+      <div class="calc-box-mobile">
+        <b style="font-size: 11px; color: var(--accent-blue);">Cost & Pricing Engine:</b>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 4px;">
+          <div>
+            <label style="font-size: 10px; margin: 0;">Buying (¥):</label>
+            <input type="number" id="mpBuyingYuan" step="0.01" placeholder="35.0" oninput="calculateMobilePricingEngine()">
+          </div>
+          <div>
+            <label style="font-size: 10px; margin: 0;">Supplier %:</label>
+            <input type="number" id="mpSupplierPct" step="0.1" value="0" oninput="calculateMobilePricingEngine()">
+          </div>
+          <div>
+            <label style="font-size: 10px; margin: 0;">Yuan Rate (MMK):</label>
+            <input type="number" id="mpYuanRate" oninput="calculateMobilePricingEngine()">
+          </div>
+          <div>
+            <label style="font-size: 10px; margin: 0;">Cargo Fee (MMK):</label>
+            <input type="number" id="mpCargoFee" oninput="calculateMobilePricingEngine()">
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 6px;">
+          <div>
+            <label style="font-size: 10px; margin: 0;">Total Capital:</label>
+            <input type="number" id="mpTotalCapital" readonly style="background: #edf2f7; font-weight: bold;">
+          </div>
+          <div>
+            <label style="font-size: 10px; margin: 0;" id="lblMpNormalPrice">Normal Price:</label>
+            <input type="number" id="mpNormalPrice" readonly style="background: #edf2f7; font-weight: bold; color: green;">
+          </div>
         </div>
       </div>
 
@@ -634,21 +782,77 @@
           <input type="number" id="mpPrice" placeholder="e.g. 12000">
         </div>
         <div>
-          <label>Initial Stock:</label>
-          <input type="number" id="mpStock" value="5">
+          <label>Wholesale (MMK):</label>
+          <input type="number" id="mpWholesalePrice" placeholder="e.g. 9000">
         </div>
       </div>
 
-      <button class="btn btn-primary" style="width: 100%; margin-top: 14px;" onclick="saveMobileProduct()">💾 Save SKU</button>
+      <div style="display: grid; grid-template-columns: 1fr 1.5fr; gap: 8px;">
+        <div>
+          <label>Stock Level:</label>
+          <input type="number" id="mpStock" value="5" min="0">
+        </div>
+        <div>
+          <label>Remark / Batch:</label>
+          <input type="text" id="mpRemark" placeholder="e.g. Batch 2026 restock">
+        </div>
+      </div>
+
+      <button class="btn btn-primary" style="width: 100%; margin-top: 14px;" onclick="saveMobileProduct()">💾 Save Product Variant</button>
     </div>
   </div>
 
   <!-- ========================================================================= -->
-  <!-- JAVASCRIPT: SHARED LOCAL-FIRST CORE ENGINE -->
+  <!-- DRAWER: CUSTOMER PROFILE / NEW CLIENT -->
+  <!-- ========================================================================= -->
+  <div id="mCustomerDrawer" class="drawer-overlay">
+    <div class="drawer-card">
+      <div class="drawer-header">
+        <h3 id="mcDrawerTitle">👤 Customer Profile</h3>
+        <button class="close-drawer-btn" onclick="closeDrawer('mCustomerDrawer')">&times;</button>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 8px;">
+        <div>
+          <label>Customer ID:</label>
+          <input type="text" id="mcCustId" readonly style="background:#edf2f7; font-weight:bold; color:var(--primary);">
+        </div>
+        <div>
+          <label>Full Name <span style="color:red;">*</span>:</label>
+          <input type="text" id="mcFullName" placeholder="Daw Nwe Nwe Yee">
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+        <div>
+          <label>Phone Number:</label>
+          <input type="text" id="mcPhone" placeholder="09xxxxxxxxx">
+        </div>
+        <div>
+          <label>Township / City:</label>
+          <input type="text" id="mcTownship" placeholder="Kamayut">
+        </div>
+      </div>
+
+      <label>Delivery Address:</label>
+      <textarea id="mcAddress" style="height: 48px;" placeholder="Street / House No."></textarea>
+
+      <label>Remark / Aliases:</label>
+      <input type="text" id="mcRemark" placeholder="e.g. VIP, Prefers KPay">
+
+      <div style="display: flex; gap: 8px; margin-top: 14px;">
+        <button class="btn btn-primary" style="flex: 1;" onclick="saveMobileCustomer()">💾 Save Profile</button>
+        <button class="btn btn-success" id="btnMcStartSale" onclick="startPosFromMobileCustomerModal()">🛒 New Sale</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- JAVASCRIPT: LOCAL-FIRST ENGINE (COMPATIBLE WITH INDEX.HTML & GAS) -->
   <!-- ========================================================================= -->
   <script>
     const DB_NAME = "BabyStoreOwnerDB";
-    const DB_VERSION = 6;
+    const DB_VERSION = 5;
     let db;
 
     let appSettings = {
@@ -659,13 +863,17 @@
       ProductTypes: ["Dress", "Pant", "Top", "T shirt", "Shirt", "Cap", "Set", "Boiler", "Romper", "Accessories"],
       ProductSizes: ["73", "80", "90", "100", "110", "120", "130", "140", "150"],
       ProductColors: ["ပန်း", "ဝါ", "ပြာ", "ခဲ", "ဖြူ", "နီ", "စိမ်း", "နက်", "လိမ္မော်", "ခရမ်း", "ကြား", "ပွင့်"],
-      PaymentMethods: ["KPay", "WavePay", "COD", "AYA Pay"]
+      PaymentMethods: ["KPay", "WavePay", "COD", "AYA Pay"],
+      DeliveryServices: ["Royal", "Wepots", "Ninja Van", "Safe", "self"],
+      PaidStatuses: ["paid", "not received yet"]
     };
 
     let currentCart = [];
     let activeSex = "All";
     let activeType = "All";
     let activeSize = "All";
+    let isWholesaleActive = false;
+    let isProductEditMode = false;
     let lastSavedOrder = null;
 
     function initDatabase() {
@@ -727,7 +935,18 @@
       });
     }
 
-    // Initialize App
+    function dbReplaceAll(storeName, items) {
+      return new Promise((resolve, reject) => {
+        const tx = db.transaction(storeName, "readwrite");
+        const store = tx.objectStore(storeName);
+        store.clear().onsuccess = () => {
+          for (let item of items) store.put(item);
+        };
+        tx.oncomplete = () => resolve(true);
+        tx.onerror = () => reject(tx.error);
+      });
+    }
+
     window.addEventListener("DOMContentLoaded", async () => {
       await initDatabase();
       await loadSettings();
@@ -744,28 +963,65 @@
         if (saved && saved.length > 0) {
           saved.forEach(row => { appSettings[row.key] = row.value; });
         }
-      } catch(e) {}
+      } catch(e) {
+        console.warn("Using offline fallback settings", e);
+      }
       applyDynamicSettings();
     }
 
     function applyDynamicSettings() {
-      // 1. POS Filter Chips
-      document.getElementById("mPosTypeChips").innerHTML = ["All", ...(appSettings.ProductTypes || [])].map(t => `
-        <div class="chip ${t === activeType ? 'active' : ''}" onclick="setMobilePosType('${t}', this)">${t}</div>
-      `).join('');
+      const typeChips = document.getElementById("mPosTypeChips");
+      if (typeChips) {
+        typeChips.innerHTML = ["All", ...(appSettings.ProductTypes || [])].map(t => `
+          <div class="chip ${t === activeType ? 'active' : ''}" onclick="setMobilePosType('${t}', this)">${t === 'All' ? 'All Types' : t}</div>
+        `).join('');
+      }
 
-      document.getElementById("mPosSizeChips").innerHTML = ["All", ...(appSettings.ProductSizes || [])].map(s => `
-        <div class="chip ${s === activeSize ? 'active' : ''}" onclick="setMobilePosSize('${s}', this)">${s}</div>
-      `).join('');
+      const sizeChips = document.getElementById("mPosSizeChips");
+      if (sizeChips) {
+        sizeChips.innerHTML = ["All", ...(appSettings.ProductSizes || [])].map(s => `
+          <div class="chip ${s === activeSize ? 'active' : ''}" onclick="setMobilePosSize('${s}', this)">${s === 'All' ? 'All Sizes' : s}</div>
+        `).join('');
+      }
 
-      // 2. Selects
-      document.getElementById("mpType").innerHTML = (appSettings.ProductTypes || []).map(t => `<option value="${t}">${t}</option>`).join('');
-      document.getElementById("mpSize").innerHTML = (appSettings.ProductSizes || []).map(s => `<option value="${s}">${s}</option>`).join('');
-      document.getElementById("mpColor").innerHTML = (appSettings.ProductColors || []).map(c => `<option value="${c}">${c}</option>`).join('');
-      document.getElementById("mOrderPaymentType").innerHTML = (appSettings.PaymentMethods || ["KPay", "WavePay", "COD"]).map(p => `<option value="${p}">${p}</option>`).join('');
+      const mpType = document.getElementById("mpType");
+      if (mpType) {
+        mpType.innerHTML = (appSettings.ProductTypes || []).map(t => `<option value="${t}">${t}</option>`).join('');
+      }
+
+      const mpSize = document.getElementById("mpSize");
+      if (mpSize) {
+        mpSize.innerHTML = (appSettings.ProductSizes || []).map(s => `<option value="${s}">${s}</option>`).join('');
+      }
+
+      const mpColor = document.getElementById("mpColor");
+      if (mpColor) {
+        mpColor.innerHTML = (appSettings.ProductColors || []).map(c => `<option value="${c}">${c}</option>`).join('');
+      }
+
+      const paymentMethods = appSettings.PaymentMethods || ["KPay", "WavePay", "COD", "AYA Pay"];
+      const mOrderPay = document.getElementById("mOrderPaymentType");
+      if (mOrderPay) {
+        mOrderPay.innerHTML = paymentMethods.map(p => `<option value="${p}">${p}</option>`).join('');
+      }
+
+      const deliveryServices = appSettings.DeliveryServices || ["Royal", "Wepots", "Ninja Van", "Safe", "self"];
+      const mOrderDelivery = document.getElementById("mOrderDeliveryName");
+      if (mOrderDelivery) {
+        mOrderDelivery.innerHTML = deliveryServices.map(d => `<option value="${d}">${d}</option>`).join('');
+      }
+
+      const paidStatuses = appSettings.PaidStatuses || ["paid", "not received yet"];
+      const mOrderPaid = document.getElementById("mOrderPaidStatus");
+      if (mOrderPaid) {
+        mOrderPaid.innerHTML = paidStatuses.map(p => `<option value="${p}">${p}</option>`).join('');
+      }
+
+      const regMargin = appSettings.RegularProfitMargin || 33;
+      const lblMpNormal = document.getElementById("lblMpNormalPrice");
+      if (lblMpNormal) lblMpNormal.innerText = `Normal (+${regMargin}%):`;
     }
 
-    // Navigation Tabs Controller
     function switchMobileTab(tabId, el) {
       document.querySelectorAll('.tab-view').forEach(v => v.classList.remove('active'));
       document.querySelectorAll('.nav-tab-btn').forEach(b => b.classList.remove('active'));
@@ -778,10 +1034,10 @@
       if (tabId === 'mCustomersView') renderMobileCustomersList();
     }
 
-    // Modal Drawer Helpers
     function openDrawer(id) {
       if (id === 'mSyncDrawer') {
         document.getElementById('mGasEndpointInput').value = localStorage.getItem('gas_endpoint_url') || '';
+        document.getElementById('mGasSaveStatus').innerText = '';
       }
       document.getElementById(id).style.display = 'flex';
     }
@@ -789,7 +1045,7 @@
       document.getElementById(id).style.display = 'none';
     }
 
-    // --- POS Catalog Engine (In-Stock Only) ---
+    // --- POS Catalog Engine ---
     function setMobilePosSex(val, el) {
       activeSex = val;
       document.querySelectorAll('#mPosSexChips .chip').forEach(c => c.classList.remove('active'));
@@ -808,6 +1064,15 @@
       el.classList.add('active');
       renderMobilePosCatalog();
     }
+    function resetMobilePosFilters() {
+      document.getElementById('mPosSearch').value = '';
+      activeSex = "All";
+      activeType = "All";
+      activeSize = "All";
+      document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+      document.querySelectorAll('#mPosSexChips div:first-child, #mPosTypeChips div:first-child, #mPosSizeChips div:first-child').forEach(c => c.classList.add('active'));
+      renderMobilePosCatalog();
+    }
 
     async function renderMobilePosCatalog() {
       const products = await dbGetAll("products");
@@ -818,54 +1083,78 @@
         const matchSex = activeSex === "All" || p.Sex === activeSex;
         const matchType = activeType === "All" || p.Type === activeType;
         const matchSize = activeSize === "All" || String(p.Size) === activeSize;
-        const str = `${p.ProductID} ${p.Name_MM} ${p.ColorPattern} ${p.Type}`.toLowerCase();
+        const str = `${p.ProductID} ${p.Name_MM} ${p.ColorPattern} ${p.Type} ${p.Sex || ''} ${p.Remark || ''}`.toLowerCase();
         const matchQuery = !query || str.includes(query);
         const matchStock = (Number(p.Stock) || 0) > 0;
         return matchSex && matchType && matchSize && matchQuery && matchStock;
       });
 
       if (filtered.length === 0) {
-        feed.innerHTML = `<div style="grid-column: 1/-1; text-align:center; color:#888; padding:30px;">No matching in-stock items.</div>`;
+        feed.innerHTML = `<div style="grid-column: 1/-1; text-align:center; color:#888; padding:30px;">No in-stock items found.</div>`;
         return;
       }
 
-      feed.innerHTML = filtered.map(p => `
-        <div class="product-mobile-card">
-          <div>
-            <div style="font-weight: bold; font-size: 13px;">${p.Name_MM}</div>
-            <div style="font-size: 11px; color: #666; margin: 2px 0;">${p.Size} | ${p.ColorPattern}</div>
-            <span class="status-badge badge-stock-ok">${p.Stock} left</span>
+      feed.innerHTML = filtered.map(p => {
+        const stock = Number(p.Stock) || 0;
+        const priceToUse = isWholesaleActive ? (p.WholesalePrice || p.SellingPrice) : p.SellingPrice;
+        const badgeClass = stock <= 2 ? 'badge-stock-low' : 'badge-stock-ok';
+
+        return `
+          <div class="product-mobile-card">
+            <div>
+              <div style="font-weight: bold; font-size: 13px; line-height: 1.3;">${p.Name_MM}</div>
+              <div style="font-size: 11px; color: #666; margin: 3px 0;">${p.Size} | ${p.ColorPattern} | ${p.Length || 'တို'}</div>
+              <span class="status-badge ${badgeClass}">${stock} left</span>
+            </div>
+            <div style="margin-top: 8px;">
+              <div style="font-weight: bold; color: var(--primary); font-size: 14px; margin-bottom: 6px;">${Number(priceToUse).toLocaleString()} K</div>
+              <button class="btn btn-primary btn-sm" style="width: 100%;" onclick="addToMobileCart('${p.ProductID}')">➕ Add</button>
+            </div>
           </div>
-          <div style="margin-top: 8px;">
-            <div style="font-weight: bold; color: var(--primary); font-size: 14px; margin-bottom: 6px;">${Number(p.SellingPrice).toLocaleString()} K</div>
-            <button class="btn btn-primary" style="width: 100%; min-height: 38px; padding: 6px; font-size: 13px;" onclick="addToMobileCart('${p.ProductID}')">➕ Add</button>
-          </div>
-        </div>
-      `).join('');
+        `;
+      }).join('');
     }
 
-    // --- Cart & Checkout Drawer ---
+    function toggleMobileWholesaleMode() {
+      isWholesaleActive = document.getElementById("mWholesaleToggle").checked;
+      dbGetAll("products").then(products => {
+        currentCart.forEach(item => {
+          const prod = products.find(p => p.ProductID === item.ProductID);
+          if (prod) {
+            item.UnitPrice = isWholesaleActive ? (prod.WholesalePrice || prod.SellingPrice) : prod.SellingPrice;
+            item.Subtotal = item.Quantity * item.UnitPrice;
+          }
+        });
+        renderMobileCartDrawer();
+        renderMobilePosCatalog();
+      });
+    }
+
     async function addToMobileCart(productId) {
       const products = await dbGetAll("products");
       const p = products.find(x => x.ProductID === productId);
       if (!p) return;
 
-      const existing = currentCart.find(x => x.ProductID === productId);
-      const stock = Number(p.Stock) || 0;
+      const availableStock = Number(p.Stock) || 0;
+      const existing = currentCart.find(item => item.ProductID === productId);
+      const unitPrice = isWholesaleActive ? (Number(p.WholesalePrice) || Number(p.SellingPrice)) : Number(p.SellingPrice);
 
       if (existing) {
-        if (existing.Quantity + 1 > stock) return alert(`Maximum available stock is ${stock}.`);
+        if (existing.Quantity + 1 > availableStock) {
+          return alert(`Maximum available stock is ${availableStock}.`);
+        }
         existing.Quantity++;
         existing.Subtotal = existing.Quantity * existing.UnitPrice;
       } else {
+        if (availableStock <= 0) return alert("Item is out of stock!");
         currentCart.push({
           ProductID: p.ProductID,
           Name_MM: p.Name_MM,
           Size: p.Size,
           ColorPattern: p.ColorPattern,
-          UnitPrice: Number(p.SellingPrice),
+          UnitPrice: unitPrice,
           Quantity: 1,
-          Subtotal: Number(p.SellingPrice)
+          Subtotal: unitPrice
         });
       }
       renderMobileCartDrawer();
@@ -892,8 +1181,63 @@
 
     function clearMobileCart() {
       currentCart = [];
+      document.getElementById('mOrderDiscountType').value = 'none';
+      handleMobileDiscountChange();
       renderMobileCartDrawer();
       closeDrawer('mCheckoutDrawer');
+    }
+
+    function handleMobileDiscountChange() {
+      const type = document.getElementById("mOrderDiscountType").value;
+      const valInput = document.getElementById("mOrderDiscountVal");
+      const tieredRow = document.getElementById("mTieredDiscountRow");
+
+      if (type === 'none') {
+        valInput.style.display = 'none';
+        valInput.value = '';
+        tieredRow.style.display = 'none';
+      } else if (type === 'percentage') {
+        valInput.style.display = 'block';
+        valInput.placeholder = "Enter % (e.g. 10)";
+        tieredRow.style.display = 'none';
+      } else if (type === 'flat') {
+        valInput.style.display = 'block';
+        valInput.placeholder = "Enter Flat MMK (e.g. 5000)";
+        tieredRow.style.display = 'none';
+      } else if (type === 'tiered') {
+        valInput.style.display = 'none';
+        tieredRow.style.display = 'grid';
+      }
+      renderMobileCartDrawer();
+    }
+
+    function calculateMobileDiscountBreakdown(subtotal) {
+      const type = document.getElementById('mOrderDiscountType').value;
+      let discountAmount = 0;
+      let label = "Discount:";
+
+      if (type === 'percentage') {
+        const pct = parseFloat(document.getElementById('mOrderDiscountVal').value) || 0;
+        discountAmount = Math.round(subtotal * (pct / 100));
+        label = `Discount (${pct}%):`;
+      } else if (type === 'flat') {
+        const flat = parseFloat(document.getElementById('mOrderDiscountVal').value) || 0;
+        discountAmount = Math.min(subtotal, flat);
+        label = `Flat Discount:`;
+      } else if (type === 'tiered') {
+        const cashback = parseFloat(document.getElementById('mOrderTierCashback').value) || 0;
+        const threshold = parseFloat(document.getElementById('mOrderTierThreshold').value) || 100000;
+        if (threshold > 0 && subtotal >= threshold) {
+          const tiers = Math.floor(subtotal / threshold);
+          discountAmount = tiers * cashback;
+          label = `Cashback (${tiers}x Tier):`;
+        }
+      }
+
+      discountAmount = Math.min(subtotal, Math.max(0, discountAmount));
+      const netTotal = Math.max(0, subtotal - discountAmount);
+
+      return { type, discountAmount, netTotal, label };
     }
 
     function renderMobileCartDrawer() {
@@ -903,6 +1247,11 @@
       const totalEl = document.getElementById("mDrawerTotalDisplay");
       const countEl = document.getElementById("mCartItemCountBadge");
       const barTotalEl = document.getElementById("mCartBarTotalDisplay");
+      const cartItemsCountLbl = document.getElementById("mCartItemsCountLbl");
+      const discountRow = document.getElementById("mDrawerDiscountRow");
+      const discountLabel = document.getElementById("mDrawerDiscountLabel");
+      const discountDisplay = document.getElementById("mDrawerDiscountDisplay");
+      const discountBadge = document.getElementById("mDrawerDiscountBadge");
 
       let subtotal = 0;
       let totalQty = 0;
@@ -912,6 +1261,9 @@
         list.innerHTML = `<div style="text-align:center; color:#888; padding:15px;">Cart is empty.</div>`;
         subtotalEl.innerText = "0 MMK";
         totalEl.innerText = "0 MMK";
+        cartItemsCountLbl.innerText = "0";
+        discountRow.style.display = 'none';
+        discountBadge.innerText = '';
         return;
       }
 
@@ -920,10 +1272,10 @@
         subtotal += i.Subtotal;
         totalQty += i.Quantity;
         return `
-          <div style="display: flex; justify-content: space-between; align-items: center; background: #f8fafc; padding: 8px; border-radius: 8px;">
-            <div style="font-size: 13px;">
-              <b>${i.Name_MM}</b> (${i.Size})<br>
-              <span style="font-size: 11px; color: #666;">${i.Subtotal.toLocaleString()} MMK</span>
+          <div style="display: flex; justify-content: space-between; align-items: center; background: #f8fafc; padding: 8px; border-radius: 8px; border: 1px solid var(--border);">
+            <div style="font-size: 12px;">
+              <b>${i.Name_MM}</b> (${i.Size} | ${i.ColorPattern})<br>
+              <span style="color: #666;">${Number(i.Subtotal).toLocaleString()} MMK</span>
             </div>
             <div style="display: flex; align-items: center; gap: 6px;">
               <button class="stepper-btn" onclick="updateMobileCartQty('${i.ProductID}', -1)">-</button>
@@ -934,63 +1286,62 @@
         `;
       }).join('');
 
-      const discType = document.getElementById("mOrderDiscountType").value;
-      const discValInput = document.getElementById("mOrderDiscountVal");
-      let discountAmount = 0;
-
-      if (discType === 'percentage') {
-        discValInput.style.display = 'block';
-        const pct = parseFloat(discValInput.value) || 0;
-        discountAmount = Math.round(subtotal * (pct / 100));
-      } else if (discType === 'flat') {
-        discValInput.style.display = 'block';
-        discountAmount = parseFloat(discValInput.value) || 0;
-      } else {
-        discValInput.style.display = 'none';
-      }
-
-      discountAmount = Math.min(subtotal, Math.max(0, discountAmount));
-      const netTotal = Math.max(0, subtotal - discountAmount);
+      const disc = calculateMobileDiscountBreakdown(subtotal);
 
       countEl.innerText = `${totalQty} Items`;
-      barTotalEl.innerText = `${netTotal.toLocaleString()} MMK`;
+      cartItemsCountLbl.innerText = totalQty.toString();
+      barTotalEl.innerText = `${disc.netTotal.toLocaleString()} MMK`;
       subtotalEl.innerText = `${subtotal.toLocaleString()} MMK`;
-      totalEl.innerText = `${netTotal.toLocaleString()} MMK`;
+      totalEl.innerText = `${disc.netTotal.toLocaleString()} MMK`;
 
-      const discRow = document.getElementById("mDrawerDiscountRow");
-      if (discountAmount > 0) {
-        discRow.style.display = "flex";
-        document.getElementById("mDrawerDiscountDisplay").innerText = `-${discountAmount.toLocaleString()} MMK`;
+      if (disc.discountAmount > 0) {
+        discountRow.style.display = "flex";
+        discountLabel.innerText = disc.label;
+        discountDisplay.innerText = `-${disc.discountAmount.toLocaleString()} MMK`;
+        discountBadge.innerText = `Saved ${disc.discountAmount.toLocaleString()} K`;
       } else {
-        discRow.style.display = "none";
+        discountRow.style.display = "none";
+        discountBadge.innerText = '';
       }
     }
 
-    // --- Customer Search Drawer ---
+    // --- Customer Lookup & Autocomplete ---
+    let custDebounce;
     async function handleMobileCustInput() {
       const input = document.getElementById("mCustName").value.trim().toLowerCase();
       const list = document.getElementById("mCustSuggestList");
 
+      if (document.getElementById("mCustBoundId").value) {
+        unbindMobileCustomer(false);
+      }
+
+      clearTimeout(custDebounce);
       if (input.length < 1) {
         list.style.display = "none";
         return;
       }
 
-      const customers = await dbGetAll("customers");
-      const matches = customers.filter(c => (c.FullName && c.FullName.toLowerCase().includes(input)) || (c.Phone && String(c.Phone).includes(input))).slice(0, 4);
+      custDebounce = setTimeout(async () => {
+        const customers = await dbGetAll("customers");
+        const matches = customers.filter(c => 
+          (c.FullName && c.FullName.toLowerCase().includes(input)) || 
+          (c.Phone && String(c.Phone).includes(input)) ||
+          (c.Remark && c.Remark.toLowerCase().includes(input))
+        ).slice(0, 4);
 
-      if (matches.length === 0) {
-        list.style.display = "none";
-        return;
-      }
+        if (matches.length === 0) {
+          list.style.display = "none";
+          return;
+        }
 
-      list.innerHTML = matches.map(c => `
-        <div class="cust-mobile-suggest-item" onclick="bindMobileCustomer('${c.CustomerID}')">
-          <b>👤 ${c.FullName}</b> (${c.Phone || 'No Phone'})<br>
-          <span style="font-size: 11px; color: #666;">${c.TownshipCity || ''}</span>
-        </div>
-      `).join('');
-      list.style.display = "block";
+        list.innerHTML = matches.map(c => `
+          <div class="cust-mobile-suggest-item" onclick="bindMobileCustomer('${c.CustomerID}')">
+            <b>👤 ${c.FullName}</b> (${c.Phone || 'No Phone'})<br>
+            <span style="font-size: 11px; color: #666;">📍 ${c.TownshipCity || '-'}</span>
+          </div>
+        `).join('');
+        list.style.display = "block";
+      }, 150);
     }
 
     async function bindMobileCustomer(customerId) {
@@ -999,53 +1350,118 @@
       if (!c) return;
 
       document.getElementById("mCustBoundId").value = c.CustomerID;
-      document.getElementById("mCustName").value = c.FullName;
+      document.getElementById("mCustName").value = c.FullName || '';
       document.getElementById("mCustPhone").value = c.Phone || '';
       document.getElementById("mCustTownship").value = c.TownshipCity || '';
       document.getElementById("mCustAddress").value = c.DefaultAddress || '';
 
+      const orders = await dbGetAll("orders");
+      const totalSpent = orders
+        .filter(o => o.CustomerID === c.CustomerID && o.Status !== "Cancelled")
+        .reduce((sum, o) => sum + (Number(o.TotalAmount) || 0), 0);
+
       document.getElementById("mCustBadge").style.display = "block";
       document.getElementById("mCustFoundText").innerText = `${c.FullName} (${c.CustomerID})`;
+      document.getElementById("mCustFoundSpend").innerText = totalSpent ? `${totalSpent.toLocaleString()} K` : 'Profile';
       document.getElementById("mCustSuggestList").style.display = "none";
     }
 
-    function unbindMobileCustomer() {
+    function unbindMobileCustomer(clearFields = true) {
       document.getElementById("mCustBoundId").value = '';
       document.getElementById("mCustBadge").style.display = 'none';
-      document.getElementById("mCustPhone").value = '';
-      document.getElementById("mCustTownship").value = '';
-      document.getElementById("mCustAddress").value = '';
+      if (clearFields) {
+        document.getElementById("mCustPhone").value = '';
+        document.getElementById("mCustTownship").value = '';
+        document.getElementById("mCustAddress").value = '';
+      }
     }
 
-    // --- Submit Order ---
+    // --- ID Generators Matching Backend ---
+    async function generateNextSalesId() {
+      const orders = await dbGetAll("orders");
+      let maxNum = 0;
+      orders.forEach(o => {
+        if (o.SalesID) {
+          const match = String(o.SalesID).match(/\d+/);
+          if (match) {
+            const num = parseInt(match[0], 10);
+            if (num > maxNum) maxNum = num;
+          }
+        }
+      });
+      return "S" + String(maxNum + 1).padStart(6, "0");
+    }
+
+    async function generateNextCustomerId() {
+      const customers = await dbGetAll("customers");
+      let maxNum = 0;
+      customers.forEach(c => {
+        if (c.CustomerID) {
+          const match = String(c.CustomerID).match(/\d+/);
+          if (match) {
+            const num = parseInt(match[0], 10);
+            if (num > maxNum) maxNum = num;
+          }
+        }
+      });
+      return "C" + String(maxNum + 1).padStart(6, "0");
+    }
+
+    async function generateNextItemCode() {
+      const products = await dbGetAll("products");
+      let maxNum = 0;
+      products.forEach(p => {
+        if (p.ItemCode) {
+          const match = String(p.ItemCode).match(/\d+/);
+          if (match) {
+            const num = parseInt(match[0], 10);
+            if (num > maxNum) maxNum = num;
+          }
+        }
+      });
+      return "I" + String(maxNum + 1).padStart(6, "0");
+    }
+
+    function cleanColorCode(colorText) {
+      const map = {
+        "ပန်း": "PNK", "pink": "PNK",
+        "ဝါ": "YEL", "yellow": "YEL",
+        "ပြာ": "BLU", "blue": "BLU",
+        "ခဲ": "GRY", "grey": "GRY", "gray": "GRY",
+        "ဖြူ": "WHT", "white": "WHT",
+        "နီ": "RED", "red": "RED",
+        "စိမ်း": "GRN", "green": "GRN",
+        "နက်": "BLK", "black": "BLK",
+        "လိမ္မော်": "ORG", "orange": "ORG",
+        "ခရမ်း": "PUR", "purple": "PUR",
+        "ကြား": "STR", "striped": "STR",
+        "ပွင့်": "FLR", "floral": "FLR"
+      };
+      const normalized = String(colorText).toLowerCase().trim();
+      return map[normalized] || String(colorText).toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 3) || 'DEF';
+    }
+
+    // --- Complete Sale ---
     async function submitMobileOrder() {
       const name = document.getElementById("mCustName").value.trim();
       const phone = document.getElementById("mCustPhone").value.trim();
       const address = document.getElementById("mCustAddress").value.trim();
       const township = document.getElementById("mCustTownship").value.trim();
+      const delivery = document.getElementById("mOrderDeliveryName").value;
       const payment = document.getElementById("mOrderPaymentType").value;
+      const paidStatus = document.getElementById("mOrderPaidStatus").value;
+      const status = document.getElementById("mOrderStatus").value;
+      const remark = document.getElementById("mOrderRemark").value.trim();
       const boundId = document.getElementById("mCustBoundId").value;
 
       if (!name) return alert("Customer Name is required.");
-      if (currentCart.length === 0) return alert("Cart is empty.");
+      if (currentCart.length === 0) return alert("Cannot complete sale: Cart is empty.");
 
       const subtotal = currentCart.reduce((sum, i) => sum + i.Subtotal, 0);
-      const discType = document.getElementById("mOrderDiscountType").value;
-      let discountAmount = 0;
-
-      if (discType === 'percentage') {
-        const pct = parseFloat(document.getElementById("mOrderDiscountVal").value) || 0;
-        discountAmount = Math.round(subtotal * (pct / 100));
-      } else if (discType === 'flat') {
-        discountAmount = parseFloat(document.getElementById("mOrderDiscountVal").value) || 0;
-      }
-      discountAmount = Math.min(subtotal, Math.max(0, discountAmount));
-      const netTotal = Math.max(0, subtotal - discountAmount);
-
-      const orders = await dbGetAll("orders");
-      const salesId = "S" + String(orders.length + 1).padStart(6, "0");
-      const customerId = boundId || ("C" + String(Date.now()).slice(-6));
+      const disc = calculateMobileDiscountBreakdown(subtotal);
       const timestamp = new Date().toISOString();
+      const salesId = await generateNextSalesId();
+      const customerId = boundId || await generateNextCustomerId();
 
       const orderPayload = {
         SalesID: salesId,
@@ -1053,15 +1469,20 @@
         CustomerID: customerId,
         CustomerName: name,
         Phone: phone,
+        DeliveryName: delivery,
         DeliveryAddress: address,
         TownshipCity: township,
         ItemList: currentCart,
         Subtotal: subtotal,
-        DiscountType: discType,
-        DiscountAmount: discountAmount,
-        TotalAmount: netTotal,
+        DiscountType: disc.type,
+        DiscountAmount: disc.discountAmount,
+        DiscountLabel: disc.label,
+        TotalAmount: disc.netTotal,
         PaymentType: payment,
-        Status: "Confirmed",
+        PaidStatus: paidStatus,
+        Status: status,
+        Remark: remark,
+        LastModified: timestamp,
         _syncStatus: "pending_upload"
       };
 
@@ -1076,6 +1497,7 @@
           const prod = req.result;
           if (prod) {
             prod.Stock = Math.max(0, (Number(prod.Stock) || 0) - item.Quantity);
+            prod.LastModified = timestamp;
             prod._syncStatus = "pending_upload";
             pStore.put(prod);
           }
@@ -1083,72 +1505,145 @@
       });
 
       oStore.put(orderPayload);
-      cStore.put({
-        CustomerID: customerId,
-        FullName: name,
-        Phone: phone,
-        DefaultAddress: address,
-        TownshipCity: township,
-        _syncStatus: "pending_upload"
-      });
+
+      const custReq = cStore.get(customerId);
+      custReq.onsuccess = () => {
+        const existing = custReq.result;
+        if (existing) {
+          existing.FullName = name;
+          existing.Phone = phone || existing.Phone || "";
+          existing.DefaultAddress = address || existing.DefaultAddress || "";
+          existing.TownshipCity = township || existing.TownshipCity || "";
+          existing.LastOrderDate = timestamp;
+          existing._syncStatus = "pending_upload";
+          cStore.put(existing);
+        } else {
+          cStore.put({
+            CustomerID: customerId,
+            FullName: name,
+            Phone: phone || "",
+            DefaultAddress: address || "",
+            TownshipCity: township || "",
+            Remark: "",
+            TotalSpend: disc.netTotal,
+            LastOrderDate: timestamp,
+            _syncStatus: "pending_upload"
+          });
+        }
+      };
 
       tx.oncomplete = () => {
         lastSavedOrder = orderPayload;
         clearMobileCart();
+        document.getElementById("mCustName").value = '';
+        document.getElementById("mCustPhone").value = '';
+        document.getElementById("mCustAddress").value = '';
+        document.getElementById("mCustTownship").value = '';
+        document.getElementById("mOrderRemark").value = '';
+        unbindMobileCustomer();
+
         closeDrawer('mCheckoutDrawer');
         renderMobilePosCatalog();
+        renderMobileInventoryList();
+        renderMobileOrdersList();
+        renderMobileCustomersList();
         updateUnsavedBadge();
         openMobileVoucher(orderPayload);
       };
+
+      tx.onerror = (e) => alert("Order placement failed: " + e.target.error);
     }
 
-    // --- Mobile Voucher Sharing & Screenshot ---
+    // --- Mobile Voucher Rendering & Export ---
     function openMobileVoucher(o) {
+      if (!o) return;
+      if (typeof o.ItemList === "string") {
+        try { o.ItemList = JSON.parse(o.ItemList); } catch(e) { o.ItemList = []; }
+      }
+
+      const subtotal = o.Subtotal || (o.ItemList || []).reduce((s, i) => s + (i.Subtotal || 0), 0);
+      const discountAmount = Number(o.DiscountAmount) || 0;
+
       document.getElementById("mvSalesId").innerText = o.SalesID;
+      document.getElementById("mvDate").innerText = new Date(o.Date).toLocaleString();
       document.getElementById("mvCustName").innerText = o.CustomerName;
-      document.getElementById("mvPhone").innerText = o.Phone || 'N/A';
+      document.getElementById("mvPhone").innerText = o.Phone || 'None';
+      document.getElementById("mvDelivery").innerText = o.DeliveryName || 'Standard';
+      document.getElementById("mvAddress").innerText = `${o.DeliveryAddress || ''}${o.TownshipCity ? ', ' + o.TownshipCity : ''}` || 'Not specified';
+      document.getElementById("mvSubtotal").innerText = `${Number(subtotal).toLocaleString()} MMK`;
+
+      const discRow = document.getElementById("mvDiscountRow");
+      if (discountAmount > 0) {
+        discRow.style.display = "flex";
+        document.getElementById("mvDiscountLabel").innerText = o.DiscountLabel || 'Discount:';
+        document.getElementById("mvDiscountAmount").innerText = `-${discountAmount.toLocaleString()} MMK`;
+      } else {
+        discRow.style.display = "none";
+      }
+
       document.getElementById("mvTotal").innerText = `${Number(o.TotalAmount).toLocaleString()} MMK`;
+      document.getElementById("mvPayment").innerText = o.PaymentType || 'KPay';
+      document.getElementById("mvPaidStatus").innerText = (o.PaidStatus || 'not received yet').toUpperCase();
 
       document.getElementById("mvItemsList").innerHTML = (o.ItemList || []).map(i => `
-        <div style="display:flex; justify-content:space-between; margin-bottom:2px;">
+        <div style="display:flex; justify-content:space-between; margin-bottom:3px; font-size:11px;">
           <span>${i.Name_MM} (${i.Size}) x${i.Quantity}</span>
           <b>${Number(i.Subtotal).toLocaleString()} K</b>
         </div>
       `).join('');
 
+      document.getElementById("mvStatusMsg").innerText = '';
       openDrawer('mVoucherDrawer');
     }
 
+    async function generateMobileVoucherCanvas() {
+      const card = document.getElementById("mVoucherCaptureTarget");
+      return await html2canvas(card, { scale: 2, backgroundColor: "#ffffff", useCORS: true });
+    }
+
     async function shareMobileVoucher() {
+      const status = document.getElementById("mvStatusMsg");
+      status.innerText = "📸 Preparing share...";
       try {
-        const card = document.getElementById("mVoucherCaptureTarget");
-        const canvas = await html2canvas(card, { scale: 2, backgroundColor: "#ffffff" });
+        const canvas = await generateMobileVoucherCanvas();
+        const salesId = document.getElementById("mvSalesId").innerText || 'Order';
         canvas.toBlob(async (blob) => {
-          const file = new File([blob], `Voucher_${document.getElementById("mvSalesId").innerText}.png`, { type: 'image/png' });
+          if (!blob) return status.innerText = "❌ Image generation failed.";
+          const file = new File([blob], `Voucher_${salesId}.png`, { type: 'image/png' });
           if (navigator.canShare && navigator.canShare({ files: [file] })) {
             await navigator.share({
               files: [file],
-              title: `Voucher #${document.getElementById("mvSalesId").innerText}`
+              title: `Voucher #${salesId}`,
+              text: `Order Voucher #${salesId} from Mini-M`
             });
+            status.innerText = "✅ Shared successfully!";
           } else {
             downloadMobileVoucher();
+            status.innerText = "ℹ️ Web Share unsupported. Voucher image downloaded.";
           }
-        });
+        }, 'image/png');
       } catch(e) {
-        alert("Share canceled or unsupported on this device.");
+        status.innerText = "❌ Share cancelled or failed.";
       }
     }
 
     async function downloadMobileVoucher() {
-      const card = document.getElementById("mVoucherCaptureTarget");
-      const canvas = await html2canvas(card, { scale: 2, backgroundColor: "#ffffff" });
-      const a = document.createElement("a");
-      a.download = `Voucher_${document.getElementById("mvSalesId").innerText}.png`;
-      a.href = canvas.toDataURL("image/png");
-      a.click();
+      const status = document.getElementById("mvStatusMsg");
+      status.innerText = "📸 Saving image...";
+      try {
+        const canvas = await generateMobileVoucherCanvas();
+        const salesId = document.getElementById("mvSalesId").innerText || 'Order';
+        const a = document.createElement("a");
+        a.download = `Voucher_${salesId}.png`;
+        a.href = canvas.toDataURL("image/png");
+        a.click();
+        status.innerText = "✅ Voucher image saved!";
+      } catch(e) {
+        status.innerText = "❌ Download failed.";
+      }
     }
 
-    // --- Inventory, Orders & Customers Mobile Views ---
+    // --- Inventory Management ---
     async function renderMobileInventoryList() {
       const products = await dbGetAll("products");
       const query = (document.getElementById("mInvSearch")?.value || "").toLowerCase().trim();
@@ -1157,7 +1652,7 @@
 
       const filtered = products.filter(p => {
         const matchStock = showOut ? true : (Number(p.Stock) || 0) > 0;
-        const str = `${p.ProductID} ${p.Name_MM} ${p.Size} ${p.ColorPattern}`.toLowerCase();
+        const str = `${p.ProductID} ${p.Name_MM} ${p.Size} ${p.ColorPattern} ${p.Type}`.toLowerCase();
         return matchStock && (!query || str.includes(query));
       });
 
@@ -1166,19 +1661,24 @@
         return;
       }
 
-      list.innerHTML = filtered.map(p => `
-        <div style="background:white; border:1px solid var(--border); border-radius:8px; padding:10px; display:flex; justify-content:space-between; align-items:center;">
-          <div>
-            <b>${p.Name_MM}</b> (${p.Size} | ${p.ColorPattern})<br>
-            <span style="font-size:11px; color:#666;">${p.ProductID}</span> — <b>${Number(p.SellingPrice).toLocaleString()} K</b>
+      list.innerHTML = filtered.map(p => {
+        const stock = Number(p.Stock) || 0;
+        return `
+          <div style="background:white; border:1px solid var(--border); border-radius:8px; padding:10px; display:flex; justify-content:space-between; align-items:center;" onclick="openProductDrawerForEdit('${p.ProductID}')">
+            <div>
+              <b>${p.Name_MM}</b><br>
+              <span style="font-size:11px; color:#666;">${p.Size} | ${p.ColorPattern} | ${p.ProductID}</span><br>
+              <b style="color:var(--primary); font-size:13px;">${Number(p.SellingPrice).toLocaleString()} K</b>
+              <span style="font-size:11px; color:#888;">(Cost: ${Number(p.TotalCapital || 0).toLocaleString()} K)</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:6px;" onclick="event.stopPropagation();">
+              <button class="stepper-btn" onclick="adjustMobileStock('${p.ProductID}', -1)">-</button>
+              <span style="font-weight:bold; min-width:24px; text-align:center;">${stock}</span>
+              <button class="stepper-btn" onclick="adjustMobileStock('${p.ProductID}', 1)">+</button>
+            </div>
           </div>
-          <div style="display:flex; align-items:center; gap:6px;">
-            <button class="stepper-btn" onclick="adjustMobileStock('${p.ProductID}', -1)">-</button>
-            <span style="font-weight:bold; min-width:24px; text-align:center;">${p.Stock}</span>
-            <button class="stepper-btn" onclick="adjustMobileStock('${p.ProductID}', 1)">+</button>
-          </div>
-        </div>
-      `).join('');
+        `;
+      }).join('');
     }
 
     async function adjustMobileStock(productId, delta) {
@@ -1189,6 +1689,7 @@
         const p = req.result;
         if (p) {
           p.Stock = Math.max(0, (Number(p.Stock) || 0) + delta);
+          p.LastModified = new Date().toISOString();
           p._syncStatus = "pending_upload";
           store.put(p);
         }
@@ -1200,55 +1701,419 @@
       };
     }
 
+    // --- Product Single SKU Creation & Editing ---
+    function roundUpToThousand(num) {
+      if (!num || num <= 0) return 0;
+      return Math.ceil(num / 1000) * 1000;
+    }
+
+    function calculateMobilePricingEngine() {
+      const buyingYuan = parseFloat(document.getElementById('mpBuyingYuan').value) || 0;
+      const supplierPct = parseFloat(document.getElementById('mpSupplierPct').value) || 0;
+      const yuanRate = parseFloat(document.getElementById('mpYuanRate').value) || (appSettings.DefaultYuanRate || 620);
+      const cargoFee = parseFloat(document.getElementById('mpCargoFee').value) || (appSettings.DefaultCargoFee || 2500);
+
+      const capital = ((buyingYuan * (1 + (supplierPct / 100))) * yuanRate) + cargoFee;
+      const totalCapital = Math.round(capital);
+      
+      const regMarginPct = Number(appSettings.RegularProfitMargin || 33) / 100;
+      const wsMarginPct = Number(appSettings.WholesaleProfitMargin || 15) / 100;
+
+      const normalPrice = Math.round(totalCapital * (1 + regMarginPct));
+      const rawWholesale = totalCapital * (1 + wsMarginPct);
+      const wholesaleSuggested = roundUpToThousand(rawWholesale);
+      const sellingPriceSuggested = roundUpToThousand(normalPrice);
+
+      document.getElementById('mpTotalCapital').value = totalCapital;
+      document.getElementById('mpNormalPrice').value = normalPrice;
+
+      if (!isProductEditMode || !document.getElementById('mpPrice').value) {
+        document.getElementById('mpPrice').value = sellingPriceSuggested;
+      }
+      if (!isProductEditMode || !document.getElementById('mpWholesalePrice').value) {
+        document.getElementById('mpWholesalePrice').value = wholesaleSuggested;
+      }
+    }
+
+    function autoGenerateMobileSku() {
+      if (isProductEditMode) return;
+      const code = document.getElementById('mpItemCode').value.trim() || 'I000000';
+      const size = (document.getElementById('mpSize').value || '').replace(/[^a-zA-Z0-9]/g, '');
+      const color = cleanColorCode(document.getElementById('mpColor').value);
+      document.getElementById('mpSku').value = `${code}-${size}-${color}`;
+    }
+
+    async function openProductDrawerForAdd() {
+      isProductEditMode = false;
+      document.getElementById('mpDrawerTitle').innerText = "➕ Add Product Variant SKU";
+      document.getElementById('mpItemCode').disabled = false;
+      document.getElementById('mpSize').disabled = false;
+      document.getElementById('mpColor').disabled = false;
+
+      const nextCode = await generateNextItemCode();
+      document.getElementById('mpItemCode').value = nextCode;
+      document.getElementById('mpName').value = '';
+      document.getElementById('mpSex').value = 'Unisex';
+      document.getElementById('mpLength').value = 'တို';
+      
+      if (document.getElementById('mpType').options.length > 0) document.getElementById('mpType').selectedIndex = 0;
+      if (document.getElementById('mpSize').options.length > 0) document.getElementById('mpSize').selectedIndex = 0;
+      if (document.getElementById('mpColor').options.length > 0) document.getElementById('mpColor').selectedIndex = 0;
+
+      document.getElementById('mpBuyingYuan').value = '';
+      document.getElementById('mpSupplierPct').value = '0';
+      document.getElementById('mpYuanRate').value = appSettings.DefaultYuanRate || 620;
+      document.getElementById('mpCargoFee').value = appSettings.DefaultCargoFee || 2500;
+      document.getElementById('mpTotalCapital').value = '';
+      document.getElementById('mpNormalPrice').value = '';
+      document.getElementById('mpPrice').value = '';
+      document.getElementById('mpWholesalePrice').value = '';
+      document.getElementById('mpStock').value = '5';
+      document.getElementById('mpRemark').value = '';
+
+      autoGenerateMobileSku();
+      openDrawer('mProductAddDrawer');
+    }
+
+    async function openProductDrawerForEdit(productId) {
+      const products = await dbGetAll("products");
+      const p = products.find(x => x.ProductID === productId);
+      if (!p) return;
+
+      isProductEditMode = true;
+      document.getElementById('mpDrawerTitle').innerText = `✏️ Edit: ${p.ProductID}`;
+      document.getElementById('mpItemCode').disabled = true;
+      document.getElementById('mpSize').disabled = true;
+      document.getElementById('mpColor').disabled = true;
+
+      document.getElementById('mpSku').value = p.ProductID;
+      document.getElementById('mpItemCode').value = p.ItemCode || '';
+      document.getElementById('mpName').value = p.Name_MM || '';
+      document.getElementById('mpSex').value = p.Sex || 'Unisex';
+      document.getElementById('mpLength').value = p.Length || 'တို';
+      document.getElementById('mpType').value = p.Type || '';
+      document.getElementById('mpSize').value = p.Size || '';
+      document.getElementById('mpColor').value = p.ColorPattern || '';
+      document.getElementById('mpBuyingYuan').value = p.BuyingYuan || '';
+      document.getElementById('mpSupplierPct').value = p.SupplierPct || '0';
+      document.getElementById('mpYuanRate').value = p.YuanRate || (appSettings.DefaultYuanRate || 620);
+      document.getElementById('mpCargoFee').value = p.CargoFee || (appSettings.DefaultCargoFee || 2500);
+      document.getElementById('mpTotalCapital').value = p.TotalCapital || '';
+      document.getElementById('mpNormalPrice').value = p.NormalPrice || '';
+      document.getElementById('mpPrice').value = p.SellingPrice || '';
+      document.getElementById('mpWholesalePrice').value = p.WholesalePrice || '';
+      document.getElementById('mpStock').value = p.Stock !== undefined ? p.Stock : 0;
+      document.getElementById('mpRemark').value = p.Remark || '';
+
+      openDrawer('mProductAddDrawer');
+    }
+
+    async function saveMobileProduct() {
+      const sku = document.getElementById("mpSku").value.trim();
+      const code = document.getElementById("mpItemCode").value.trim();
+      const name = document.getElementById("mpName").value.trim();
+      const sex = document.getElementById("mpSex").value;
+      const length = document.getElementById("mpLength").value;
+      const type = document.getElementById("mpType").value;
+      const size = document.getElementById("mpSize").value;
+      const color = document.getElementById("mpColor").value;
+      const price = Number(document.getElementById("mpPrice").value) || 0;
+      const wholesale = Number(document.getElementById("mpWholesalePrice").value) || 0;
+      const stock = Number(document.getElementById("mpStock").value) || 0;
+      const remark = document.getElementById("mpRemark").value.trim();
+
+      const buyingYuan = parseFloat(document.getElementById('mpBuyingYuan').value) || 0;
+      const supplierPct = parseFloat(document.getElementById('mpSupplierPct').value) || 0;
+      const yuanRate = parseFloat(document.getElementById('mpYuanRate').value) || 0;
+      const cargoFee = parseFloat(document.getElementById('mpCargoFee').value) || 0;
+      const totalCapital = Number(document.getElementById('mpTotalCapital').value) || 0;
+      const normalPrice = Number(document.getElementById('mpNormalPrice').value) || 0;
+
+      if (!name) return alert("Product Name is required.");
+      if (price <= 0) return alert("Selling Price is required.");
+
+      const productPayload = {
+        ProductID: sku,
+        ItemCode: code,
+        Name_MM: name,
+        Sex: sex,
+        Type: type,
+        Length: length,
+        Size: size,
+        ColorPattern: color,
+        Remark: remark,
+        Stock: stock,
+        BuyingYuan: buyingYuan,
+        SupplierPct: supplierPct,
+        YuanRate: yuanRate,
+        CargoFee: cargoFee,
+        TotalCapital: totalCapital,
+        NormalPrice: normalPrice,
+        SellingPrice: price,
+        WholesalePrice: wholesale,
+        LastModified: new Date().toISOString(),
+        _syncStatus: "pending_upload"
+      };
+
+      await dbPut("products", productPayload);
+      alert(`✅ SKU ${sku} saved!`);
+      closeDrawer('mProductAddDrawer');
+      renderMobileInventoryList();
+      renderMobilePosCatalog();
+    }
+
+    // --- Mobile Orders Management ---
     async function renderMobileOrdersList() {
       const orders = await dbGetAll("orders");
       const query = (document.getElementById("mOrderSearch")?.value || "").toLowerCase().trim();
       const list = document.getElementById("mOrdersList");
 
       orders.sort((a, b) => new Date(b.Date) - new Date(a.Date));
-      const filtered = orders.filter(o => !query || `${o.SalesID} ${o.CustomerName}`.toLowerCase().includes(query));
+      const filtered = orders.filter(o => {
+        const str = `${o.SalesID} ${o.CustomerName} ${o.Phone || ''} ${o.DeliveryName || ''} ${o.PaidStatus || ''} ${o.Status}`.toLowerCase();
+        return !query || str.includes(query);
+      });
 
       if (filtered.length === 0) {
-        list.innerHTML = `<div style="text-align:center; color:#888; padding:20px;">No orders found.</div>`;
+        list.innerHTML = `<div style="text-align:center; color:#888; padding:20px;">No sales orders found.</div>`;
         return;
       }
 
-      list.innerHTML = filtered.map(o => `
-        <div style="background:white; border:1px solid var(--border); border-radius:8px; padding:10px;">
-          <div style="display:flex; justify-content:space-between; font-weight:bold;">
-            <span>${o.SalesID} • ${o.CustomerName}</span>
-            <span style="color:var(--primary);">${Number(o.TotalAmount).toLocaleString()} K</span>
+      const deliveryServices = appSettings.DeliveryServices || ["Royal", "Wepots", "Ninja Van", "Safe", "self"];
+      const paidStatuses = appSettings.PaidStatuses || ["paid", "not received yet"];
+
+      list.innerHTML = filtered.map(o => {
+        const curCourier = o.DeliveryName || 'Royal';
+        let courierList = [...deliveryServices];
+        if (curCourier && !courierList.includes(curCourier)) courierList.push(curCourier);
+        const courierOptions = courierList.map(c => `<option value="${c}" ${c === curCourier ? 'selected' : ''}>${c}</option>`).join('');
+
+        const curPaid = o.PaidStatus || 'not received yet';
+        let paidList = [...paidStatuses];
+        if (curPaid && !paidList.includes(curPaid)) paidList.push(curPaid);
+        const paidOptions = paidList.map(p => `<option value="${p}" ${p === curPaid ? 'selected' : ''}>${p}</option>`).join('');
+
+        const isPaid = curPaid.toLowerCase() === 'paid';
+
+        return `
+          <div style="background:white; border:1px solid var(--border); border-radius:8px; padding:10px;">
+            <div style="display:flex; justify-content:space-between; font-weight:bold;">
+              <span>${o.SalesID} • ${o.CustomerName}</span>
+              <span style="color:var(--primary);">${Number(o.TotalAmount).toLocaleString()} K</span>
+            </div>
+            <div style="font-size:11px; color:#666; margin:4px 0;">
+              ${(o.ItemList || []).map(i => `${i.Name_MM} (${i.Size}) x${i.Quantity}`).join(', ')}
+            </div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 6px;">
+              <select onchange="quickUpdateMobileOrderCourier('${o.SalesID}', this.value)" style="padding: 4px; font-size: 11px;">
+                ${courierOptions}
+              </select>
+              <select onchange="quickUpdateMobileOrderPaidStatus('${o.SalesID}', this.value)" style="padding: 4px; font-size: 11px; font-weight:bold; color:${isPaid ? '#155724' : '#721c24'};">
+                ${paidOptions}
+              </select>
+            </div>
+
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:6px;">
+              <select onchange="quickUpdateMobileOrderStatus('${o.SalesID}', this.value)" style="width: auto; padding: 4px; font-size: 11px;">
+                <option value="Confirmed" ${o.Status === 'Confirmed' ? 'selected' : ''}>Confirmed</option>
+                <option value="Pending" ${o.Status === 'Pending' ? 'selected' : ''}>Pending</option>
+                <option value="Shipped" ${o.Status === 'Shipped' ? 'selected' : ''}>Shipped</option>
+                <option value="Delivered" ${o.Status === 'Delivered' ? 'selected' : ''}>Delivered</option>
+                <option value="Cancelled" ${o.Status === 'Cancelled' ? 'selected' : ''}>Cancelled</option>
+              </select>
+              <button class="btn btn-success btn-sm" onclick='openMobileVoucher(${JSON.stringify(o).replace(/'/g, "&apos;")})'>📸 Voucher</button>
+            </div>
           </div>
-          <div style="font-size:11px; color:#666; margin:4px 0;">
-            ${(o.ItemList || []).map(i => `${i.Name_MM} (${i.Size}) x${i.Quantity}`).join(', ')}
-          </div>
-          <div style="display:flex; justify-content:flex-end; gap:6px; margin-top:6px;">
-            <button class="btn btn-success" style="min-height:32px; padding:4px 10px; font-size:11px;" onclick='openMobileVoucher(${JSON.stringify(o).replace(/'/g, "&apos;")})'>📸 Voucher</button>
-          </div>
-        </div>
-      `).join('');
+        `;
+      }).join('');
     }
 
+    async function quickUpdateMobileOrderCourier(salesId, courier) {
+      const orders = await dbGetAll("orders");
+      const o = orders.find(x => x.SalesID === salesId);
+      if (!o) return;
+      o.DeliveryName = courier;
+      o.LastModified = new Date().toISOString();
+      o._syncStatus = "pending_upload";
+      await dbPut("orders", o);
+      renderMobileOrdersList();
+    }
+
+    async function quickUpdateMobileOrderPaidStatus(salesId, paidStatus) {
+      const orders = await dbGetAll("orders");
+      const o = orders.find(x => x.SalesID === salesId);
+      if (!o) return;
+      o.PaidStatus = paidStatus;
+      o.LastModified = new Date().toISOString();
+      o._syncStatus = "pending_upload";
+      await dbPut("orders", o);
+      renderMobileOrdersList();
+    }
+
+    async function quickUpdateMobileOrderStatus(salesId, newStatus) {
+      const orders = await dbGetAll("orders");
+      const o = orders.find(x => x.SalesID === salesId);
+      if (!o) return;
+
+      if (newStatus === "Cancelled" && o.Status !== "Cancelled") {
+        if (confirm("Marking as Cancelled will return items to stock inventory. Proceed?")) {
+          await refundOrderStock(o.ItemList);
+        } else {
+          renderMobileOrdersList();
+          return;
+        }
+      } else if (newStatus !== "Cancelled" && o.Status === "Cancelled") {
+        if (confirm("Reactivating order will deduct items from stock again. Proceed?")) {
+          await deductOrderStock(o.ItemList);
+        } else {
+          renderMobileOrdersList();
+          return;
+        }
+      }
+
+      o.Status = newStatus;
+      o.LastModified = new Date().toISOString();
+      o._syncStatus = "pending_upload";
+      await dbPut("orders", o);
+      renderMobileOrdersList();
+      renderMobileInventoryList();
+      renderMobilePosCatalog();
+    }
+
+    async function refundOrderStock(items) {
+      const tx = db.transaction("products", "readwrite");
+      const store = tx.objectStore("products");
+      for (let item of (items || [])) {
+        const req = store.get(item.ProductID);
+        req.onsuccess = () => {
+          const prod = req.result;
+          if (prod) {
+            prod.Stock = (Number(prod.Stock) || 0) + Number(item.Quantity);
+            prod.LastModified = new Date().toISOString();
+            prod._syncStatus = "pending_upload";
+            store.put(prod);
+          }
+        };
+      }
+    }
+
+    async function deductOrderStock(items) {
+      const tx = db.transaction("products", "readwrite");
+      const store = tx.objectStore("products");
+      for (let item of (items || [])) {
+        const req = store.get(item.ProductID);
+        req.onsuccess = () => {
+          const prod = req.result;
+          if (prod) {
+            prod.Stock = Math.max(0, (Number(prod.Stock) || 0) - Number(item.Quantity));
+            prod.LastModified = new Date().toISOString();
+            prod._syncStatus = "pending_upload";
+            store.put(prod);
+          }
+        };
+      }
+    }
+
+    // --- Customers Management ---
     async function renderMobileCustomersList() {
       const customers = await dbGetAll("customers");
+      const orders = await dbGetAll("orders");
       const query = (document.getElementById("mCustSearch")?.value || "").toLowerCase().trim();
       const list = document.getElementById("mCustomersList");
 
-      const filtered = customers.filter(c => !query || `${c.FullName} ${c.Phone || ''}`.toLowerCase().includes(query));
+      const filtered = customers.filter(c => {
+        const str = `${c.CustomerID} ${c.FullName} ${c.Phone || ''} ${c.TownshipCity || ''}`.toLowerCase();
+        return !query || str.includes(query);
+      });
+
       if (filtered.length === 0) {
         list.innerHTML = `<div style="text-align:center; color:#888; padding:20px;">No customer records found.</div>`;
         return;
       }
 
-      list.innerHTML = filtered.map(c => `
-        <div style="background:white; border:1px solid var(--border); border-radius:8px; padding:10px; display:flex; justify-content:space-between; align-items:center;">
-          <div>
-            <b>${c.FullName}</b><br>
-            <span style="font-size:11px; color:#666;">📞 ${c.Phone || 'No Phone'} • 📍 ${c.TownshipCity || '-'}</span>
+      list.innerHTML = filtered.map(c => {
+        const custOrders = orders.filter(o => o.CustomerID === c.CustomerID && o.Status !== "Cancelled");
+        const totalSpend = custOrders.reduce((sum, o) => sum + (Number(o.TotalAmount) || 0), 0);
+
+        return `
+          <div style="background:white; border:1px solid var(--border); border-radius:8px; padding:10px; display:flex; justify-content:space-between; align-items:center;">
+            <div onclick="openCustomerDrawerForEdit('${c.CustomerID}')">
+              <b>${c.FullName}</b> (${c.CustomerID})<br>
+              <span style="font-size:11px; color:#666;">📞 ${c.Phone || 'No Phone'} • 📍 ${c.TownshipCity || '-'}</span><br>
+              <b style="font-size:12px; color:var(--primary);">${totalSpend.toLocaleString()} MMK</b>
+              <span style="font-size:11px; color:#888;">(${custOrders.length} orders)</span>
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="startMobilePosForCust('${c.CustomerID}')">🛒 Sale</button>
           </div>
-          <button class="btn btn-primary" style="min-height:34px; padding:4px 10px; font-size:11px;" onclick="startMobilePosForCust('${c.CustomerID}')">🛒 Sale</button>
-        </div>
-      `).join('');
+        `;
+      }).join('');
+    }
+
+    async function openNewCustomerDrawer() {
+      const nextId = await generateNextCustomerId();
+      document.getElementById('mcDrawerTitle').innerText = "➕ Create Customer Profile";
+      document.getElementById('mcCustId').value = nextId;
+      document.getElementById('mcFullName').value = '';
+      document.getElementById('mcPhone').value = '';
+      document.getElementById('mcTownship').value = '';
+      document.getElementById('mcAddress').value = '';
+      document.getElementById('mcRemark').value = '';
+      document.getElementById('btnMcStartSale').style.display = 'none';
+      openDrawer('mCustomerDrawer');
+    }
+
+    async function openCustomerDrawerForEdit(customerId) {
+      const customers = await dbGetAll("customers");
+      const c = customers.find(x => x.CustomerID === customerId);
+      if (!c) return;
+
+      document.getElementById('mcDrawerTitle').innerText = `👤 Profile: ${c.FullName}`;
+      document.getElementById('mcCustId').value = c.CustomerID;
+      document.getElementById('mcFullName').value = c.FullName || '';
+      document.getElementById('mcPhone').value = c.Phone || '';
+      document.getElementById('mcTownship').value = c.TownshipCity || '';
+      document.getElementById('mcAddress').value = c.DefaultAddress || '';
+      document.getElementById('mcRemark').value = c.Remark || '';
+      document.getElementById('btnMcStartSale').style.display = 'inline-flex';
+      openDrawer('mCustomerDrawer');
+    }
+
+    async function saveMobileCustomer() {
+      const id = document.getElementById('mcCustId').value;
+      const name = document.getElementById('mcFullName').value.trim();
+      const phone = document.getElementById('mcPhone').value.trim();
+      const township = document.getElementById('mcTownship').value.trim();
+      const address = document.getElementById('mcAddress').value.trim();
+      const remark = document.getElementById('mcRemark').value.trim();
+
+      if (!name) return alert("Full Name is required.");
+
+      const customers = await dbGetAll("customers");
+      const existing = customers.find(c => c.CustomerID === id);
+
+      const payload = {
+        CustomerID: id,
+        FullName: name,
+        Phone: phone,
+        TownshipCity: township,
+        DefaultAddress: address,
+        Remark: remark,
+        TotalSpend: existing ? (existing.TotalSpend || 0) : 0,
+        LastOrderDate: existing ? (existing.LastOrderDate || new Date().toISOString()) : new Date().toISOString(),
+        _syncStatus: "pending_upload"
+      };
+
+      await dbPut("customers", payload);
+      alert("✅ Customer profile saved!");
+      closeDrawer('mCustomerDrawer');
+      renderMobileCustomersList();
+    }
+
+    function startPosFromMobileCustomerModal() {
+      const custId = document.getElementById('mcCustId').value;
+      closeDrawer('mCustomerDrawer');
+      startMobilePosForCust(custId);
     }
 
     function startMobilePosForCust(customerId) {
@@ -1257,100 +2122,163 @@
       openDrawer('mCheckoutDrawer');
     }
 
-    // --- Save Product Single SKU ---
-    async function saveMobileProduct() {
-      const name = document.getElementById("mpName").value.trim();
-      const sex = document.getElementById("mpSex").value;
-      const type = document.getElementById("mpType").value;
-      const size = document.getElementById("mpSize").value;
-      const color = document.getElementById("mpColor").value;
-      const price = Number(document.getElementById("mpPrice").value) || 0;
-      const stock = Number(document.getElementById("mpStock").value) || 0;
-
-      if (!name || price <= 0) return alert("Product Name and valid Selling Price are required.");
-
-      const products = await dbGetAll("products");
-      const itemCode = "I" + String(products.length + 1).padStart(6, "0");
-      const sku = `${itemCode}-${String(size).replace(/[^a-zA-Z0-9]/g, '')}-${color}`;
-
-      await dbPut("products", {
-        ProductID: sku,
-        ItemCode: itemCode,
-        Name_MM: name,
-        Sex: sex,
-        Type: type,
-        Size: size,
-        ColorPattern: color,
-        SellingPrice: price,
-        Stock: stock,
-        _syncStatus: "pending_upload"
-      });
-
-      alert(`✅ SKU ${sku} added!`);
-      closeDrawer('mProductAddDrawer');
-      renderMobileInventoryList();
-      renderMobilePosCatalog();
-    }
-
-    // --- Cloud Sync Handlers ---
+    // --- Google Apps Script Sync & Offline JSON ---
     function saveMobileGasUrl() {
       const url = document.getElementById("mGasEndpointInput").value.trim();
       if (!url.startsWith("https://script.google.com/")) return alert("Invalid Google Apps Script Web App URL.");
       localStorage.setItem("gas_endpoint_url", url);
-      alert("✅ Backend URL saved locally!");
-      closeDrawer('mSyncDrawer');
+      document.getElementById("mGasSaveStatus").innerHTML = "<span style='color:green;'>✅ Saved!</span>";
+    }
+
+    async function testMobileGasConnection() {
+      const url = document.getElementById("mGasEndpointInput").value.trim();
+      const status = document.getElementById("mGasSaveStatus");
+      if (!url) return status.innerHTML = "<span style='color:red;'>⚠️ Enter URL first.</span>";
+      status.innerHTML = "⏳ Connecting...";
+      try {
+        const res = await (await fetch(url)).json();
+        if (res.status === "success") {
+          status.innerHTML = "<span style='color:green;'>✅ Connected!</span>";
+        } else {
+          status.innerHTML = `<span style='color:orange;'>⚠️ Response: ${res.message || 'Error'}</span>`;
+        }
+      } catch(e) {
+        status.innerHTML = `<span style='color:red;'>❌ Connection failed: ${e.message}</span>`;
+      }
     }
 
     async function downloadFromGoogleSheetsMobile() {
       const endpoint = localStorage.getItem("gas_endpoint_url");
-      if (!endpoint) return alert("Please configure your Google Apps Script Backend URL first.");
+      if (!endpoint) return alert("Please configure and save your Google Apps Script URL first.");
 
       try {
         const res = await (await fetch(endpoint, { method: "GET" })).json();
         if (res.status !== "success") throw new Error(res.message);
 
-        const tx = db.transaction(["products", "orders", "customers"], "readwrite");
-        (res.data.products || []).forEach(p => tx.objectStore("products").put({ ...p, _syncStatus: "synced" }));
-        (res.data.orders || []).forEach(o => tx.objectStore("orders").put({ ...o, _syncStatus: "synced" }));
-        (res.data.customers || []).forEach(c => tx.objectStore("customers").put({ ...c, _syncStatus: "synced" }));
+        const { products, orders, customers, settings } = res.data;
 
-        tx.oncomplete = () => {
-          alert("✅ Cloud data merged!");
-          closeDrawer('mSyncDrawer');
-          renderMobilePosCatalog();
-          renderMobileInventoryList();
-          renderMobileOrdersList();
-          renderMobileCustomersList();
-          updateUnsavedBadge();
-        };
+        await smartMergeStore("products", "ProductID", products || []);
+
+        const normalizedOrders = (orders || []).map(o => {
+          if (typeof o.ItemList === "string") {
+            try { o.ItemList = JSON.parse(o.ItemList); } catch(e) { o.ItemList = []; }
+          }
+          return o;
+        });
+        await smartMergeStore("orders", "SalesID", normalizedOrders);
+
+        let counter = 1;
+        const normalizedCustomers = (customers || []).map(c => {
+          return {
+            ...c,
+            CustomerID: c.CustomerID || ("C" + String(counter++).padStart(6, "0")),
+            FullName: c.FullName || "Customer",
+            Phone: c.Phone ? String(c.Phone).trim() : "",
+            DefaultAddress: c.DefaultAddress || "",
+            TownshipCity: c.TownshipCity || "",
+            Remark: c.Remark || "",
+            LastOrderDate: c.LastOrderDate || new Date().toISOString()
+          };
+        });
+        await smartMergeStore("customers", "CustomerID", normalizedCustomers);
+
+        if (settings && typeof settings === "object") {
+          const tx = db.transaction("settings", "readwrite");
+          const sStore = tx.objectStore("settings");
+          Object.keys(settings).forEach(k => {
+            appSettings[k] = settings[k];
+            sStore.put({ key: k, value: settings[k] });
+          });
+          await new Promise(r => { tx.oncomplete = r; });
+          applyDynamicSettings();
+        }
+
+        renderMobilePosCatalog();
+        renderMobileInventoryList();
+        renderMobileOrdersList();
+        renderMobileCustomersList();
+        await updateUnsavedBadge();
+        alert("✅ Cloud data and settings merged successfully!");
+        closeDrawer('mSyncDrawer');
       } catch(e) {
-        alert("Sync Failed: " + e.message);
+        alert("Sync Download Error: " + e.message);
+        await updateUnsavedBadge();
       }
+    }
+
+    async function smartMergeStore(storeName, keyField, cloudItems) {
+      const localItems = await dbGetAll(storeName);
+      const localMap = new Map(localItems.map(item => [item[keyField], item]));
+
+      const tx = db.transaction(storeName, "readwrite");
+      const store = tx.objectStore(storeName);
+
+      for (let cloudItem of cloudItems) {
+        const key = cloudItem[keyField];
+        const local = localMap.get(key);
+
+        if (!local || local._syncStatus !== "pending_upload") {
+          cloudItem._syncStatus = "synced";
+          store.put(cloudItem);
+        }
+      }
+
+      return new Promise((resolve, reject) => {
+        tx.oncomplete = () => resolve(true);
+        tx.onerror = () => reject(tx.error);
+      });
     }
 
     async function uploadToGoogleSheetsMobile() {
       const endpoint = localStorage.getItem("gas_endpoint_url");
-      if (!endpoint) return alert("Please configure your Google Apps Script Backend URL first.");
+      if (!endpoint) return alert("Please configure and save your Google Apps Script URL first.");
 
       try {
         const [products, orders, customers] = await Promise.all([
           dbGetAll("products"), dbGetAll("orders"), dbGetAll("customers")
         ]);
 
+        const payload = {
+          products: products.map(cleanSyncRecord),
+          orders: orders.map(cleanSyncRecord),
+          customers: customers.map(cleanSyncRecord)
+        };
+
         const res = await (await fetch(endpoint, {
           method: "POST",
           headers: { "Content-Type": "text/plain;charset=utf-8" },
-          body: JSON.stringify({ products, orders, customers })
+          body: JSON.stringify(payload)
         })).json();
 
         if (res.status !== "success") throw new Error(res.message);
 
-        alert("✅ Google Sheets backup updated!");
+        await markStoreAsSynced("products", products);
+        await markStoreAsSynced("orders", orders);
+        await markStoreAsSynced("customers", customers);
+
+        await updateUnsavedBadge();
+        alert("✅ Google Sheets backup updated successfully!");
         closeDrawer('mSyncDrawer');
-        updateUnsavedBadge();
       } catch(e) {
-        alert("Upload Failed: " + e.message);
+        alert("Upload Error: " + e.message);
+        await updateUnsavedBadge();
       }
+    }
+
+    function cleanSyncRecord(record) {
+      const copy = { ...record };
+      delete copy._syncStatus;
+      return copy;
+    }
+
+    async function markStoreAsSynced(storeName, items) {
+      const tx = db.transaction(storeName, "readwrite");
+      const store = tx.objectStore(storeName);
+      for (let item of items) {
+        item._syncStatus = "synced";
+        store.put(item);
+      }
+      return new Promise(r => { tx.oncomplete = () => r(true); });
     }
 
     async function updateUnsavedBadge() {
@@ -1369,6 +2297,62 @@
         badge.className = "status-badge badge-synced";
         badge.innerText = "⚡ Synced";
       }
+    }
+
+    async function exportMobileJsonBackup() {
+      try {
+        const [products, orders, customers, settings] = await Promise.all([
+          dbGetAll("products"), dbGetAll("orders"), dbGetAll("customers"), dbGetAll("settings")
+        ]);
+
+        const backupData = {
+          version: "5.3",
+          exportDate: new Date().toISOString(),
+          products, orders, customers, settings
+        };
+
+        const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: "application/json" });
+        const a = document.createElement("a");
+        a.href = URL.createObjectURL(blob);
+        a.download = `BabyStore_MobileBackup_${new Date().toISOString().slice(0, 10)}.json`;
+        a.click();
+      } catch (err) {
+        alert("Export Backup Failed: " + err.message);
+      }
+    }
+
+    function importMobileJsonBackup(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        try {
+          const data = JSON.parse(e.target.result);
+          if (!data.products || !data.orders || !data.customers) throw new Error("Invalid backup structure.");
+
+          if (!confirm("Restore database from this JSON backup? Existing records will be replaced.")) return;
+
+          await dbReplaceAll("products", data.products);
+          await dbReplaceAll("orders", data.orders);
+          await dbReplaceAll("customers", data.customers);
+          if (data.settings) await dbReplaceAll("settings", data.settings);
+
+          await loadSettings();
+          renderMobilePosCatalog();
+          renderMobileInventoryList();
+          renderMobileOrdersList();
+          renderMobileCustomersList();
+          await updateUnsavedBadge();
+          alert("✅ Restored successfully from file!");
+          closeDrawer('mSyncDrawer');
+        } catch (err) {
+          alert("Restore Failed: " + err.message);
+        } finally {
+          event.target.value = "";
+        }
+      };
+      reader.readAsText(file);
     }
   </script>
 </body>
