@@ -367,6 +367,54 @@
       border-radius: 8px;
       margin-top: 10px;
     }
+
+    /* Thermal Slip Print Stylesheet (Optimized for 80mm Roll) */
+    #mPrintSlip { display: none; }
+
+    @media print {
+      @page {
+        margin: 0;
+        size: 80mm auto;
+      }
+      body {
+        background-color: #fff !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        color: #000 !important;
+        font-family: 'Segoe UI', 'Padauk', Arial, sans-serif !important;
+        -webkit-print-color-adjust: exact;
+      }
+      /* Hide the entire mobile app interface */
+      .mobile-header, .bottom-nav, .floating-cart-bar, .tab-view, .drawer-overlay, .sync-loading-overlay {
+        display: none !important;
+      }
+      /* Display formatted 80mm continuous slip */
+      body.printing-mobile-slip #mPrintSlip {
+        display: block !important;
+        width: 100%;
+        max-width: 76mm;
+        margin: 0 auto;
+        padding: 8px 6px 24px 6px;
+        font-size: 13px;
+        line-height: 1.3;
+        color: #000;
+      }
+      .slip-divider {
+        border-bottom: 1px dashed #000;
+        margin: 6px 0;
+      }
+      .slip-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 6px 0;
+        font-size: 12px;
+      }
+      .slip-table th, .slip-table td {
+        padding: 4px 0;
+        border: none;
+        text-align: left;
+      }
+    }
   </style>
 </head>
 <body>
@@ -383,10 +431,11 @@
     </div>
   </header>
 
-      <div id="mSyncLoadingOverlay" class="sync-loading-overlay">
-      <div class="spinner-icon"></div>
-      <span id="mSyncLoadingText">Syncing data...</span>
-    </div>
+  <!-- Non-blocking Sync Notification Toast -->
+  <div id="mSyncLoadingOverlay" class="sync-loading-overlay">
+    <div class="spinner-icon"></div>
+    <span id="mSyncLoadingText">Syncing data...</span>
+  </div>
 
   <!-- ========================================================================= -->
   <!-- TAB 1: MOBILE POS VIEW -->
@@ -679,9 +728,10 @@
         </div>
       </div>
 
-      <div style="display: flex; gap: 8px; margin-top: 14px;">
+      <div style="display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap;">
+        <button class="btn btn-secondary" style="flex: 1;" onclick="printReceiptFromMobile(lastSavedOrder)">🖨️ Print Slip</button>
         <button class="btn btn-success" style="flex: 1;" onclick="shareMobileVoucher()">📲 Share Voucher</button>
-        <button class="btn btn-primary" onclick="downloadMobileVoucher()">📥 Save Image</button>
+        <button class="btn btn-primary" onclick="downloadMobileVoucher()">📥 Save</button>
       </div>
       <div id="mvStatusMsg" style="font-size: 11px; text-align: center; color: #666; margin-top: 6px;"></div>
     </div>
@@ -709,7 +759,7 @@
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 14px;">
         <button id="btnMDownload" class="btn btn-secondary" onclick="downloadFromGoogleSheetsMobile()">📥 Download Sheets</button>
         <button id="btnMUpload" class="btn btn-success" onclick="uploadToGoogleSheetsMobile()">☁️ Upload Sheets</button>
-      </div>>
+      </div>
 
       <div style="border-top: 1px dashed #cbd5e0; margin-top: 14px; padding-top: 10px;">
         <label>Offline JSON Backups:</label>
@@ -884,6 +934,71 @@
         <button class="btn btn-primary" style="flex: 1;" onclick="saveMobileCustomer()">💾 Save Profile</button>
         <button class="btn btn-success" id="btnMcStartSale" onclick="startPosFromMobileCustomerModal()">🛒 New Sale</button>
       </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- HIDDEN 80MM THERMAL RECEIPT SLIP TEMPLATE -->
+  <!-- ========================================================================= -->
+  <div id="mPrintSlip">
+    <div style="text-align: center;">
+      <img src="logo.png" alt="Logo" style="max-height: 48px; width: auto; margin: 0 auto 4px auto; display: block;" onerror="this.style.display='none'">
+      <b style="font-size: 16px;">MINI-M BABY CLOTHING</b><br>
+      <span style="font-size: 11px;">Sales Receipt & Delivery Order</span>
+    </div>
+
+    <div class="slip-divider"></div>
+
+    <div style="font-size: 12px; line-height: 1.4;">
+      <div style="display: flex; justify-content: space-between;">
+        <span><b>Sales ID:</b> <span id="mpsSalesId"></span></span>
+        <span><b>Date:</b> <span id="mpsDate"></span></span>
+      </div>
+      <div><b>Customer:</b> <span id="mpsCustName"></span></div>
+      <div><b>Phone:</b> <span id="mpsPhone"></span></div>
+      <div><b>Courier:</b> <span id="mpsDelivery"></span></div>
+      <div><b>Address:</b> <span id="mpsAddress"></span></div>
+    </div>
+
+    <div class="slip-divider"></div>
+
+    <table class="slip-table">
+      <thead>
+        <tr>
+          <th style="width: 48%;">Item / Variant</th>
+          <th style="text-align: center; width: 14%;">Qty</th>
+          <th style="text-align: right; width: 18%;">Price</th>
+          <th style="text-align: right; width: 20%;">Total</th>
+        </tr>
+      </thead>
+      <tbody id="mpsItemsBody"></tbody>
+    </table>
+
+    <div class="slip-divider"></div>
+
+    <div style="font-size: 12px; line-height: 1.4;">
+      <div style="display: flex; justify-content: space-between;">
+        <span>Subtotal:</span>
+        <span id="mpsSubtotal"></span>
+      </div>
+      <div id="mpsDiscountRow" style="display: none; justify-content: space-between; color: #000;">
+        <span id="mpsDiscountLabel">Discount:</span>
+        <span id="mpsDiscountAmount"></span>
+      </div>
+      <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 15px; margin-top: 4px; border-top: 1px dashed #000; padding-top: 4px;">
+        <span>TOTAL:</span>
+        <span id="mpsTotal"></span>
+      </div>
+    </div>
+
+    <div style="margin-top: 6px; font-size: 11px; line-height: 1.3;">
+      <div><b>Payment Method:</b> <span id="mpsPayment"></span> (<span id="mpsPaidStatus"></span>)</div>
+      <div id="mpsRemarkRow" style="display: none;"><b>Delivery Notes:</b> <span id="mpsRemark"></span></div>
+    </div>
+
+    <div style="text-align: center; font-size: 11px; margin-top: 14px; font-style: italic;">
+      Thank you for shopping with Mini-M! 💕<br>
+      Please inspect all clothing items upon delivery.
     </div>
   </div>
 
@@ -1683,6 +1798,76 @@
       }
     }
 
+    // --- Thermal Receipt Printing (80mm Formatted) ---
+    function printReceiptFromMobile(order) {
+      if (!order) return alert("Please select or complete an order first.");
+
+      let items = order.ItemList || [];
+      if (typeof items === "string") {
+        try { items = JSON.parse(items); } catch(e) { items = []; }
+      }
+
+      const subtotal = order.Subtotal || items.reduce((s, i) => s + (Number(i.Subtotal) || 0), 0);
+      const discountAmount = Number(order.DiscountAmount) || 0;
+
+      document.getElementById("mpsSalesId").innerText = order.SalesID || "-";
+      document.getElementById("mpsDate").innerText = new Date(order.Date).toLocaleDateString();
+      document.getElementById("mpsCustName").innerText = order.CustomerName || "-";
+      document.getElementById("mpsPhone").innerText = order.Phone || "N/A";
+      document.getElementById("mpsDelivery").innerText = order.DeliveryName || "Standard";
+      document.getElementById("mpsAddress").innerText = `${order.DeliveryAddress || ''}${order.TownshipCity ? ', ' + order.TownshipCity : ''}` || 'N/A';
+
+      const itemsBody = document.getElementById("mpsItemsBody");
+      itemsBody.innerHTML = items.map(i => {
+        const unitPrice = Number(i.UnitPrice) || (Number(i.Subtotal) / Number(i.Quantity)) || 0;
+        return `
+          <tr>
+            <td>
+              <b>${i.Name_MM}</b><br>
+              <span style="font-size: 10px; color: #333;">${i.Size || '-'} | ${i.ColorPattern || '-'}</span>
+            </td>
+            <td style="text-align: center; font-weight: bold;">${i.Quantity}</td>
+            <td style="text-align: right;">${unitPrice.toLocaleString()}</td>
+            <td style="text-align: right; font-weight: bold;">${Number(i.Subtotal).toLocaleString()}</td>
+          </tr>
+        `;
+      }).join('');
+
+      document.getElementById("mpsSubtotal").innerText = `${Number(subtotal).toLocaleString()} K`;
+
+      const discRow = document.getElementById("mpsDiscountRow");
+      if (discountAmount > 0) {
+        discRow.style.display = "flex";
+        document.getElementById("mpsDiscountLabel").innerText = order.DiscountLabel || "Discount:";
+        document.getElementById("mpsDiscountAmount").innerText = `-${discountAmount.toLocaleString()} K`;
+      } else {
+        discRow.style.display = "none";
+      }
+
+      document.getElementById("mpsTotal").innerText = `${Number(order.TotalAmount).toLocaleString()} MMK`;
+      document.getElementById("mpsPayment").innerText = order.PaymentType || "Cash";
+      document.getElementById("mpsPaidStatus").innerText = (order.PaidStatus || "not received yet").toUpperCase();
+
+      const remarkRow = document.getElementById("mpsRemarkRow");
+      if (order.Remark && order.Remark.trim()) {
+        remarkRow.style.display = "block";
+        document.getElementById("mpsRemark").innerText = order.Remark;
+      } else {
+        remarkRow.style.display = "none";
+      }
+
+      // Print preview trigger
+      document.body.classList.add("printing-mobile-slip");
+      window.print();
+      document.body.classList.remove("printing-mobile-slip");
+    }
+
+    async function printMobileSlipById(salesId) {
+      const orders = await dbGetAll("orders");
+      const o = orders.find(x => x.SalesID === salesId);
+      if (o) printReceiptFromMobile(o);
+    }
+
     // --- Inventory Management ---
     async function renderMobileInventoryList() {
       const products = await dbGetAll("products");
@@ -1962,7 +2147,10 @@
                 <option value="Delivered" ${o.Status === 'Delivered' ? 'selected' : ''}>Delivered</option>
                 <option value="Cancelled" ${o.Status === 'Cancelled' ? 'selected' : ''}>Cancelled</option>
               </select>
-              <button class="btn btn-success btn-sm" onclick='openMobileVoucher(${JSON.stringify(o).replace(/'/g, "&apos;")})'>📸 Voucher</button>
+              <div style="display: flex; gap: 4px;">
+                <button class="btn btn-secondary btn-sm" onclick='printMobileSlipById("${o.SalesID}")'>🖨️ Slip</button>
+                <button class="btn btn-success btn-sm" onclick='openMobileVoucher(${JSON.stringify(o).replace(/'/g, "&apos;")})'>📸 Voucher</button>
+              </div>
             </div>
           </div>
         `;
@@ -2187,6 +2375,29 @@
       }
     }
 
+    function setSyncLoading(active, text = "Syncing...") {
+      const overlay = document.getElementById("mSyncLoadingOverlay");
+      const overlayText = document.getElementById("mSyncLoadingText");
+      const badge = document.getElementById("mSyncStatus");
+      const btnDown = document.getElementById("btnMDownload");
+      const btnUp = document.getElementById("btnMUpload");
+
+      if (active) {
+        if (overlayText) overlayText.innerText = text;
+        if (overlay) overlay.style.display = "flex";
+        if (badge) {
+          badge.className = "status-badge badge-unsaved";
+          badge.innerText = "⏳ In Progress";
+        }
+        if (btnDown) btnDown.disabled = true;
+        if (btnUp) btnUp.disabled = true;
+      } else {
+        if (overlay) overlay.style.display = "none";
+        if (btnDown) btnDown.disabled = false;
+        if (btnUp) btnUp.disabled = false;
+      }
+    }
+
     async function downloadFromGoogleSheetsMobile() {
       const endpoint = localStorage.getItem("gas_endpoint_url");
       if (!endpoint) {
@@ -2194,7 +2405,7 @@
         return;
       }
 
-      // 1. Immediately close drawer so the UI never appears stuck
+      // 1. Close drawer immediately to prevent visual stall
       closeDrawer('mSyncDrawer');
 
       // 2. Display non-blocking feedback toast
@@ -2280,29 +2491,6 @@
       });
     }
 
-    function setSyncLoading(active, text = "Syncing...") {
-      const overlay = document.getElementById("mSyncLoadingOverlay");
-      const overlayText = document.getElementById("mSyncLoadingText");
-      const badge = document.getElementById("mSyncStatus");
-      const btnDown = document.getElementById("btnMDownload");
-      const btnUp = document.getElementById("btnMUpload");
-
-      if (active) {
-        if (overlayText) overlayText.innerText = text;
-        if (overlay) overlay.style.display = "flex";
-        if (badge) {
-          badge.className = "status-badge badge-unsaved";
-          badge.innerText = "⏳ In Progress";
-        }
-        if (btnDown) btnDown.disabled = true;
-        if (btnUp) btnUp.disabled = true;
-      } else {
-        if (overlay) overlay.style.display = "none";
-        if (btnDown) btnDown.disabled = false;
-        if (btnUp) btnUp.disabled = false;
-      }
-    }
-
     async function uploadToGoogleSheetsMobile() {
       const endpoint = localStorage.getItem("gas_endpoint_url");
       if (!endpoint) {
@@ -2313,7 +2501,7 @@
       // 1. Immediately close drawer
       closeDrawer('mSyncDrawer');
 
-      // 2. Show active upload notification
+      // 2. Show active non-blocking feedback toast
       setSyncLoading(true, "Uploading to Sheets...");
 
       try {
