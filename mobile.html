@@ -72,6 +72,27 @@
       margin-bottom: 3px;
     }
 
+    /* Search input clear button wrapper */
+    .search-input-wrapper {
+      position: relative;
+      flex: 1;
+      display: flex;
+      align-items: center;
+    }
+    .search-clear-btn {
+      position: absolute;
+      right: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      font-size: 16px;
+      color: #888;
+      padding: 4px;
+      cursor: pointer;
+      display: none;
+    }
+
     /* Sync Spinner & Progress Toast Overlay */
     .sync-loading-overlay {
       position: fixed;
@@ -384,11 +405,9 @@
         font-family: 'Segoe UI', 'Padauk', Arial, sans-serif !important;
         -webkit-print-color-adjust: exact;
       }
-      /* Hide the entire mobile app interface */
       .mobile-header, .bottom-nav, .floating-cart-bar, .tab-view, .drawer-overlay, .sync-loading-overlay {
         display: none !important;
       }
-      /* Display formatted 80mm continuous slip */
       body.printing-mobile-slip #mPrintSlip {
         display: block !important;
         width: 100%;
@@ -441,8 +460,15 @@
   <!-- TAB 1: MOBILE POS VIEW -->
   <!-- ========================================================================= -->
   <div id="mPosView" class="tab-view active">
-    <div style="display: flex; gap: 6px;">
-      <input type="text" id="mPosSearch" placeholder="🔍 Search SKU, Title, Color, Type..." oninput="renderMobilePosCatalog()">
+    <div style="display: flex; gap: 6px; align-items: center;">
+      <div class="search-input-wrapper">
+        <input type="search" id="mPosSearch" 
+               placeholder="🔍 Search SKU, Title, Color, Type..." 
+               autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
+               oninput="onSearchInputChanged('mPosSearch', 'mPosSearchClear', debouncedMobilePosCatalog)">
+        <button type="button" id="mPosSearchClear" class="search-clear-btn" 
+                onclick="clearSearchInput('mPosSearch', 'mPosSearchClear', debouncedMobilePosCatalog)">✕</button>
+      </div>
       <button class="btn btn-secondary btn-sm" onclick="resetMobilePosFilters()">Reset</button>
     </div>
 
@@ -488,8 +514,15 @@
   <!-- TAB 2: MOBILE INVENTORY VIEW -->
   <!-- ========================================================================= -->
   <div id="mInventoryView" class="tab-view">
-    <div style="display: flex; gap: 8px; margin-bottom: 8px;">
-      <input type="text" id="mInvSearch" placeholder="🔍 Search SKU, name, color, type..." oninput="renderMobileInventoryList()">
+    <div style="display: flex; gap: 6px; margin-bottom: 8px; align-items: center;">
+      <div class="search-input-wrapper">
+        <input type="search" id="mInvSearch" 
+               placeholder="🔍 Search SKU, name, color, type, remark..." 
+               autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
+               oninput="onSearchInputChanged('mInvSearch', 'mInvSearchClear', debouncedMobileInventoryList)">
+        <button type="button" id="mInvSearchClear" class="search-clear-btn" 
+                onclick="clearSearchInput('mInvSearch', 'mInvSearchClear', debouncedMobileInventoryList)">✕</button>
+      </div>
       <button class="btn btn-primary btn-sm" style="white-space: nowrap;" onclick="openProductDrawerForAdd()">➕ SKU</button>
     </div>
 
@@ -505,16 +538,32 @@
   <!-- TAB 3: MOBILE ORDERS VIEW -->
   <!-- ========================================================================= -->
   <div id="mOrdersView" class="tab-view">
-    <input type="text" id="mOrderSearch" placeholder="🔍 Search Sales ID, Customer, Phone, Courier..." oninput="renderMobileOrdersList()">
-    <div id="mOrdersList" style="display: flex; flex-direction: column; gap: 8px; margin-top: 10px;"></div>
+    <div style="display: flex; gap: 6px; margin-bottom: 10px; align-items: center;">
+      <div class="search-input-wrapper">
+        <input type="search" id="mOrderSearch" 
+               placeholder="🔍 Search Sales ID, Customer, Phone, Courier..." 
+               autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
+               oninput="onSearchInputChanged('mOrderSearch', 'mOrderSearchClear', debouncedMobileOrdersList)">
+        <button type="button" id="mOrderSearchClear" class="search-clear-btn" 
+                onclick="clearSearchInput('mOrderSearch', 'mOrderSearchClear', debouncedMobileOrdersList)">✕</button>
+      </div>
+    </div>
+    <div id="mOrdersList" style="display: flex; flex-direction: column; gap: 8px;"></div>
   </div>
 
   <!-- ========================================================================= -->
   <!-- TAB 4: MOBILE CUSTOMERS VIEW -->
   <!-- ========================================================================= -->
   <div id="mCustomersView" class="tab-view">
-    <div style="display: flex; gap: 8px; margin-bottom: 10px;">
-      <input type="text" id="mCustSearch" placeholder="🔍 Search Name, Phone, Township..." oninput="renderMobileCustomersList()">
+    <div style="display: flex; gap: 6px; margin-bottom: 10px; align-items: center;">
+      <div class="search-input-wrapper">
+        <input type="search" id="mCustSearch" 
+               placeholder="🔍 Search Name, Phone, Township, Remark..." 
+               autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
+               oninput="onSearchInputChanged('mCustSearch', 'mCustSearchClear', debouncedMobileCustomersList)">
+        <button type="button" id="mCustSearchClear" class="search-clear-btn" 
+                onclick="clearSearchInput('mCustSearch', 'mCustSearchClear', debouncedMobileCustomersList)">✕</button>
+      </div>
       <button class="btn btn-primary btn-sm" style="white-space: nowrap;" onclick="openNewCustomerDrawer()">➕ Client</button>
     </div>
     <div id="mCustomersList" style="display: flex; flex-direction: column; gap: 8px;"></div>
@@ -1031,6 +1080,53 @@
     let isProductEditMode = false;
     let lastSavedOrder = null;
 
+    // --- Lightweight Debounce Utilities for Mobile ---
+    let posSearchTimer;
+    function debouncedMobilePosCatalog() {
+      clearTimeout(posSearchTimer);
+      posSearchTimer = setTimeout(renderMobilePosCatalog, 150);
+    }
+
+    let invSearchTimer;
+    function debouncedMobileInventoryList() {
+      clearTimeout(invSearchTimer);
+      invSearchTimer = setTimeout(renderMobileInventoryList, 150);
+    }
+
+    let orderSearchTimer;
+    function debouncedMobileOrdersList() {
+      clearTimeout(orderSearchTimer);
+      orderSearchTimer = setTimeout(renderMobileOrdersList, 150);
+    }
+
+    let custSearchTimer;
+    function debouncedMobileCustomersList() {
+      clearTimeout(custSearchTimer);
+      custSearchTimer = setTimeout(renderMobileCustomersList, 150);
+    }
+
+    function onSearchInputChanged(inputId, clearBtnId, callback) {
+      const input = document.getElementById(inputId);
+      const clearBtn = document.getElementById(clearBtnId);
+      if (clearBtn) {
+        clearBtn.style.display = (input && input.value.trim().length > 0) ? "block" : "none";
+      }
+      callback();
+    }
+
+    function clearSearchInput(inputId, clearBtnId, callback) {
+      const input = document.getElementById(inputId);
+      const clearBtn = document.getElementById(clearBtnId);
+      if (input) {
+        input.value = "";
+        input.focus();
+      }
+      if (clearBtn) {
+        clearBtn.style.display = "none";
+      }
+      callback();
+    }
+
     function initDatabase() {
       return new Promise((resolve, reject) => {
         const request = indexedDB.open(DB_NAME, DB_VERSION);
@@ -1220,7 +1316,7 @@
       renderMobilePosCatalog();
     }
     function resetMobilePosFilters() {
-      document.getElementById('mPosSearch').value = '';
+      clearSearchInput('mPosSearch', 'mPosSearchClear', () => {});
       activeSex = "All";
       activeType = "All";
       activeSize = "All";
@@ -1238,7 +1334,7 @@
         const matchSex = activeSex === "All" || p.Sex === activeSex;
         const matchType = activeType === "All" || p.Type === activeType;
         const matchSize = activeSize === "All" || String(p.Size) === activeSize;
-        const str = `${p.ProductID} ${p.Name_MM} ${p.ColorPattern} ${p.Type} ${p.Sex || ''} ${p.Remark || ''}`.toLowerCase();
+        const str = `${p.ProductID || ''} ${p.Name_MM || ''} ${p.ColorPattern || ''} ${p.Type || ''} ${p.Sex || ''} ${p.Length || ''} ${p.Size || ''} ${p.Remark || ''}`.toLowerCase();
         const matchQuery = !query || str.includes(query);
         const matchStock = (Number(p.Stock) || 0) > 0;
         return matchSex && matchType && matchSize && matchQuery && matchStock;
@@ -1877,7 +1973,7 @@
 
       const filtered = products.filter(p => {
         const matchStock = showOut ? true : (Number(p.Stock) || 0) > 0;
-        const str = `${p.ProductID} ${p.Name_MM} ${p.Size} ${p.ColorPattern} ${p.Type}`.toLowerCase();
+        const str = `${p.ProductID || ''} ${p.Name_MM || ''} ${p.Sex || ''} ${p.Type || ''} ${p.Length || ''} ${p.Size || ''} ${p.ColorPattern || ''} ${p.Remark || ''}`.toLowerCase();
         return matchStock && (!query || str.includes(query));
       });
 
@@ -2095,7 +2191,7 @@
 
       orders.sort((a, b) => new Date(b.Date) - new Date(a.Date));
       const filtered = orders.filter(o => {
-        const str = `${o.SalesID} ${o.CustomerName} ${o.Phone || ''} ${o.DeliveryName || ''} ${o.PaidStatus || ''} ${o.Status}`.toLowerCase();
+        const str = `${o.SalesID || ''} ${o.CustomerName || ''} ${o.Phone || ''} ${o.DeliveryName || ''} ${o.PaidStatus || ''} ${o.Status || ''}`.toLowerCase();
         return !query || str.includes(query);
       });
 
@@ -2251,7 +2347,7 @@
       const list = document.getElementById("mCustomersList");
 
       const filtered = customers.filter(c => {
-        const str = `${c.CustomerID} ${c.FullName} ${c.Phone || ''} ${c.TownshipCity || ''}`.toLowerCase();
+        const str = `${c.CustomerID || ''} ${c.FullName || ''} ${c.Phone || ''} ${c.TownshipCity || ''} ${c.DefaultAddress || ''} ${c.Remark || ''}`.toLowerCase();
         return !query || str.includes(query);
       });
 
@@ -2405,10 +2501,7 @@
         return;
       }
 
-      // 1. Close drawer immediately to prevent visual stall
       closeDrawer('mSyncDrawer');
-
-      // 2. Display non-blocking feedback toast
       setSyncLoading(true, "Downloading Sheets...");
 
       try {
@@ -2498,10 +2591,7 @@
         return;
       }
 
-      // 1. Immediately close drawer
       closeDrawer('mSyncDrawer');
-
-      // 2. Show active non-blocking feedback toast
       setSyncLoading(true, "Uploading to Sheets...");
 
       try {
