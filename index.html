@@ -1810,32 +1810,41 @@
   }
 
   function calculatePricingEngine() {
-    const buyingYuan = parseFloat(document.getElementById('mProdBuyingYuan').value) || 0;
-    const supplierPct = parseFloat(document.getElementById('mProdSupplierPct').value) || 0;
-    const yuanRate = parseFloat(document.getElementById('mProdYuanRate').value) || (appSettings.DefaultYuanRate || 620);
-    const cargoFee = parseFloat(document.getElementById('mProdCargoFee').value) || (appSettings.DefaultCargoFee || 2500);
+  const buyingYuan = parseFloat(document.getElementById('mProdBuyingYuan').value) || 0;
+  const supplierPct = parseFloat(document.getElementById('mProdSupplierPct').value) || 0;
+  const yuanRate = parseFloat(document.getElementById('mProdYuanRate').value) || (appSettings.DefaultYuanRate || 620);
+  const cargoFee = parseFloat(document.getElementById('mProdCargoFee').value) || (appSettings.DefaultCargoFee || 2500);
 
-    const capital = ((buyingYuan * (1 + (supplierPct / 100))) * yuanRate) + cargoFee;
-    const totalCapital = Math.round(capital);
-    
-    const regMarginPct = Number(appSettings.RegularProfitMargin || 33) / 100;
-    const wsMarginPct = Number(appSettings.WholesaleProfitMargin || 15) / 100;
+  // Total Capital Calculation
+  const capital = ((buyingYuan * (1 + (supplierPct / 100))) * yuanRate) + cargoFee;
+  const totalCapital = Math.round(capital);
+  
+  const regMarginPct = Number(appSettings.RegularProfitMargin || 33) / 100;
+  const wsMarginPct = Number(appSettings.WholesaleProfitMargin || 15) / 100;
 
-    const normalPrice = Math.round(totalCapital * (1 + regMarginPct));
-    const rawWholesale = totalCapital * (1 + wsMarginPct);
-    const wholesaleSuggested = roundUpToThousand(rawWholesale);
-    const sellingPriceSuggested = roundUpToThousand(normalPrice);
+  // Exact Markup Pricing
+  const normalPrice = Math.round(totalCapital * (1 + regMarginPct));
+  const rawWholesale = totalCapital * (1 + wsMarginPct);
 
-    document.getElementById('mProdTotalCapital').value = totalCapital;
-    document.getElementById('mProdNormalPrice').value = normalPrice;
-    
-    if (!isEditMode || !document.getElementById('mProdSellingPrice').value) {
-      document.getElementById('mProdSellingPrice').value = sellingPriceSuggested;
-    }
-    if (!isEditMode || !document.getElementById('mProdWholesalePrice').value) {
-      document.getElementById('mProdWholesalePrice').value = wholesaleSuggested;
-    }
+  // Rounded Pricing (Nearest 100 MMK or 1,000 MMK depending on pricing Strategy)
+  const sellingPriceSuggested = roundUpToThousand(normalPrice);
+  const wholesaleSuggested = roundUpToThousand(rawWholesale);
+
+  // Set Output Field Values Cleanly
+  document.getElementById('mProdTotalCapital').value = totalCapital;
+  document.getElementById('mProdNormalPrice').value = normalPrice;
+
+  // Automatically update suggested selling and wholesale prices
+  const sellingInput = document.getElementById('mProdSellingPrice');
+  const wholesaleInput = document.getElementById('mProdWholesalePrice');
+
+  if (!isEditMode || !sellingInput.value) {
+    sellingInput.value = sellingPriceSuggested;
   }
+  if (!isEditMode || !wholesaleInput.value) {
+    wholesaleInput.value = wholesaleSuggested;
+  }
+}
 
   async function openBulkMatrixModal() {
     const nextCode = await generateNextItemCode();
@@ -1881,32 +1890,26 @@
   }
 
   function calculateBulkPricingEngine() {
-    const buyingYuan = parseFloat(document.getElementById('bmBuyingYuan').value) || 0;
-    const supplierPct = parseFloat(document.getElementById('bmSupplierPct').value) || 0;
-    const yuanRate = parseFloat(document.getElementById('bmYuanRate').value) || (appSettings.DefaultYuanRate || 620);
-    const cargoFee = parseFloat(document.getElementById('bmCargoFee').value) || (appSettings.DefaultCargoFee || 2500);
+  const buyingYuan = parseFloat(document.getElementById('bmBuyingYuan').value) || 0;
+  const supplierPct = parseFloat(document.getElementById('bmSupplierPct').value) || 0;
+  const yuanRate = parseFloat(document.getElementById('bmYuanRate').value) || (appSettings.DefaultYuanRate || 620);
+  const cargoFee = parseFloat(document.getElementById('bmCargoFee').value) || (appSettings.DefaultCargoFee || 2500);
 
-    const capital = ((buyingYuan * (1 + (supplierPct / 100))) * yuanRate) + cargoFee;
-    const totalCapital = Math.round(capital);
-    
-    const regMarginPct = Number(appSettings.RegularProfitMargin || 33) / 100;
-    const wsMarginPct = Number(appSettings.WholesaleProfitMargin || 15) / 100;
+  const capital = ((buyingYuan * (1 + (supplierPct / 100))) * yuanRate) + cargoFee;
+  const totalCapital = Math.round(capital);
+  
+  const regMarginPct = Number(appSettings.RegularProfitMargin || 33) / 100;
+  const wsMarginPct = Number(appSettings.WholesaleProfitMargin || 15) / 100;
 
-    const normalPrice = Math.round(totalCapital * (1 + regMarginPct));
-    const rawWholesale = totalCapital * (1 + wsMarginPct);
-    const wholesaleSuggested = roundUpToThousand(rawWholesale);
-    const sellingPriceSuggested = roundUpToThousand(normalPrice);
+  const normalPrice = Math.round(totalCapital * (1 + regMarginPct));
+  const rawWholesale = totalCapital * (1 + wsMarginPct);
 
-    document.getElementById('bmTotalCapital').value = totalCapital;
-    document.getElementById('bmNormalPrice').value = normalPrice;
-    
-    if (!document.getElementById('bmSellingPrice').value) {
-      document.getElementById('bmSellingPrice').value = sellingPriceSuggested;
-    }
-    if (!document.getElementById('bmWholesalePrice').value) {
-      document.getElementById('bmWholesalePrice').value = wholesaleSuggested;
-    }
-  }
+  document.getElementById('bmTotalCapital').value = totalCapital;
+  document.getElementById('bmNormalPrice').value = normalPrice;
+  
+  document.getElementById('bmSellingPrice').value = roundUpToThousand(normalPrice);
+  document.getElementById('bmWholesalePrice').value = roundUpToThousand(rawWholesale);
+}
 
   function getSelectedBulkSizes() {
     return Array.from(document.querySelectorAll('#bmSizeCheckboxGrid input:checked')).map(cb => cb.value);
