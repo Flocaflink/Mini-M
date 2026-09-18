@@ -448,10 +448,10 @@
       <input type="hidden" id="cBoundId">
 
       <div style="display: flex; gap: 6px;">
-        <div style="flex: 1;">
+        <div style="flex: 1; position: relative;">
           <label>Customer Name *:</label>
-          <input type="text" id="cCustName" placeholder="Name" oninput="handleCustSuggest()">
-          <div id="cSuggestBox" style="display:none; background:white; border:1px solid #ccc; max-height:120px; overflow-y:auto; font-size:11px;"></div>
+          <input type="text" id="cCustName" placeholder="Name" autocomplete="off" oninput="handleMobileCustSuggest()">
+          <div id="cSuggestBox" style="display: none; position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid var(--primary-border); border-radius: 6px; max-height: 180px; overflow-y: auto; z-index: 1050; box-shadow: 0 4px 12px rgba(0,0,0,0.15);"></div>
         </div>
         <div style="flex: 1;">
           <label>Phone:</label>
@@ -1442,6 +1442,7 @@
       }
     });
 
+    
     function openCheckoutModal() {
       if (currentCart.length === 0) return alert("Cart is empty!");
       renderCheckoutTotals();
@@ -1566,6 +1567,8 @@
         renderOrdersTable();
         renderAnalytics();
         pushPendingToSupabase();
+        unbindMobileCustomer(true);
+        document.getElementById("cCustName").value = "";
         alert(`✅ Order #${salesId} recorded successfully!`);
       };
     }
