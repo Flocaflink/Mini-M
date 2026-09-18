@@ -2,18 +2,15 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>Mini-M Mobile Store Portal</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>BabyStore Mobile Operations</title>
   
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Padauk:wght@400;700&family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
-  
-  <link rel="apple-touch-icon" href="./logo.png">
-  <link rel="icon" type="image/png" href="./logo.png">
 
-  <!-- Lightweight HTML-To-Canvas for Screenshot Voucher -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
   <style>
     :root {
@@ -21,1155 +18,667 @@
       --primary-hover: #cf5300;
       --primary-light: #fff3eb;
       --primary-border: #ffd8be;
-      --accent-blue: #0d5c75;
       --success: #2e7d32;
       --warning: #b78103;
       --danger: #c62828;
       --text: #2c3e50;
-      --bg: #f5f7fa;
+      --bg: #f8f9fa;
       --card-bg: #ffffff;
       --border: #dcdfe6;
-      --safe-bottom: env(safe-area-inset-bottom, 0px);
     }
 
     * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-    
     body {
       font-family: 'Segoe UI', 'Padauk', Arial, sans-serif;
       margin: 0;
-      padding: 0 0 calc(75px + var(--safe-bottom)) 0;
+      padding: 0 0 70px 0;
       background-color: var(--bg);
       color: var(--text);
-      -webkit-font-smoothing: antialiased;
     }
 
-    /* Form Anti-Zoom for iOS (>= 16px font-size) */
-    input, select, textarea {
-      font-size: 15px !important;
-      font-family: inherit;
-      width: 100%;
-      padding: 9px 11px;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      box-sizing: border-box;
-      background: white;
-      color: var(--text);
-    }
-    input:focus, select:focus, textarea:focus {
-      outline: none;
-      border-color: var(--primary);
-    }
-    input:disabled, select:disabled {
-      background: #e9ecef;
-      color: #6c757d;
-    }
-    label {
-      font-size: 12px;
-      font-weight: 700;
-      color: #444;
-      display: block;
-      margin-top: 8px;
-      margin-bottom: 3px;
-    }
-
-    /* Search input clear button wrapper */
-    .search-input-wrapper {
-      position: relative;
-      flex: 1;
-      display: flex;
-      align-items: center;
-    }
-    .search-clear-btn {
-      position: absolute;
-      right: 8px;
-      top: 50%;
-      transform: translateY(-50%);
-      background: none;
-      border: none;
-      font-size: 16px;
-      color: #888;
-      padding: 4px;
-      cursor: pointer;
-      display: none;
-    }
-
-    /* Sync Spinner & Progress Toast Overlay */
-    .sync-loading-overlay {
-      position: fixed;
-      top: 60px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: rgba(33, 37, 41, 0.92);
-      color: #fff;
-      padding: 10px 18px;
-      border-radius: 25px;
-      display: none;
-      align-items: center;
-      gap: 10px;
-      font-size: 13px;
-      font-weight: 600;
-      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
-      z-index: 1200;
-      animation: fadeInDown 0.2s ease-out;
-    }
-    @keyframes fadeInDown {
-      from { opacity: 0; transform: translate(-50%, -10px); }
-      to { opacity: 1; transform: translate(-50%, 0); }
-    }
-    .spinner-icon {
-      width: 16px;
-      height: 16px;
-      border: 2px solid rgba(255, 255, 255, 0.3);
-      border-top-color: #fff;
-      border-radius: 50%;
-      animation: spin 0.75s linear infinite;
-    }
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-
-    /* Header Bar */
+    /* Top App Header */
     .mobile-header {
       position: sticky;
       top: 0;
-      z-index: 100;
-      background: white;
-      border-bottom: 1px solid var(--border);
+      z-index: 900;
+      background: #ffffff;
       padding: 10px 14px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+      border-bottom: 2px solid var(--primary);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
     }
-    .brand-logo-img {
-      height: 32px;
-      width: auto;
-      object-fit: contain;
-      border-radius: 4px;
+    .brand-title {
+      font-size: 16px;
+      font-weight: bold;
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin: 0;
     }
-
-    /* Badges */
     .status-badge {
       font-size: 10px;
       font-weight: bold;
-      padding: 3px 8px;
-      border-radius: 12px;
-      display: inline-block;
+      padding: 2px 6px;
+      border-radius: 10px;
       white-space: nowrap;
     }
     .badge-synced { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
     .badge-unsaved { background: #fff3cd; color: #856404; border: 1px solid #ffeeba; }
-    .badge-stock-out { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
-    .badge-stock-low { background: #fff3cd; color: #856404; border: 1px solid #ffeeba; }
-    .badge-stock-ok { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+    .badge-alert { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
 
-    /* Sticky Bottom Navigation Bar */
+    /* Bottom Navigation Bar */
     .bottom-nav {
       position: fixed;
       bottom: 0;
       left: 0;
       right: 0;
-      height: calc(58px + var(--safe-bottom));
-      padding-bottom: var(--safe-bottom);
-      background: white;
+      height: 56px;
+      background: #ffffff;
       border-top: 1px solid var(--border);
       display: flex;
       justify-content: space-around;
       align-items: center;
-      z-index: 300;
-      box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+      z-index: 900;
+      box-shadow: 0 -2px 8px rgba(0,0,0,0.05);
     }
-    .nav-tab-btn {
-      flex: 1;
-      height: 100%;
-      border: none;
-      background: transparent;
+    .nav-item {
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      color: #718096;
-      font-size: 11px;
+      font-size: 10px;
       font-weight: 600;
+      color: #666;
+      background: none;
+      border: none;
+      width: 20%;
+      height: 100%;
       cursor: pointer;
-      gap: 3px;
     }
-    .nav-tab-btn.active {
-      color: var(--primary);
-    }
-    .nav-tab-icon {
-      font-size: 18px;
-    }
+    .nav-item span { font-size: 17px; margin-bottom: 2px; }
+    .nav-item.active { color: var(--primary); }
 
     /* Views */
-    .tab-view { display: none; padding: 12px; }
-    .tab-view.active { display: block; }
+    .view-content { display: none; padding: 12px; }
+    .view-content.active { display: block; }
 
-    /* Buttons */
-    .btn {
-      min-height: 42px;
-      padding: 8px 14px;
-      font-weight: 700;
-      font-size: 13px;
-      border: none;
+    /* Reusable UI Components */
+    .card-panel {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
       border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 12px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.03);
+    }
+    label { font-weight: bold; font-size: 11px; display: block; margin-top: 6px; color: #555; }
+    input, textarea, select {
+      width: 100%;
+      padding: 8px 10px;
+      margin-top: 4px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 13px;
+      font-family: inherit;
+    }
+    input:focus, select:focus, textarea:focus { outline: none; border-color: var(--primary); }
+
+    .btn {
+      padding: 8px 12px;
+      font-weight: bold;
+      font-size: 12px;
+      border: none;
+      border-radius: 6px;
       cursor: pointer;
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      gap: 6px;
-      transition: transform 0.1s;
+      gap: 4px;
+      transition: 0.15s ease;
     }
-    .btn:active { transform: scale(0.97); }
     .btn-primary { background: var(--primary); color: white; }
-    .btn-secondary { background: var(--accent-blue); color: white; }
+    .btn-secondary { background: #0d5c75; color: white; }
     .btn-success { background: var(--success); color: white; }
     .btn-warning { background: var(--warning); color: white; }
-    .btn-dark { background: #4a5568; color: white; }
-    .btn-sm { min-height: 32px; padding: 4px 8px; font-size: 11px; }
+    .btn-sm { padding: 4px 8px; font-size: 11px; }
 
-    .stepper-btn {
-      min-width: 36px;
-      min-height: 36px;
-      border: 1px solid #ccc;
-      background: #f8f9fa;
-      font-size: 16px;
-      font-weight: bold;
-      border-radius: 6px;
+    .chip-group {
       display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-    }
-    .stepper-btn:active { background: #e2e8f0; }
-
-    /* Chips Horizontal Scroller */
-    .chip-scroll-group {
-      display: flex;
-      gap: 6px;
+      gap: 5px;
       overflow-x: auto;
       padding: 4px 0 6px 0;
-      -webkit-overflow-scrolling: touch;
       scrollbar-width: none;
     }
-    .chip-scroll-group::-webkit-scrollbar { display: none; }
+    .chip-group::-webkit-scrollbar { display: none; }
     .chip {
-      padding: 5px 12px;
-      border-radius: 16px;
+      padding: 4px 10px;
+      border-radius: 14px;
+      border: 1px solid #ccc;
       background: white;
-      border: 1px solid var(--border);
-      font-size: 12px;
+      font-size: 11px;
       white-space: nowrap;
       cursor: pointer;
     }
-    .chip.active {
-      background: var(--primary);
-      color: white;
-      border-color: var(--primary);
-      font-weight: bold;
-    }
+    .chip.active { background: var(--primary); color: white; border-color: var(--primary); }
 
     /* Product Grid */
-    .product-feed {
+    .product-grid {
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      margin-top: 10px;
+      grid-template-columns: repeat(auto-fill, minmax(145px, 1fr));
+      gap: 8px;
+      margin-top: 8px;
     }
-    .product-mobile-card {
+    .product-card {
       background: white;
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 10px;
+      border: 1px solid #e0e0e0;
+      border-radius: 6px;
+      padding: 8px;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      box-shadow: 0 1px 4px rgba(0,0,0,0.03);
     }
+    .product-title { font-size: 12px; font-weight: bold; line-height: 1.2; margin-bottom: 2px; }
+    .product-meta { font-size: 10px; color: #666; margin-bottom: 2px; }
+    .product-price { font-size: 12px; font-weight: bold; color: var(--primary); }
 
-    /* Persistent Bottom Floating Cart Bar */
-    .floating-cart-bar {
-      position: fixed;
-      bottom: calc(64px + var(--safe-bottom));
-      left: 12px;
-      right: 12px;
-      height: 52px;
-      background: #2d3748;
+    /* Cart Floating Bar */
+    .cart-float-bar {
+      background: #2c3e50;
       color: white;
-      border-radius: 12px;
-      display: none;
-      align-items: center;
+      padding: 10px 14px;
+      border-radius: 8px;
+      display: flex;
       justify-content: space-between;
-      padding: 0 16px;
-      z-index: 250;
-      box-shadow: 0 6px 16px rgba(0,0,0,0.25);
+      align-items: center;
+      margin-top: 10px;
       cursor: pointer;
-      font-weight: bold;
     }
 
-    /* Slide-Up Full Drawer Modals */
-    .drawer-overlay {
+    /* Modals */
+    .modal-overlay {
       display: none;
       position: fixed;
-      top: 0; left: 0; right: 0; bottom: 0;
-      background: rgba(0,0,0,0.55);
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.5);
       z-index: 1000;
       justify-content: center;
       align-items: flex-end;
     }
-    .drawer-card {
+    .modal-card {
       background: white;
       width: 100%;
-      max-height: 92vh;
-      border-radius: 16px 16px 0 0;
-      padding: 16px 16px calc(20px + var(--safe-bottom)) 16px;
+      max-height: 88vh;
+      border-radius: 12px 12px 0 0;
+      padding: 16px;
       overflow-y: auto;
-      box-shadow: 0 -4px 20px rgba(0,0,0,0.2);
-      animation: slideUp 0.22s ease-out;
+      box-shadow: 0 -4px 16px rgba(0,0,0,0.15);
     }
-    @keyframes slideUp {
-      from { transform: translateY(100%); }
-      to { transform: translateY(0); }
-    }
-    .drawer-header {
+    .modal-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      border-bottom: 2px solid var(--primary-border);
-      padding-bottom: 10px;
-      margin-bottom: 12px;
+      border-bottom: 2px solid var(--primary);
+      padding-bottom: 6px;
+      margin-bottom: 10px;
     }
-    .drawer-header h3 { margin: 0; font-size: 16px; color: var(--primary); }
-    .close-drawer-btn {
-      background: #edf2f7;
-      border: none;
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
-      font-size: 16px;
-      font-weight: bold;
-      cursor: pointer;
-    }
+    .modal-header h3 { margin: 0; font-size: 15px; color: var(--primary); }
+    .close-btn { background: none; border: none; font-size: 20px; cursor: pointer; }
 
-    /* Suggestion Dropdown */
-    .cust-mobile-suggest-list {
-      background: white;
-      border: 1px solid var(--primary-border);
-      border-radius: 8px;
-      max-height: 180px;
-      overflow-y: auto;
-      margin-top: 4px;
-      display: none;
-    }
-    .cust-mobile-suggest-item {
-      padding: 8px 10px;
-      border-bottom: 1px solid #f0f0f0;
-      font-size: 12px;
-    }
-    .cust-mobile-suggest-item:hover { background-color: var(--primary-light); }
+    /* Tables */
+    table.data-table { width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 8px; }
+    table.data-table th, table.data-table td { border: 1px solid #ddd; padding: 6px 4px; text-align: left; }
+    table.data-table th { background: #f1f3f5; white-space: nowrap; }
 
-    /* Voucher Formatting */
-    .voucher-card-mobile {
-      width: 100%;
-      max-width: 360px;
-      margin: 0 auto;
-      background: #ffffff;
-      padding: 18px 14px;
-      border-radius: 12px;
-      border: 1px solid var(--border);
-      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08);
-      font-size: 12px;
-      box-sizing: border-box;
-    }
-    .calc-box-mobile {
-      background: #f8f9fa;
-      border: 1px solid #e2e8f0;
-      padding: 10px;
-      border-radius: 8px;
-      margin-top: 10px;
-    }
+    .cart-table { width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 6px; }
+    .cart-table td { padding: 6px 2px; border-bottom: 1px solid #eee; }
+    .cart-qty-btn { width: 22px; height: 22px; font-weight: bold; border: 1px solid #ccc; background: #eee; border-radius: 4px; }
 
-    /* Thermal Slip Print Stylesheet (Optimized for 80mm Roll) */
-    #mPrintSlip { display: none; }
+    .matrix-input-cell { width: 45px; padding: 4px; text-align: center; font-size: 11px; }
 
+    /* Voucher & Receipt */
+    .voucher-card { background: white; padding: 14px; border-radius: 8px; border: 1px solid #ddd; font-size: 11px; }
+    #printReceiptSlip { display: none; }
     @media print {
-      @page {
-        margin: 0;
-        size: 80mm auto;
-      }
-      body {
-        background-color: #fff !important;
-        padding: 0 !important;
-        margin: 0 !important;
-        color: #000 !important;
-        font-family: 'Segoe UI', 'Padauk', Arial, sans-serif !important;
-        -webkit-print-color-adjust: exact;
-      }
-      .mobile-header, .bottom-nav, .floating-cart-bar, .tab-view, .drawer-overlay, .sync-loading-overlay {
-        display: none !important;
-      }
-      body.printing-mobile-slip #mPrintSlip {
-        display: block !important;
-        width: 100%;
-        max-width: 76mm;
-        margin: 0 auto;
-        padding: 8px 6px 24px 6px;
-        font-size: 13px;
-        line-height: 1.3;
-        color: #000;
-      }
-      .slip-divider {
-        border-bottom: 1px dashed #000;
-        margin: 6px 0;
-      }
-      .slip-table {
-        width: 100%;
-        border-collapse: collapse;
-        margin: 6px 0;
-        font-size: 12px;
-      }
-      .slip-table th, .slip-table td {
-        padding: 4px 0;
-        border: none;
-        text-align: left;
-      }
+      body * { visibility: hidden; }
+      #printReceiptSlip, #printReceiptSlip * { visibility: visible; }
+      #printReceiptSlip { position: absolute; left: 0; top: 0; width: 100%; display: block !important; font-size: 11px; }
     }
   </style>
 </head>
 <body>
 
-  <!-- Top Mobile App Header -->
+  <!-- Top App Header -->
   <header class="mobile-header">
-    <div style="display: flex; align-items: center; gap: 8px;">
-      <img src="logo.png" alt="Mini-M" class="brand-logo-img" onerror="this.style.display='none'">
-      <span style="font-weight: bold; font-size: 15px; color: var(--primary);">Mini-M POS</span>
-    </div>
-    <div style="display: flex; align-items: center; gap: 6px;">
-      <span id="mSyncStatus" class="status-badge badge-synced">⚡ Synced</span>
-      <button class="btn btn-dark btn-sm" onclick="openDrawer('mSyncDrawer')">☁️ Cloud</button>
+    <h1 class="brand-title">
+      <img src="logo.png" alt="Logo" style="height: 24px; border-radius: 3px;" onerror="this.style.display='none'">
+      Mini-M Mobile
+    </h1>
+    <div style="display: flex; gap: 6px; align-items: center;">
+      <span id="sbBadge" class="status-badge badge-alert">⚡ Supabase: Off</span>
+      <span id="syncBadge" class="status-badge badge-synced">⚡ Synced</span>
+      <button class="btn btn-sm" style="background:#2b6cb0; color:white; padding: 2px 6px;" onclick="openSettingsModal()">⚙️</button>
     </div>
   </header>
 
-  <!-- Non-blocking Sync Notification Toast -->
-  <div id="mSyncLoadingOverlay" class="sync-loading-overlay">
-    <div class="spinner-icon"></div>
-    <span id="mSyncLoadingText">Syncing data...</span>
-  </div>
-
-  <!-- ========================================================================= -->
-  <!-- TAB 1: MOBILE POS VIEW -->
-  <!-- ========================================================================= -->
-  <div id="mPosView" class="tab-view active">
-    <div style="display: flex; gap: 6px; align-items: center;">
-      <div class="search-input-wrapper">
-        <input type="search" id="mPosSearch" 
-               placeholder="🔍 Search SKU, Title, Color, Type..." 
-               autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
-               oninput="onSearchInputChanged('mPosSearch', 'mPosSearchClear', debouncedMobilePosCatalog)">
-        <button type="button" id="mPosSearchClear" class="search-clear-btn" 
-                onclick="clearSearchInput('mPosSearch', 'mPosSearchClear', debouncedMobilePosCatalog)">✕</button>
+  <!-- Navigation Views -->
+  <main>
+    <!-- View 1: POS & Sale -->
+    <div id="posView" class="view-content active">
+      <div style="display: flex; gap: 6px;">
+        <input type="text" id="posSearch" placeholder="🔍 Search catalog..." oninput="renderPosCatalog()">
+        <button class="btn btn-secondary btn-sm" onclick="resetPosFilters()">Reset</button>
       </div>
-      <button class="btn btn-secondary btn-sm" onclick="resetMobilePosFilters()">Reset</button>
-    </div>
 
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px;">
-      <label style="margin: 0;">Sex Filter:</label>
-      <label style="margin: 0; font-size: 11px; display: flex; align-items: center; gap: 4px; cursor: pointer;">
-        <input type="checkbox" id="mWholesaleToggle" onchange="toggleMobileWholesaleMode()" style="width:auto; margin:0;">
-        <b>Wholesale Price</b>
-      </label>
-    </div>
-    <div class="chip-scroll-group" id="mPosSexChips">
-      <div class="chip active" onclick="setMobilePosSex('All', this)">All</div>
-      <div class="chip" onclick="setMobilePosSex('Unisex', this)">Unisex</div>
-      <div class="chip" onclick="setMobilePosSex('Male', this)">Male</div>
-      <div class="chip" onclick="setMobilePosSex('Female', this)">Female</div>
-    </div>
-
-    <label>Type Category:</label>
-    <div class="chip-scroll-group" id="mPosTypeChips"></div>
-
-    <label>Size Filter:</label>
-    <div class="chip-scroll-group" id="mPosSizeChips"></div>
-
-    <!-- Product Feed (In-Stock Only) -->
-    <div class="product-feed" id="mPosProductFeed">
-      <div style="grid-column: 1/-1; text-align:center; color:#888; padding: 30px;">Loading catalog...</div>
-    </div>
-  </div>
-
-  <!-- Persistent Bottom Floating Cart Bar -->
-  <div id="mFloatingCartBar" class="floating-cart-bar" onclick="openDrawer('mCheckoutDrawer')">
-    <div style="display: flex; align-items: center; gap: 8px;">
-      <span>🛒</span>
-      <span id="mCartItemCountBadge">0 Items</span>
-    </div>
-    <div style="display: flex; align-items: center; gap: 8px;">
-      <span id="mCartBarTotalDisplay" style="color: #ffd8be;">0 MMK</span>
-      <span>Checkout ➔</span>
-    </div>
-  </div>
-
-  <!-- ========================================================================= -->
-  <!-- TAB 2: MOBILE INVENTORY VIEW -->
-  <!-- ========================================================================= -->
-  <div id="mInventoryView" class="tab-view">
-    <div style="display: flex; gap: 6px; margin-bottom: 8px; align-items: center;">
-      <div class="search-input-wrapper">
-        <input type="search" id="mInvSearch" 
-               placeholder="🔍 Search SKU, name, color, type, remark..." 
-               autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
-               oninput="onSearchInputChanged('mInvSearch', 'mInvSearchClear', debouncedMobileInventoryList)">
-        <button type="button" id="mInvSearchClear" class="search-clear-btn" 
-                onclick="clearSearchInput('mInvSearch', 'mInvSearchClear', debouncedMobileInventoryList)">✕</button>
+      <div class="chip-group" id="posSexChips">
+        <div class="chip active" onclick="setPosSex('All', this)">All</div>
+        <div class="chip" onclick="setPosSex('Unisex', this)">Unisex</div>
+        <div class="chip" onclick="setPosSex('Male', this)">Male</div>
+        <div class="chip" onclick="setPosSex('Female', this)">Female</div>
       </div>
-      <button class="btn btn-primary btn-sm" style="white-space: nowrap;" onclick="openProductDrawerForAdd()">➕ SKU</button>
-    </div>
+      <div class="chip-group" id="posTypeChips"></div>
+      <div class="chip-group" id="posSizeChips"></div>
 
-    <label style="display: flex; align-items: center; gap: 6px; font-size: 12px; margin-bottom: 10px; cursor: pointer;">
-      <input type="checkbox" id="mInvShowOut" style="width: auto; margin: 0;" onchange="renderMobileInventoryList()">
-      <b>Show Out-of-Stock (0 Stock)</b>
-    </label>
+      <div class="product-grid" id="posGrid"></div>
 
-    <div id="mInventoryList" style="display: flex; flex-direction: column; gap: 8px;"></div>
-  </div>
-
-  <!-- ========================================================================= -->
-  <!-- TAB 3: MOBILE ORDERS VIEW -->
-  <!-- ========================================================================= -->
-  <div id="mOrdersView" class="tab-view">
-    <div style="display: flex; gap: 6px; margin-bottom: 10px; align-items: center;">
-      <div class="search-input-wrapper">
-        <input type="search" id="mOrderSearch" 
-               placeholder="🔍 Search Sales ID, Customer, Phone, Courier..." 
-               autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
-               oninput="onSearchInputChanged('mOrderSearch', 'mOrderSearchClear', debouncedMobileOrdersList)">
-        <button type="button" id="mOrderSearchClear" class="search-clear-btn" 
-                onclick="clearSearchInput('mOrderSearch', 'mOrderSearchClear', debouncedMobileOrdersList)">✕</button>
+      <!-- Floating Cart Summary Bar -->
+      <div class="cart-float-bar" onclick="openCheckoutModal()">
+        <div>
+          <b>🛒 <span id="cartFloatCount">0</span> items</b>
+          <span style="font-size: 11px; opacity: 0.8; margin-left: 6px;">(Tap to view / checkout)</span>
+        </div>
+        <div style="font-size: 14px; font-weight: bold;" id="cartFloatTotal">0 K</div>
       </div>
     </div>
-    <div id="mOrdersList" style="display: flex; flex-direction: column; gap: 8px;"></div>
-  </div>
 
-  <!-- ========================================================================= -->
-  <!-- TAB 4: MOBILE CUSTOMERS VIEW -->
-  <!-- ========================================================================= -->
-  <div id="mCustomersView" class="tab-view">
-    <div style="display: flex; gap: 6px; margin-bottom: 10px; align-items: center;">
-      <div class="search-input-wrapper">
-        <input type="search" id="mCustSearch" 
-               placeholder="🔍 Search Name, Phone, Township, Remark..." 
-               autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
-               oninput="onSearchInputChanged('mCustSearch', 'mCustSearchClear', debouncedMobileCustomersList)">
-        <button type="button" id="mCustSearchClear" class="search-clear-btn" 
-                onclick="clearSearchInput('mCustSearch', 'mCustSearchClear', debouncedMobileCustomersList)">✕</button>
+    <!-- View 2: Inventory -->
+    <div id="invView" class="view-content">
+      <div style="display: flex; justify-content: space-between; gap: 6px; align-items: center; margin-bottom: 6px;">
+        <input type="text" id="invSearch" placeholder="🔍 Search stock..." oninput="renderInventoryTable()">
+        <button class="btn btn-success btn-sm" onclick="openBulkMatrixModal()">📦 Bulk Intake</button>
       </div>
-      <button class="btn btn-primary btn-sm" style="white-space: nowrap;" onclick="openNewCustomerDrawer()">➕ Client</button>
-    </div>
-    <div id="mCustomersList" style="display: flex; flex-direction: column; gap: 8px;"></div>
-  </div>
+      <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px; margin-bottom: 6px;">
+        <label style="display: flex; align-items: center; gap: 4px; margin: 0;">
+          <input type="checkbox" id="invShowOutOfStock" onchange="renderInventoryTable()" style="width:auto; margin:0;">
+          Show Out of Stock
+        </label>
+        <button class="btn btn-primary btn-sm" onclick="openNewProductModal()">➕ Single SKU</button>
+      </div>
 
-  <!-- ========================================================================= -->
-  <!-- STICKY BOTTOM NAVIGATION BAR -->
-  <!-- ========================================================================= -->
+      <div class="chip-group" id="invTypeChips"></div>
+
+      <div style="overflow-x: auto;">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>SKU / Name</th>
+              <th>Price</th>
+              <th style="text-align:center;">Stock</th>
+            </tr>
+          </thead>
+          <tbody id="invTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- View 3: Orders -->
+    <div id="ordersView" class="view-content">
+      <input type="text" id="orderSearch" placeholder="🔍 Search ID, customer, phone..." oninput="renderOrdersTable()">
+      <div id="ordersCardsContainer" style="margin-top: 10px;"></div>
+    </div>
+
+    <!-- View 4: Customers -->
+    <div id="customersView" class="view-content">
+      <div style="display: flex; justify-content: space-between; gap: 6px; margin-bottom: 8px;">
+        <input type="text" id="custSearch" placeholder="🔍 Search customer name, phone..." oninput="renderCustomersTable()">
+        <button class="btn btn-primary btn-sm" onclick="openNewCustomerModal()">➕ New</button>
+      </div>
+      <div id="customersContainer"></div>
+    </div>
+
+    <!-- View 5: Analytics -->
+    <div id="analyticsView" class="view-content">
+      <div class="chip-group" id="anPeriodChips">
+        <div class="chip active" onclick="setAnalyticsPeriod('today', this)">Today</div>
+        <div class="chip" onclick="setAnalyticsPeriod('this_month', this)">This Month</div>
+        <div class="chip" onclick="setAnalyticsPeriod('all_time', this)">All Time</div>
+      </div>
+
+      <div class="card-panel" style="margin-top: 8px;">
+        <div style="font-size: 11px; color:#666;">TOTAL REVENUE</div>
+        <div style="font-size: 20px; font-weight: bold; color: var(--primary);" id="anRev">0 MMK</div>
+        <div style="font-size: 11px; color: var(--success); margin-top: 2px;" id="anProfit">Gross Profit: 0 MMK</div>
+        <div style="font-size: 11px; color: #555; margin-top: 2px;" id="anUnits">0 items sold</div>
+      </div>
+
+      <div class="card-panel">
+        <b style="font-size: 12px; color: var(--primary);">Top Selling Categories</b>
+        <div id="anCategoryBars" style="margin-top: 6px;"></div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Bottom Navigation Bar -->
   <nav class="bottom-nav">
-    <button class="nav-tab-btn active" onclick="switchMobileTab('mPosView', this)">
-      <span class="nav-tab-icon">🛒</span>
-      <span>POS</span>
-    </button>
-    <button class="nav-tab-btn" onclick="switchMobileTab('mInventoryView', this)">
-      <span class="nav-tab-icon">📦</span>
-      <span>Stock</span>
-    </button>
-    <button class="nav-tab-btn" onclick="switchMobileTab('mOrdersView', this)">
-      <span class="nav-tab-icon">📋</span>
-      <span>Orders</span>
-    </button>
-    <button class="nav-tab-btn" onclick="switchMobileTab('mCustomersView', this)">
-      <span class="nav-tab-icon">👥</span>
-      <span>Clients</span>
-    </button>
+    <button class="nav-item active" onclick="switchTab('posView', this)"><span>🛒</span>POS</button>
+    <button class="nav-item" onclick="switchTab('invView', this)"><span>📦</span>Stock</button>
+    <button class="nav-item" onclick="switchTab('ordersView', this)"><span>📋</span>Orders</button>
+    <button class="nav-item" onclick="switchTab('customersView', this)"><span>👥</span>Clients</button>
+    <button class="nav-item" onclick="switchTab('analyticsView', this)"><span>📊</span>Stats</button>
   </nav>
 
   <!-- ========================================================================= -->
-  <!-- DRAWER: MOBILE CHECKOUT & CUSTOMER BINDING -->
+  <!-- MODALS -->
   <!-- ========================================================================= -->
-  <div id="mCheckoutDrawer" class="drawer-overlay">
-    <div class="drawer-card">
-      <div class="drawer-header">
-        <h3>🛒 Order & Customer Details</h3>
-        <button class="close-drawer-btn" onclick="closeDrawer('mCheckoutDrawer')">&times;</button>
-      </div>
 
-      <input type="hidden" id="mCustBoundId">
-
-      <label>Customer Name <span style="color:red;">*</span>:</label>
-      <input type="text" id="mCustName" placeholder="e.g. Daw Nwe Nwe Yee" autocomplete="off" oninput="handleMobileCustInput()">
-      <div id="mCustSuggestList" class="cust-mobile-suggest-list"></div>
-
-      <div id="mCustBadge" style="display:none; font-size: 11px; margin-top: 4px; color: var(--success); font-weight: bold;">
-        ✅ Selected: <span id="mCustFoundText"></span> (<span id="mCustFoundSpend"></span>)
-        <button type="button" style="border:none; background:none; color:red; cursor:pointer; font-size:11px; margin-left:4px;" onclick="unbindMobileCustomer()">✕ Clear</button>
-      </div>
-
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-        <div>
-          <label>Phone Number:</label>
-          <input type="text" id="mCustPhone" placeholder="09xxxxxxxxx">
-        </div>
-        <div>
-          <label>Township / City:</label>
-          <input type="text" id="mCustTownship" placeholder="Kamayut">
-        </div>
-      </div>
-
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-        <div>
-          <label>Courier Service:</label>
-          <select id="mOrderDeliveryName"></select>
-        </div>
-        <div>
-          <label>Payment Method:</label>
-          <select id="mOrderPaymentType"></select>
-        </div>
-      </div>
-
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-        <div>
-          <label>Paid Status:</label>
-          <select id="mOrderPaidStatus">
-            <option value="paid">paid</option>
-            <option value="not received yet">not received yet</option>
-          </select>
-        </div>
-        <div>
-          <label>Order Status:</label>
-          <select id="mOrderStatus">
-            <option value="Confirmed">Confirmed</option>
-            <option value="Pending">Pending</option>
-            <option value="Shipped">Shipped</option>
-          </select>
-        </div>
-      </div>
-
-      <label>Delivery Address:</label>
-      <textarea id="mCustAddress" style="height: 48px;" placeholder="Street / House No. / Quarter"></textarea>
-
-      <label>Order Remark / Notes:</label>
-      <input type="text" id="mOrderRemark" placeholder="e.g. Call before delivery">
-
-      <!-- Cart Item Steppers -->
-      <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 12px;">
-        <b style="font-size: 13px;">Cart Items (<span id="mCartItemsCountLbl">0</span>)</b>
-        <button class="btn btn-sm" style="background:#e9ecef; color:#333;" onclick="clearMobileCart()">Clear</button>
-      </div>
-      <div id="mCartDrawerItemsList" style="display: flex; flex-direction: column; gap: 6px; margin-top: 6px;"></div>
-
-      <!-- Discount Configuration -->
-      <div style="background: var(--primary-light); padding: 10px; border-radius: 8px; margin-top: 10px; border: 1px solid var(--primary-border);">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
-          <b style="font-size: 12px; color: var(--primary);">🎁 Discount / Promotion:</b>
-          <span id="mDrawerDiscountBadge" style="font-size: 11px; font-weight: bold; color: var(--success);"></span>
-        </div>
-        <select id="mOrderDiscountType" onchange="handleMobileDiscountChange()">
-          <option value="none">No Discount</option>
-          <option value="percentage">Percentage (%) Off</option>
-          <option value="flat">Direct Flat Cash (MMK)</option>
-          <option value="tiered">Tiered Cashback (e.g. 5K per 100K)</option>
-        </select>
-        <input type="number" id="mOrderDiscountVal" placeholder="Amount or %" style="margin-top: 6px; display: none;" oninput="renderMobileCartDrawer()">
-        
-        <div id="mTieredDiscountRow" style="display: none; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 6px;">
-          <div>
-            <label style="font-size: 10px; margin: 0;">Cashback (MMK):</label>
-            <input type="number" id="mOrderTierCashback" value="5000" oninput="renderMobileCartDrawer()">
-          </div>
-          <div>
-            <label style="font-size: 10px; margin: 0;">For Every (MMK):</label>
-            <input type="number" id="mOrderTierThreshold" value="100000" oninput="renderMobileCartDrawer()">
-          </div>
-        </div>
-      </div>
-
-      <!-- Totals Summary -->
-      <div style="margin-top: 10px; padding: 10px; background: #f8fafc; border-radius: 8px; border: 1px solid var(--border);">
-        <div style="display: flex; justify-content: space-between; font-size: 13px;">
-          <span style="color: #666;">Subtotal:</span>
-          <span id="mDrawerSubtotalDisplay" style="font-weight: bold;">0 MMK</span>
-        </div>
-        <div id="mDrawerDiscountRow" style="display: none; justify-content: space-between; font-size: 13px; color: var(--success); margin-top: 4px;">
-          <span id="mDrawerDiscountLabel">Discount:</span>
-          <span id="mDrawerDiscountDisplay" style="font-weight: bold;">-0 MMK</span>
-        </div>
-        <div style="display: flex; justify-content: space-between; font-size: 16px; font-weight: bold; border-top: 1px dashed #cbd5e0; padding-top: 6px; margin-top: 6px;">
-          <span>Net Total:</span>
-          <span id="mDrawerTotalDisplay" style="color: var(--primary);">0 MMK</span>
-        </div>
-      </div>
-
-      <div style="display: flex; gap: 8px; margin-top: 14px;">
-        <button class="btn btn-primary" style="flex: 1;" onclick="submitMobileOrder()">💾 Complete Sale</button>
-        <button class="btn btn-secondary" onclick="closeDrawer('mCheckoutDrawer')">Close</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ========================================================================= -->
-  <!-- DRAWER: VOUCHER SHARE & SCREENSHOT -->
-  <!-- ========================================================================= -->
-  <div id="mVoucherDrawer" class="drawer-overlay">
-    <div class="drawer-card">
-      <div class="drawer-header">
-        <h3>📸 Order Voucher</h3>
-        <button class="close-drawer-btn" onclick="closeDrawer('mVoucherDrawer')">&times;</button>
-      </div>
-
-      <div id="mVoucherCaptureTarget" class="voucher-card-mobile">
-        <div style="text-align: center; border-bottom: 2px dashed var(--primary); padding-bottom: 8px; margin-bottom: 8px;">
-          <img src="logo.png" style="height: 42px; max-width: 140px; object-fit: contain; margin: 0 auto 4px auto; display: block;" onerror="this.style.display='none'">
-          <div style="font-size: 11px; color: #666;">Official Sales Order Receipt</div>
-        </div>
-
-        <div style="display: flex; justify-content: space-between; margin-bottom: 3px;">
-          <b>Order ID:</b> <span id="mvSalesId" style="font-family: monospace; font-weight: bold;"></span>
-        </div>
-        <div style="display: flex; justify-content: space-between; margin-bottom: 3px;">
-          <b>Date:</b> <span id="mvDate"></span>
-        </div>
-        <div style="display: flex; justify-content: space-between; margin-bottom: 3px;">
-          <b>Customer:</b> <span id="mvCustName" style="font-weight: bold;"></span>
-        </div>
-        <div style="display: flex; justify-content: space-between; margin-bottom: 3px;">
-          <b>Phone:</b> <span id="mvPhone"></span>
-        </div>
-        <div style="display: flex; justify-content: space-between; margin-bottom: 3px;">
-          <b>Courier:</b> <span id="mvDelivery" style="font-weight: bold; color: var(--primary);"></span>
-        </div>
-        <div style="display: flex; flex-direction: column; margin-bottom: 6px;">
-          <b>Address:</b> <span id="mvAddress" style="color: #444;"></span>
-        </div>
-
-        <div id="mvItemsList" style="border-top: 1px solid #eee; border-bottom: 1px solid #eee; padding: 6px 0; margin-bottom: 6px;"></div>
-
-        <div style="display: flex; justify-content: space-between; font-size: 12px; color: #555;">
-          <span>Subtotal:</span>
-          <span id="mvSubtotal"></span>
-        </div>
-        <div id="mvDiscountRow" style="display: none; justify-content: space-between; font-size: 12px; color: var(--success);">
-          <span id="mvDiscountLabel">Discount:</span>
-          <span id="mvDiscountAmount"></span>
-        </div>
-        <div style="display: flex; justify-content: space-between; font-size: 14px; font-weight: bold; margin-top: 4px; border-top: 1px dashed #ddd; padding-top: 4px;">
-          <span>Total Payable:</span>
-          <span id="mvTotal" style="color: var(--primary);"></span>
-        </div>
-        <div style="display: flex; justify-content: space-between; font-size: 11px; color: #555; margin-top: 4px;">
-          <span>Payment:</span>
-          <span id="mvPayment"></span>
-        </div>
-        <div style="display: flex; justify-content: space-between; font-size: 11px; color: #555;">
-          <span>Paid Status:</span>
-          <span id="mvPaidStatus" style="font-weight: bold;"></span>
-        </div>
-
-        <div style="text-align: center; font-size: 10px; color: #777; margin-top: 10px; border-top: 1px solid #f0f0f0; padding-top: 6px;">
-          Thank you for ordering with us! 💕
-        </div>
-      </div>
-
-      <div style="display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap;">
-        <button class="btn btn-secondary" style="flex: 1;" onclick="printReceiptFromMobile(lastSavedOrder)">🖨️ Print Slip</button>
-        <button class="btn btn-success" style="flex: 1;" onclick="shareMobileVoucher()">📲 Share Voucher</button>
-        <button class="btn btn-primary" onclick="downloadMobileVoucher()">📥 Save</button>
-      </div>
-      <div id="mvStatusMsg" style="font-size: 11px; text-align: center; color: #666; margin-top: 6px;"></div>
-    </div>
-  </div>
-
-  <!-- ========================================================================= -->
-  <!-- DRAWER: SYNC & CLOUD URL CONFIGURATION -->
-  <!-- ========================================================================= -->
-  <div id="mSyncDrawer" class="drawer-overlay">
-    <div class="drawer-card">
-      <div class="drawer-header">
-        <h3>⚙️ Cloud Sync & Local Storage</h3>
-        <button class="close-drawer-btn" onclick="closeDrawer('mSyncDrawer')">&times;</button>
+  <!-- Settings & Sync Modal -->
+  <div id="settingsModal" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>⚙️ Mobile Settings & Sync</h3>
+        <button class="close-btn" onclick="closeModal('settingsModal')">&times;</button>
       </div>
 
       <label>Google Apps Script Web App URL (/exec):</label>
-      <input type="url" id="mGasEndpointInput" placeholder="https://script.google.com/macros/s/.../exec">
-      <div id="mGasSaveStatus" style="font-size: 11px; margin-top: 4px; font-weight: bold;"></div>
+      <input type="url" id="cfgGasUrl" placeholder="https://script.google.com/macros/s/.../exec">
       
-      <div style="display: flex; gap: 8px; margin-top: 6px;">
-        <button class="btn btn-primary" style="flex: 1;" onclick="saveMobileGasUrl()">💾 Save URL</button>
-        <button class="btn btn-secondary btn-sm" onclick="testMobileGasConnection()">🧪 Test</button>
+      <div style="display: flex; gap: 6px; margin-top: 8px;">
+        <button class="btn btn-secondary btn-sm" style="flex: 1;" onclick="testGasEndpoint()">🧪 Test URL</button>
+        <button class="btn btn-primary btn-sm" style="flex: 1.5; background: #008055;" onclick="connectAndHydrateStore()">🔗 Connect & Hydrate</button>
       </div>
 
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 14px;">
-        <button id="btnMDownload" class="btn btn-secondary" onclick="downloadFromGoogleSheetsMobile()">📥 Download Sheets</button>
-        <button id="btnMUpload" class="btn btn-success" onclick="uploadToGoogleSheetsMobile()">☁️ Upload Sheets</button>
+      <div id="gasStatusText" style="font-size: 11px; margin-top: 6px; font-weight: bold;"></div>
+
+      <hr style="border: none; border-top: 1px dashed #ddd; margin: 12px 0;">
+
+      <div style="font-size: 11px; font-weight: bold; color: #555; margin-bottom: 4px;">Direct Supabase Synchronization:</div>
+      <div style="display: flex; gap: 6px;">
+        <button class="btn btn-primary btn-sm" style="flex: 1; background: #e65c00;" onclick="pullSupabaseDeltas(true)">⚡ Pull Deltas</button>
+        <button class="btn btn-warning btn-sm" style="flex: 1;" onclick="forceFullSupabaseHydration()">📥 Pull All from Supabase</button>
       </div>
 
-      <div style="border-top: 1px dashed #cbd5e0; margin-top: 14px; padding-top: 10px;">
-        <label>Offline JSON Backups:</label>
-        <div style="display: flex; gap: 8px;">
-          <button class="btn btn-dark btn-sm" style="flex: 1;" onclick="exportMobileJsonBackup()">💾 JSON Backup</button>
-          <button class="btn btn-dark btn-sm" style="flex: 1;" onclick="document.getElementById('mJsonFileInput').click()">📂 Restore</button>
-          <input type="file" id="mJsonFileInput" style="display: none;" accept=".json" onchange="importMobileJsonBackup(event)">
-        </div>
+      <div style="display: flex; gap: 6px; margin-top: 14px;">
+        <button class="btn btn-primary" style="flex: 1;" onclick="saveMobileSettings()">💾 Save Settings</button>
+        <button class="btn" style="background:#ccc;" onclick="closeModal('settingsModal')">Close</button>
       </div>
     </div>
   </div>
 
-  <!-- ========================================================================= -->
-  <!-- DRAWER: ADD / EDIT PRODUCT SKU -->
-  <!-- ========================================================================= -->
-  <div id="mProductAddDrawer" class="drawer-overlay">
-    <div class="drawer-card">
-      <div class="drawer-header">
-        <h3 id="mpDrawerTitle">➕ Add Product SKU</h3>
-        <button class="close-drawer-btn" onclick="closeDrawer('mProductAddDrawer')">&times;</button>
+  <!-- Checkout & Cart Modal -->
+  <div id="checkoutModal" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>🛒 Order Checkout</h3>
+        <button class="close-btn" onclick="closeModal('checkoutModal')">&times;</button>
       </div>
 
-      <div style="display: grid; grid-template-columns: 1fr 1.5fr; gap: 8px;">
-        <div>
-          <label>Base Item Code:</label>
-          <input type="text" id="mpItemCode" placeholder="I000001" oninput="autoGenerateMobileSku()">
-        </div>
-        <div>
-          <label>Name (MM/EN) <span style="color:red;">*</span>:</label>
-          <input type="text" id="mpName" placeholder="Duducream ဂါဝန်">
-        </div>
-      </div>
+      <input type="hidden" id="cBoundId">
 
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-        <div>
-          <label>Sex Category:</label>
-          <select id="mpSex">
-            <option value="Unisex">Unisex</option>
-            <option value="Female">Female</option>
-            <option value="Male">Male</option>
-          </select>
+      <div style="display: flex; gap: 6px;">
+        <div style="flex: 1;">
+          <label>Customer Name *:</label>
+          <input type="text" id="cCustName" placeholder="Name" oninput="handleCustSuggest()">
+          <div id="cSuggestBox" style="display:none; background:white; border:1px solid #ccc; max-height:120px; overflow-y:auto; font-size:11px;"></div>
         </div>
-        <div>
-          <label>Length:</label>
-          <select id="mpLength">
-            <option value="တို">တို (Short)</option>
-            <option value="ရှည်">ရှည် (Long)</option>
-            <option value="None">None / Regular</option>
-          </select>
+        <div style="flex: 1;">
+          <label>Phone:</label>
+          <input type="tel" id="cCustPhone" placeholder="09xxxxxxxxx">
         </div>
       </div>
 
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-        <div>
-          <label>Type:</label>
-          <select id="mpType" onchange="autoGenerateMobileSku()"></select>
+      <div style="display: flex; gap: 6px; margin-top: 4px;">
+        <div style="flex: 1;">
+          <label>Courier:</label>
+          <select id="cDeliverySelect"></select>
         </div>
-        <div>
-          <label>Size:</label>
-          <select id="mpSize" onchange="autoGenerateMobileSku()"></select>
-        </div>
-      </div>
-
-      <div>
-        <label>Color / Pattern:</label>
-        <select id="mpColor" onchange="autoGenerateMobileSku()"></select>
-      </div>
-
-      <div>
-        <label>SKU (Auto):</label>
-        <input type="text" id="mpSku" readonly style="background:#e9ecef; font-weight:bold; color:var(--primary);">
-      </div>
-
-      <div class="calc-box-mobile">
-        <b style="font-size: 11px; color: var(--accent-blue);">Cost & Pricing Engine:</b>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 4px;">
-          <div>
-            <label style="font-size: 10px; margin: 0;">Buying (¥):</label>
-            <input type="number" id="mpBuyingYuan" step="0.01" placeholder="35.0" oninput="calculateMobilePricingEngine()">
-          </div>
-          <div>
-            <label style="font-size: 10px; margin: 0;">Supplier %:</label>
-            <input type="number" id="mpSupplierPct" step="0.1" value="0" oninput="calculateMobilePricingEngine()">
-          </div>
-          <div>
-            <label style="font-size: 10px; margin: 0;">Yuan Rate (MMK):</label>
-            <input type="number" id="mpYuanRate" oninput="calculateMobilePricingEngine()">
-          </div>
-          <div>
-            <label style="font-size: 10px; margin: 0;">Cargo Fee (MMK):</label>
-            <input type="number" id="mpCargoFee" oninput="calculateMobilePricingEngine()">
-          </div>
-        </div>
-
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 6px;">
-          <div>
-            <label style="font-size: 10px; margin: 0;">Total Capital:</label>
-            <input type="number" id="mpTotalCapital" readonly style="background: #edf2f7; font-weight: bold;">
-          </div>
-          <div>
-            <label style="font-size: 10px; margin: 0;" id="lblMpNormalPrice">Normal Price:</label>
-            <input type="number" id="mpNormalPrice" readonly style="background: #edf2f7; font-weight: bold; color: green;">
-          </div>
-        </div>
-      </div>
-
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-        <div>
-          <label>Selling Price (MMK) <span style="color:red;">*</span>:</label>
-          <input type="number" id="mpPrice" placeholder="e.g. 12000">
-        </div>
-        <div>
-          <label>Wholesale (MMK):</label>
-          <input type="number" id="mpWholesalePrice" placeholder="e.g. 9000">
-        </div>
-      </div>
-
-      <div style="display: grid; grid-template-columns: 1fr 1.5fr; gap: 8px;">
-        <div>
-          <label>Stock Level:</label>
-          <input type="number" id="mpStock" value="5" min="0">
-        </div>
-        <div>
-          <label>Remark / Batch:</label>
-          <input type="text" id="mpRemark" placeholder="e.g. Batch 2026 restock">
-        </div>
-      </div>
-
-      <button class="btn btn-primary" style="width: 100%; margin-top: 14px;" onclick="saveMobileProduct()">💾 Save Product Variant</button>
-    </div>
-  </div>
-
-  <!-- ========================================================================= -->
-  <!-- DRAWER: CUSTOMER PROFILE / NEW CLIENT -->
-  <!-- ========================================================================= -->
-  <div id="mCustomerDrawer" class="drawer-overlay">
-    <div class="drawer-card">
-      <div class="drawer-header">
-        <h3 id="mcDrawerTitle">👤 Customer Profile</h3>
-        <button class="close-drawer-btn" onclick="closeDrawer('mCustomerDrawer')">&times;</button>
-      </div>
-
-      <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 8px;">
-        <div>
-          <label>Customer ID:</label>
-          <input type="text" id="mcCustId" readonly style="background:#edf2f7; font-weight:bold; color:var(--primary);">
-        </div>
-        <div>
-          <label>Full Name <span style="color:red;">*</span>:</label>
-          <input type="text" id="mcFullName" placeholder="Daw Nwe Nwe Yee">
-        </div>
-      </div>
-
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
-        <div>
-          <label>Phone Number:</label>
-          <input type="text" id="mcPhone" placeholder="09xxxxxxxxx">
-        </div>
-        <div>
+        <div style="flex: 1;">
           <label>Township / City:</label>
-          <input type="text" id="mcTownship" placeholder="Kamayut">
+          <input type="text" id="cTownship" placeholder="e.g. Kamayut">
         </div>
       </div>
 
-      <label>Delivery Address:</label>
-      <textarea id="mcAddress" style="height: 48px;" placeholder="Street / House No."></textarea>
+      <label>Address:</label>
+      <input type="text" id="cAddress" placeholder="Street / House Number">
 
-      <label>Remark / Aliases:</label>
-      <input type="text" id="mcRemark" placeholder="e.g. VIP, Prefers KPay">
+      <label>Ordered Items:</label>
+      <table class="cart-table">
+        <tbody id="cCartTableBody"></tbody>
+      </table>
 
-      <div style="display: flex; gap: 8px; margin-top: 14px;">
+      <!-- Discount Section -->
+      <div style="background:#fff3eb; padding:8px; border-radius:6px; margin-top:8px; border:1px solid var(--primary-border);">
+        <label style="margin-top:0;">Discount:</label>
+        <div style="display:flex; gap:6px;">
+          <select id="cDiscountType" onchange="renderCheckoutTotals()" style="flex:1;">
+            <option value="none">None</option>
+            <option value="flat">Flat Cash (MMK)</option>
+            <option value="percentage">Percentage (%)</option>
+          </select>
+          <input type="number" id="cDiscountVal" placeholder="Amount / %" style="flex:1;" oninput="renderCheckoutTotals()">
+        </div>
+      </div>
+
+      <div style="margin-top: 8px; font-size: 13px; font-weight: bold; display: flex; justify-content: space-between;">
+        <span>Net Total:</span>
+        <span style="color: var(--primary);" id="cNetTotalDisplay">0 MMK</span>
+      </div>
+
+      <div style="display: flex; gap: 6px; margin-top: 8px;">
+        <div style="flex: 1;">
+          <label>Payment:</label>
+          <select id="cPaymentSelect"></select>
+        </div>
+        <div style="flex: 1;">
+          <label>Paid Status:</label>
+          <select id="cPaidStatus">
+            <option value="paid">paid</option>
+            <option value="Unpaid" selected>Unpaid</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 6px; margin-top: 14px;">
+        <button class="btn btn-primary" style="flex: 1;" onclick="submitMobileOrder()">💾 Complete Sale</button>
+        <button class="btn" style="background:#ccc;" onclick="closeModal('checkoutModal')">Back</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Single SKU Intake Modal -->
+  <div id="productModal" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 id="pModalTitle">➕ Product Variant</h3>
+        <button class="close-btn" onclick="closeModal('productModal')">&times;</button>
+      </div>
+
+      <label>SKU:</label>
+      <input type="text" id="mSku" readonly style="background:#eee; font-weight:bold;">
+
+      <label>Name (MM) *:</label>
+      <input type="text" id="mName" placeholder="Product Title">
+
+      <div style="display: flex; gap: 6px;">
+        <div style="flex: 1;">
+          <label>Type:</label>
+          <select id="mTypeSelect"></select>
+        </div>
+        <div style="flex: 1;">
+          <label>Size:</label>
+          <select id="mSizeSelect"></select>
+        </div>
+        <div style="flex: 1;">
+          <label>Color:</label>
+          <select id="mColorSelect"></select>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 6px;">
+        <div style="flex: 1;">
+          <label>Selling Price (MMK) *:</label>
+          <input type="number" id="mSellingPrice">
+        </div>
+        <div style="flex: 1;">
+          <label>Stock Qty:</label>
+          <input type="number" id="mStock" value="5">
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 6px; margin-top: 14px;">
+        <button class="btn btn-primary" style="flex: 1;" onclick="saveMobileProduct()">💾 Save Item</button>
+        <button class="btn" style="background:#ccc;" onclick="closeModal('productModal')">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bulk Shipment Matrix Intake Modal -->
+  <div id="bulkMatrixModal" class="modal-overlay">
+    <div class="modal-card" style="max-height: 92vh;">
+      <div class="modal-header">
+        <h3>📦 Bulk Shipment Matrix</h3>
+        <button class="close-btn" onclick="closeModal('bulkMatrixModal')">&times;</button>
+      </div>
+
+      <label>Product Name (MM) *:</label>
+      <input type="text" id="bmName" placeholder="Item Name">
+
+      <div style="display: flex; gap: 6px;">
+        <div style="flex: 1;">
+          <label>Base Code:</label>
+          <input type="text" id="bmItemCode" readonly style="background:#eee; font-weight:bold;">
+        </div>
+        <div style="flex: 1;">
+          <label>Type:</label>
+          <select id="bmType"></select>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 6px;">
+        <div style="flex: 1;">
+          <label>Selling Price *:</label>
+          <input type="number" id="bmSellingPrice" placeholder="MMK">
+        </div>
+        <div style="flex: 1;">
+          <label>Quick Fill Qty:</label>
+          <input type="number" id="bmQuickFill" value="5">
+        </div>
+      </div>
+
+      <div style="margin-top: 8px;">
+        <label>Selected Sizes:</label>
+        <div id="bmSizeChecks" class="chip-group"></div>
+        <label>Selected Colors:</label>
+        <div id="bmColorChecks" class="chip-group"></div>
+      </div>
+
+      <div style="overflow-x: auto; max-height: 200px; margin-top: 8px; border: 1px solid #ddd;">
+        <table class="data-table" id="bmTable"></table>
+      </div>
+
+      <div style="display: flex; gap: 6px; margin-top: 14px;">
+        <button class="btn btn-primary" style="flex: 1;" onclick="submitBulkMatrixMobile()">💾 Save Bulk SKUs</button>
+        <button class="btn" style="background:#ccc;" onclick="closeModal('bulkMatrixModal')">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Customer Profile & History Modal -->
+  <div id="customerModal" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>👤 Customer Profile</h3>
+        <button class="close-btn" onclick="closeModal('customerModal')">&times;</button>
+      </div>
+      <input type="hidden" id="mcId">
+      <label>Name *:</label>
+      <input type="text" id="mcName">
+      <label>Phone:</label>
+      <input type="tel" id="mcPhone">
+      <label>Township / City:</label>
+      <input type="text" id="mcTownship">
+      <label>Default Address:</label>
+      <textarea id="mcAddress" style="height: 40px;"></textarea>
+      
+      <div style="margin-top: 10px; border-top: 1px dashed #ddd; padding-top: 8px;">
+        <b>Order History:</b>
+        <div id="mcHistoryList" style="max-height: 120px; overflow-y: auto; font-size: 11px; margin-top: 4px;"></div>
+      </div>
+
+      <div style="display: flex; gap: 6px; margin-top: 14px;">
         <button class="btn btn-primary" style="flex: 1;" onclick="saveMobileCustomer()">💾 Save Profile</button>
-        <button class="btn btn-success" id="btnMcStartSale" onclick="startPosFromMobileCustomerModal()">🛒 New Sale</button>
+        <button class="btn" style="background:#ccc;" onclick="closeModal('customerModal')">Close</button>
       </div>
     </div>
   </div>
 
-  <!-- ========================================================================= -->
-  <!-- HIDDEN 80MM THERMAL RECEIPT SLIP TEMPLATE -->
-  <!-- ========================================================================= -->
-  <div id="mPrintSlip">
-    <div style="text-align: center;">
-      <img src="logo.png" alt="Logo" style="max-height: 48px; width: auto; margin: 0 auto 4px auto; display: block;" onerror="this.style.display='none'">
-      <b style="font-size: 16px;">MINI-M BABY CLOTHING</b><br>
-      <span style="font-size: 11px;">Sales Receipt & Delivery Order</span>
-    </div>
-
-    <div class="slip-divider"></div>
-
-    <div style="font-size: 12px; line-height: 1.4;">
-      <div style="display: flex; justify-content: space-between;">
-        <span><b>Sales ID:</b> <span id="mpsSalesId"></span></span>
-        <span><b>Date:</b> <span id="mpsDate"></span></span>
-      </div>
-      <div><b>Customer:</b> <span id="mpsCustName"></span></div>
-      <div><b>Phone:</b> <span id="mpsPhone"></span></div>
-      <div><b>Courier:</b> <span id="mpsDelivery"></span></div>
-      <div><b>Address:</b> <span id="mpsAddress"></span></div>
-    </div>
-
-    <div class="slip-divider"></div>
-
-    <table class="slip-table">
-      <thead>
-        <tr>
-          <th style="width: 48%;">Item / Variant</th>
-          <th style="text-align: center; width: 14%;">Qty</th>
-          <th style="text-align: right; width: 18%;">Price</th>
-          <th style="text-align: right; width: 20%;">Total</th>
-        </tr>
-      </thead>
-      <tbody id="mpsItemsBody"></tbody>
-    </table>
-
-    <div class="slip-divider"></div>
-
-    <div style="font-size: 12px; line-height: 1.4;">
-      <div style="display: flex; justify-content: space-between;">
-        <span>Subtotal:</span>
-        <span id="mpsSubtotal"></span>
-      </div>
-      <div id="mpsDiscountRow" style="display: none; justify-content: space-between; color: #000;">
-        <span id="mpsDiscountLabel">Discount:</span>
-        <span id="mpsDiscountAmount"></span>
-      </div>
-      <div style="display: flex; justify-content: space-between; font-weight: bold; font-size: 15px; margin-top: 4px; border-top: 1px dashed #000; padding-top: 4px;">
-        <span>TOTAL:</span>
-        <span id="mpsTotal"></span>
-      </div>
-    </div>
-
-    <div style="margin-top: 6px; font-size: 11px; line-height: 1.3;">
-      <div><b>Payment Method:</b> <span id="mpsPayment"></span> (<span id="mpsPaidStatus"></span>)</div>
-      <div id="mpsRemarkRow" style="display: none;"><b>Delivery Notes:</b> <span id="mpsRemark"></span></div>
-    </div>
-
-    <div style="text-align: center; font-size: 11px; margin-top: 14px; font-style: italic;">
-      Thank you for shopping with Mini-M! 💕<br>
-      Please inspect all clothing items upon delivery.
-    </div>
+  <!-- Printable Receipt Slip (Hidden Offscreen) -->
+  <div id="printReceiptSlip">
+    <div style="text-align:center; font-weight:bold; font-size:14px;">BABY STORE</div>
+    <div style="text-align:center; font-size:10px;">Sales Order Slip</div>
+    <hr style="border-top:1px dashed #000;">
+    <div><b>ID:</b> <span id="slipId"></span></div>
+    <div><b>Customer:</b> <span id="slipCust"></span></div>
+    <div id="slipItems"></div>
+    <hr style="border-top:1px dashed #000;">
+    <div><b>Total:</b> <span id="slipTotal"></span></div>
   </div>
 
   <!-- ========================================================================= -->
-  <!-- JAVASCRIPT: LOCAL-FIRST ENGINE (COMPATIBLE WITH INDEX.HTML & GAS) -->
+  <!-- JAVASCRIPT ENGINE -->
   <!-- ========================================================================= -->
   <script>
+    let db;
     const DB_NAME = "BabyStoreOwnerDB";
     const DB_VERSION = 5;
-    let db;
 
     let appSettings = {
       RegularProfitMargin: 33,
       WholesaleProfitMargin: 15,
       DefaultYuanRate: 620,
       DefaultCargoFee: 2500,
+      DefaultSupplierPct: 3,
       ProductTypes: ["Dress", "Pant", "Top", "T shirt", "Shirt", "Cap", "Set", "Boiler", "Romper", "Accessories"],
       ProductSizes: ["73", "80", "90", "100", "110", "120", "130", "140", "150"],
       ProductColors: ["ပန်း", "ဝါ", "ပြာ", "ခဲ", "ဖြူ", "နီ", "စိမ်း", "နက်", "လိမ္မော်", "ခရမ်း", "ကြား", "ပွင့်"],
       PaymentMethods: ["KPay", "WavePay", "COD", "AYA Pay"],
       DeliveryServices: ["Royal", "Wepots", "Ninja Van", "Safe", "self"],
-      PaidStatuses: ["paid", "not received yet"]
+      PaidStatuses: ["paid", "Unpaid"]
     };
 
+    let supabaseClient = null;
     let currentCart = [];
-    let activeSex = "All";
-    let activeType = "All";
-    let activeSize = "All";
-    let isWholesaleActive = false;
-    let isProductEditMode = false;
-    let lastSavedOrder = null;
+    let activeSex = "All", activeType = "All", activeSize = "All";
+    let activeInvType = "All";
+    let activeAnalyticsPeriod = "today";
 
-    // --- Lightweight Debounce Utilities for Mobile ---
-    let posSearchTimer;
-    function debouncedMobilePosCatalog() {
-      clearTimeout(posSearchTimer);
-      posSearchTimer = setTimeout(renderMobilePosCatalog, 150);
-    }
+    const KEY_GAS_URL = "gas_endpoint_url";
+    const KEY_SB_URL = "babystore_supabase_url";
+    const KEY_SB_KEY = "babystore_supabase_key";
+    const KEY_SB_LAST_SYNC = "babystore_last_sb_sync";
 
-    let invSearchTimer;
-    function debouncedMobileInventoryList() {
-      clearTimeout(invSearchTimer);
-      invSearchTimer = setTimeout(renderMobileInventoryList, 150);
-    }
-
-    let orderSearchTimer;
-    function debouncedMobileOrdersList() {
-      clearTimeout(orderSearchTimer);
-      orderSearchTimer = setTimeout(renderMobileOrdersList, 150);
-    }
-
-    let custSearchTimer;
-    function debouncedMobileCustomersList() {
-      clearTimeout(custSearchTimer);
-      custSearchTimer = setTimeout(renderMobileCustomersList, 150);
-    }
-
-    function onSearchInputChanged(inputId, clearBtnId, callback) {
-      const input = document.getElementById(inputId);
-      const clearBtn = document.getElementById(clearBtnId);
-      if (clearBtn) {
-        clearBtn.style.display = (input && input.value.trim().length > 0) ? "block" : "none";
-      }
-      callback();
-    }
-
-    function clearSearchInput(inputId, clearBtnId, callback) {
-      const input = document.getElementById(inputId);
-      const clearBtn = document.getElementById(clearBtnId);
-      if (input) {
-        input.value = "";
-        input.focus();
-      }
-      if (clearBtn) {
-        clearBtn.style.display = "none";
-      }
-      callback();
-    }
-
+    // -------------------------------------------------------------------------
+    // DATABASE CORE (IndexedDB)
+    // -------------------------------------------------------------------------
     function initDatabase() {
       return new Promise((resolve, reject) => {
         const request = indexedDB.open(DB_NAME, DB_VERSION);
-
         request.onupgradeneeded = (e) => {
           const d = e.target.result;
-          
-          if (!d.objectStoreNames.contains("products")) {
-            const pStore = d.createObjectStore("products", { keyPath: "ProductID" });
-            pStore.createIndex("ItemCode", "ItemCode", { unique: false });
-            pStore.createIndex("Type", "Type", { unique: false });
-            pStore.createIndex("Sex", "Sex", { unique: false });
-            pStore.createIndex("Size", "Size", { unique: false });
-          }
-          
-          if (!d.objectStoreNames.contains("orders")) {
-            const oStore = d.createObjectStore("orders", { keyPath: "SalesID" });
-            oStore.createIndex("CustomerID", "CustomerID", { unique: false });
-            oStore.createIndex("Phone", "Phone", { unique: false });
-            oStore.createIndex("Status", "Status", { unique: false });
-          }
-
-          if (!d.objectStoreNames.contains("customers")) {
-            const cStore = d.createObjectStore("customers", { keyPath: "CustomerID" });
-            cStore.createIndex("FullName", "FullName", { unique: false });
-            cStore.createIndex("Phone", "Phone", { unique: false });
-          }
-
-          if (!d.objectStoreNames.contains("settings")) {
-            d.createObjectStore("settings", { keyPath: "key" });
-          }
+          if (!d.objectStoreNames.contains("products")) d.createObjectStore("products", { keyPath: "ProductID" });
+          if (!d.objectStoreNames.contains("orders")) d.createObjectStore("orders", { keyPath: "SalesID" });
+          if (!d.objectStoreNames.contains("customers")) d.createObjectStore("customers", { keyPath: "CustomerID" });
+          if (!d.objectStoreNames.contains("settings")) d.createObjectStore("settings", { keyPath: "key" });
         };
-
-        request.onsuccess = (e) => {
-          db = e.target.result;
-          resolve(db);
-        };
-        request.onerror = (e) => reject("IndexedDB Error: " + e.target.error);
+        request.onsuccess = (e) => { db = e.target.result; resolve(db); };
+        request.onerror = (e) => reject(e.target.error);
       });
     }
 
     function dbGetAll(storeName) {
       return new Promise((resolve) => {
+        if (!db) return resolve([]);
         const tx = db.transaction(storeName, "readonly");
         tx.objectStore(storeName).getAll().onsuccess = (e) => resolve(e.target.result || []);
       });
@@ -1177,832 +686,653 @@
 
     function dbPut(storeName, record) {
       return new Promise((resolve, reject) => {
+        if (!db) return reject(new Error("Database offline"));
         const tx = db.transaction(storeName, "readwrite");
         tx.objectStore(storeName).put(record).onsuccess = () => {
-          updateUnsavedBadge();
+          updateBadge();
           resolve(true);
         };
         tx.onerror = (e) => reject(e.target.error);
       });
     }
 
-    function dbReplaceAll(storeName, items) {
-      return new Promise((resolve, reject) => {
-        const tx = db.transaction(storeName, "readwrite");
-        const store = tx.objectStore(storeName);
-        store.clear().onsuccess = () => {
-          for (let item of items) store.put(item);
-        };
-        tx.oncomplete = () => resolve(true);
-        tx.onerror = () => reject(tx.error);
-      });
-    }
-
+    // -------------------------------------------------------------------------
+    // BOOTSTRAP & LIFECYCLE
+    // -------------------------------------------------------------------------
     window.addEventListener("DOMContentLoaded", async () => {
-      await initDatabase();
-      await loadSettings();
-      renderMobilePosCatalog();
-      renderMobileInventoryList();
-      renderMobileOrdersList();
-      renderMobileCustomersList();
-      updateUnsavedBadge();
+      try {
+        await initDatabase();
+        await loadLocalSettings();
+        initSupabase();
+
+        // Check for cold-start empty DB
+        const prods = await dbGetAll("products");
+        if (prods.length === 0 && supabaseClient && navigator.onLine) {
+          await forceFullSupabaseHydration();
+        }
+
+        renderPosCatalog();
+        renderInventoryTable();
+        renderOrdersTable();
+        renderCustomersTable();
+        renderAnalytics();
+        updateBadge();
+
+        // 30s background heartbeat
+        setInterval(() => {
+          if (navigator.onLine) {
+            pushPendingToSupabase();
+            pullSupabaseDeltas(false);
+          }
+        }, 30000);
+
+      } catch (err) {
+        console.error("Boot error:", err);
+      }
     });
 
-    async function loadSettings() {
-      try {
-        const saved = await dbGetAll("settings");
-        if (saved && saved.length > 0) {
-          saved.forEach(row => { appSettings[row.key] = row.value; });
-        }
-      } catch(e) {
-        console.warn("Using offline fallback settings", e);
+    // iPadOS / iOS background wake listener
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible" && navigator.onLine) {
+        pullSupabaseDeltas(false);
       }
-      applyDynamicSettings();
-    }
+    });
+    window.addEventListener("focus", () => {
+      if (navigator.onLine) pullSupabaseDeltas(false);
+    });
 
-    function applyDynamicSettings() {
-      const typeChips = document.getElementById("mPosTypeChips");
-      if (typeChips) {
-        typeChips.innerHTML = ["All", ...(appSettings.ProductTypes || [])].map(t => `
-          <div class="chip ${t === activeType ? 'active' : ''}" onclick="setMobilePosType('${t}', this)">${t === 'All' ? 'All Types' : t}</div>
-        `).join('');
-      }
+    // -------------------------------------------------------------------------
+    // SUPABASE CLIENT & REALTIME
+    // -------------------------------------------------------------------------
+    function initSupabase() {
+      const url = localStorage.getItem(KEY_SB_URL);
+      const key = localStorage.getItem(KEY_SB_KEY);
+      const badge = document.getElementById("sbBadge");
 
-      const sizeChips = document.getElementById("mPosSizeChips");
-      if (sizeChips) {
-        sizeChips.innerHTML = ["All", ...(appSettings.ProductSizes || [])].map(s => `
-          <div class="chip ${s === activeSize ? 'active' : ''}" onclick="setMobilePosSize('${s}', this)">${s === 'All' ? 'All Sizes' : s}</div>
-        `).join('');
-      }
-
-      const mpType = document.getElementById("mpType");
-      if (mpType) {
-        mpType.innerHTML = (appSettings.ProductTypes || []).map(t => `<option value="${t}">${t}</option>`).join('');
-      }
-
-      const mpSize = document.getElementById("mpSize");
-      if (mpSize) {
-        mpSize.innerHTML = (appSettings.ProductSizes || []).map(s => `<option value="${s}">${s}</option>`).join('');
-      }
-
-      const mpColor = document.getElementById("mpColor");
-      if (mpColor) {
-        mpColor.innerHTML = (appSettings.ProductColors || []).map(c => `<option value="${c}">${c}</option>`).join('');
-      }
-
-      const paymentMethods = appSettings.PaymentMethods || ["KPay", "WavePay", "COD", "AYA Pay"];
-      const mOrderPay = document.getElementById("mOrderPaymentType");
-      if (mOrderPay) {
-        mOrderPay.innerHTML = paymentMethods.map(p => `<option value="${p}">${p}</option>`).join('');
-      }
-
-      const deliveryServices = appSettings.DeliveryServices || ["Royal", "Wepots", "Ninja Van", "Safe", "self"];
-      const mOrderDelivery = document.getElementById("mOrderDeliveryName");
-      if (mOrderDelivery) {
-        mOrderDelivery.innerHTML = deliveryServices.map(d => `<option value="${d}">${d}</option>`).join('');
-      }
-
-      const paidStatuses = appSettings.PaidStatuses || ["paid", "not received yet"];
-      const mOrderPaid = document.getElementById("mOrderPaidStatus");
-      if (mOrderPaid) {
-        mOrderPaid.innerHTML = paidStatuses.map(p => `<option value="${p}">${p}</option>`).join('');
-      }
-
-      const regMargin = appSettings.RegularProfitMargin || 33;
-      const lblMpNormal = document.getElementById("lblMpNormalPrice");
-      if (lblMpNormal) lblMpNormal.innerText = `Normal (+${regMargin}%):`;
-    }
-
-    function switchMobileTab(tabId, el) {
-      document.querySelectorAll('.tab-view').forEach(v => v.classList.remove('active'));
-      document.querySelectorAll('.nav-tab-btn').forEach(b => b.classList.remove('active'));
-      document.getElementById(tabId).classList.add('active');
-      el.classList.add('active');
-
-      if (tabId === 'mPosView') renderMobilePosCatalog();
-      if (tabId === 'mInventoryView') renderMobileInventoryList();
-      if (tabId === 'mOrdersView') renderMobileOrdersList();
-      if (tabId === 'mCustomersView') renderMobileCustomersList();
-    }
-
-    function openDrawer(id) {
-      if (id === 'mSyncDrawer') {
-        document.getElementById('mGasEndpointInput').value = localStorage.getItem('gas_endpoint_url') || '';
-        document.getElementById('mGasSaveStatus').innerText = '';
-      }
-      document.getElementById(id).style.display = 'flex';
-    }
-    function closeDrawer(id) {
-      document.getElementById(id).style.display = 'none';
-    }
-
-    // --- POS Catalog Engine ---
-    function setMobilePosSex(val, el) {
-      activeSex = val;
-      document.querySelectorAll('#mPosSexChips .chip').forEach(c => c.classList.remove('active'));
-      el.classList.add('active');
-      renderMobilePosCatalog();
-    }
-    function setMobilePosType(val, el) {
-      activeType = val;
-      document.querySelectorAll('#mPosTypeChips .chip').forEach(c => c.classList.remove('active'));
-      el.classList.add('active');
-      renderMobilePosCatalog();
-    }
-    function setMobilePosSize(val, el) {
-      activeSize = val;
-      document.querySelectorAll('#mPosSizeChips .chip').forEach(c => c.classList.remove('active'));
-      el.classList.add('active');
-      renderMobilePosCatalog();
-    }
-    function resetMobilePosFilters() {
-      clearSearchInput('mPosSearch', 'mPosSearchClear', () => {});
-      activeSex = "All";
-      activeType = "All";
-      activeSize = "All";
-      document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
-      document.querySelectorAll('#mPosSexChips div:first-child, #mPosTypeChips div:first-child, #mPosSizeChips div:first-child').forEach(c => c.classList.add('active'));
-      renderMobilePosCatalog();
-    }
-
-    async function renderMobilePosCatalog() {
-      const products = await dbGetAll("products");
-      const query = (document.getElementById("mPosSearch")?.value || "").toLowerCase().trim();
-      const feed = document.getElementById("mPosProductFeed");
-
-      const filtered = products.filter(p => {
-        const matchSex = activeSex === "All" || p.Sex === activeSex;
-        const matchType = activeType === "All" || p.Type === activeType;
-        const matchSize = activeSize === "All" || String(p.Size) === activeSize;
-        const str = `${p.ProductID || ''} ${p.Name_MM || ''} ${p.ColorPattern || ''} ${p.Type || ''} ${p.Sex || ''} ${p.Length || ''} ${p.Size || ''} ${p.Remark || ''}`.toLowerCase();
-        const matchQuery = !query || str.includes(query);
-        const matchStock = (Number(p.Stock) || 0) > 0;
-        return matchSex && matchType && matchSize && matchQuery && matchStock;
-      });
-
-      if (filtered.length === 0) {
-        feed.innerHTML = `<div style="grid-column: 1/-1; text-align:center; color:#888; padding:30px;">No in-stock items found.</div>`;
+      if (!url || !key || typeof supabase === 'undefined') {
+        if (badge) { badge.className = "status-badge badge-alert"; badge.innerText = "⚡ Supabase: Not Configured"; }
         return;
       }
 
-      feed.innerHTML = filtered.map(p => {
-        const stock = Number(p.Stock) || 0;
-        const priceToUse = isWholesaleActive ? (p.WholesalePrice || p.SellingPrice) : p.SellingPrice;
-        const badgeClass = stock <= 2 ? 'badge-stock-low' : 'badge-stock-ok';
-
-        return `
-          <div class="product-mobile-card">
-            <div>
-              <div style="font-weight: bold; font-size: 13px; line-height: 1.3;">${p.Name_MM}</div>
-              <div style="font-size: 11px; color: #666; margin: 3px 0;">${p.Size} | ${p.ColorPattern} | ${p.Length || 'တို'}</div>
-              <span class="status-badge ${badgeClass}">${stock} left</span>
-            </div>
-            <div style="margin-top: 8px;">
-              <div style="font-weight: bold; color: var(--primary); font-size: 14px; margin-bottom: 6px;">${Number(priceToUse).toLocaleString()} K</div>
-              <button class="btn btn-primary btn-sm" style="width: 100%;" onclick="addToMobileCart('${p.ProductID}')">➕ Add</button>
-            </div>
-          </div>
-        `;
-      }).join('');
-    }
-
-    function toggleMobileWholesaleMode() {
-      isWholesaleActive = document.getElementById("mWholesaleToggle").checked;
-      dbGetAll("products").then(products => {
-        currentCart.forEach(item => {
-          const prod = products.find(p => p.ProductID === item.ProductID);
-          if (prod) {
-            item.UnitPrice = isWholesaleActive ? (prod.WholesalePrice || prod.SellingPrice) : prod.SellingPrice;
-            item.Subtotal = item.Quantity * item.UnitPrice;
-          }
+      try {
+        supabaseClient = supabase.createClient(url, key, {
+          auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
+          global: { headers: { apikey: key, Authorization: `Bearer ${key}` } }
         });
-        renderMobileCartDrawer();
-        renderMobilePosCatalog();
-      });
+
+        if (badge) { badge.className = "status-badge badge-synced"; badge.innerText = "⚡ Deltabase: Online"; }
+
+        setupRealtime();
+        pullSupabaseDeltas(false);
+        pushPendingToSupabase();
+
+      } catch (err) {
+        if (badge) { badge.className = "status-badge badge-alert"; badge.innerText = "⚡ Supabase: Error"; }
+      }
     }
 
-    async function addToMobileCart(productId) {
+    function setupRealtime() {
+      if (!supabaseClient) return;
+
+      supabaseClient
+        .channel("mobile-realtime")
+        .on("postgres_changes", { event: "*", schema: "public", table: "products" }, payload => {
+          if (payload.new && db) {
+            const p = payload.new;
+            const rec = {
+              ProductID: p.product_id, ItemCode: p.item_code, Name_MM: p.name_mm,
+              Sex: p.sex, Type: p.type, Length: p.length, Size: p.size,
+              ColorPattern: p.color_pattern, Remark: p.remark, Stock: p.stock,
+              SellingPrice: p.selling_price, WholesalePrice: p.wholesale_price,
+              TotalCapital: p.total_capital, LastModified: p.last_modified, _syncStatus: "synced"
+            };
+            const tx = db.transaction("products", "readwrite");
+            tx.objectStore("products").put(rec);
+            tx.oncomplete = () => { renderPosCatalog(); renderInventoryTable(); renderAnalytics(); };
+          }
+        })
+        .on("postgres_changes", { event: "*", schema: "public", table: "orders" }, payload => {
+          if (payload.new && db) {
+            const o = payload.new;
+            const rec = {
+              SalesID: o.sales_id, Date: o.date, CustomerID: o.customer_id, CustomerName: o.customer_name,
+              Phone: o.phone, DeliveryName: o.delivery_name, DeliveryAddress: o.delivery_address,
+              TownshipCity: o.township_city, ItemList: o.item_list, Subtotal: o.subtotal,
+              DiscountType: o.discount_type, DiscountAmount: o.discount_amount, TotalAmount: o.total_amount,
+              PaymentType: o.payment_type, PaidStatus: o.paid_status, Status: o.status,
+              Remark: o.remark, LastModified: o.last_modified, _syncStatus: "synced"
+            };
+            const tx = db.transaction("orders", "readwrite");
+            tx.objectStore("orders").put(rec);
+            tx.oncomplete = () => { renderOrdersTable(); renderAnalytics(); };
+          }
+        })
+        .on("postgres_changes", { event: "*", schema: "public", table: "store_settings" }, payload => {
+          if (payload.new && db) {
+            appSettings[payload.new.key] = payload.new.value;
+            const tx = db.transaction("settings", "readwrite");
+            tx.objectStore("settings").put({ key: payload.new.key, value: payload.new.value, _syncStatus: "synced" });
+            tx.oncomplete = () => applySettingsUI();
+          }
+        })
+        .subscribe();
+    }
+
+    // -------------------------------------------------------------------------
+    // HYDRATION & DELTAS
+    // -------------------------------------------------------------------------
+    async function pullSupabaseDeltas(userAlert = false) {
+      if (!supabaseClient || !db || !navigator.onLine) return;
+      try {
+        const lastSync = localStorage.getItem(KEY_SB_LAST_SYNC) || "1970-01-01T00:00:00Z";
+
+        const [pRes, oRes, sRes] = await Promise.all([
+          supabaseClient.from("products").select("*").gt("updated_at", lastSync),
+          supabaseClient.from("orders").select("*").gt("updated_at", lastSync),
+          supabaseClient.from("store_settings").select("*").gt("updated_at", lastSync)
+        ]);
+
+        if (pRes.data && pRes.data.length > 0) {
+          const tx = db.transaction("products", "readwrite");
+          const s = tx.objectStore("products");
+          pRes.data.forEach(p => s.put({
+            ProductID: p.product_id, ItemCode: p.item_code, Name_MM: p.name_mm,
+            Sex: p.sex, Type: p.type, Length: p.length, Size: p.size,
+            ColorPattern: p.color_pattern, Remark: p.remark, Stock: p.stock,
+            SellingPrice: p.selling_price, WholesalePrice: p.wholesale_price,
+            TotalCapital: p.total_capital, LastModified: p.last_modified, _syncStatus: "synced"
+          }));
+          await new Promise(r => { tx.oncomplete = r; });
+          renderPosCatalog();
+          renderInventoryTable();
+        }
+
+        if (oRes.data && oRes.data.length > 0) {
+          const tx = db.transaction("orders", "readwrite");
+          const s = tx.objectStore("orders");
+          oRes.data.forEach(o => s.put({
+            SalesID: o.sales_id, Date: o.date, CustomerID: o.customer_id, CustomerName: o.customer_name,
+            Phone: o.phone, DeliveryName: o.delivery_name, DeliveryAddress: o.delivery_address,
+            TownshipCity: o.township_city, ItemList: o.item_list, Subtotal: o.subtotal,
+            DiscountType: o.discount_type, DiscountAmount: o.discount_amount, TotalAmount: o.total_amount,
+            PaymentType: o.payment_type, PaidStatus: o.paid_status, Status: o.status,
+            Remark: o.remark, LastModified: o.last_modified, _syncStatus: "synced"
+          }));
+          await new Promise(r => { tx.oncomplete = r; });
+          renderOrdersTable();
+        }
+
+        if (sRes.data && sRes.data.length > 0) {
+          const tx = db.transaction("settings", "readwrite");
+          const s = tx.objectStore("settings");
+          sRes.data.forEach(row => {
+            appSettings[row.key] = row.value;
+            s.put({ key: row.key, value: row.value, _syncStatus: "synced" });
+          });
+          await new Promise(r => { tx.oncomplete = r; });
+          applySettingsUI();
+        }
+
+        localStorage.setItem(KEY_SB_LAST_SYNC, new Date().toISOString());
+        renderAnalytics();
+        if (userAlert) alert("✅ Supabase Deltas Synced!");
+      } catch (err) {
+        console.warn("Delta pull failed:", err);
+      }
+    }
+
+    function setPosSex(sex, el) {
+      activeSex = sex;
+      document.querySelectorAll("#posSexChips .chip").forEach(c => c.classList.remove("active"));
+      if (el) el.classList.add("active");
+      renderPosCatalog();
+    }
+
+    function resetPosFilters() {
+      const searchInput = document.getElementById("posSearch");
+      if (searchInput) searchInput.value = "";
+      activeSex = "All";
+      activeType = "All";
+      activeSize = "All";
+
+      document.querySelectorAll("#posSexChips .chip, #posTypeChips .chip, #posSizeChips .chip").forEach(c => c.classList.remove("active"));
+      document.querySelector("#posSexChips div:first-child")?.classList.add("active");
+      document.querySelector("#posTypeChips div:first-child")?.classList.add("active");
+      document.querySelector("#posSizeChips div:first-child")?.classList.add("active");
+
+      renderPosCatalog();
+    }
+
+    async function forceFullSupabaseHydration() {
+      if (!supabaseClient || !navigator.onLine) return alert("⚠️ Supabase is offline.");
+      if (!confirm("Download entire database from Supabase to phone?")) return;
+
+      try {
+        const [pRes, oRes, cRes, sRes] = await Promise.all([
+          supabaseClient.from("products").select("*"),
+          supabaseClient.from("orders").select("*"),
+          supabaseClient.from("customers").select("*"),
+          supabaseClient.from("store_settings").select("*")
+        ]);
+
+        if (sRes.data) {
+          const txS = db.transaction("settings", "readwrite");
+          const storeS = txS.objectStore("settings");
+          sRes.data.forEach(r => { appSettings[r.key] = r.value; storeS.put({ key: r.key, value: r.value, _syncStatus: "synced" }); });
+          await new Promise(r => { txS.oncomplete = r; });
+          applySettingsUI();
+        }
+
+        if (pRes.data) {
+          const txP = db.transaction("products", "readwrite");
+          const storeP = txP.objectStore("products");
+          pRes.data.forEach(p => storeP.put({
+            ProductID: p.product_id, ItemCode: p.item_code, Name_MM: p.name_mm,
+            Sex: p.sex, Type: p.type, Length: p.length, Size: p.size,
+            ColorPattern: p.color_pattern, Remark: p.remark, Stock: p.stock,
+            SellingPrice: p.selling_price, WholesalePrice: p.wholesale_price,
+            TotalCapital: p.total_capital, LastModified: p.last_modified, _syncStatus: "synced"
+          }));
+          await new Promise(r => { txP.oncomplete = r; });
+        }
+
+        if (oRes.data) {
+          const txO = db.transaction("orders", "readwrite");
+          const storeO = txO.objectStore("orders");
+          oRes.data.forEach(o => storeO.put({
+            SalesID: o.sales_id, Date: o.date, CustomerID: o.customer_id, CustomerName: o.customer_name,
+            Phone: o.phone, DeliveryName: o.delivery_name, DeliveryAddress: o.delivery_address,
+            TownshipCity: o.township_city, ItemList: o.item_list, Subtotal: o.subtotal,
+            DiscountType: o.discount_type, DiscountAmount: o.discount_amount, TotalAmount: o.total_amount,
+            PaymentType: o.payment_type, PaidStatus: o.paid_status, Status: o.status,
+            Remark: o.remark, LastModified: o.last_modified, _syncStatus: "synced"
+          }));
+          await new Promise(r => { txO.oncomplete = r; });
+        }
+
+        if (cRes.data) {
+          const txC = db.transaction("customers", "readwrite");
+          const storeC = txC.objectStore("customers");
+          cRes.data.forEach(c => storeC.put({
+            CustomerID: c.customer_id, FullName: c.full_name, Phone: c.phone,
+            DefaultAddress: c.default_address, TownshipCity: c.township_city,
+            Remark: c.remark, TotalSpend: c.total_spend, LastOrderDate: c.last_order_date, _syncStatus: "synced"
+          }));
+          await new Promise(r => { txC.oncomplete = r; });
+        }
+
+        localStorage.setItem(KEY_SB_LAST_SYNC, new Date().toISOString());
+        renderPosCatalog();
+        renderInventoryTable();
+        renderOrdersTable();
+        renderCustomersTable();
+        renderAnalytics();
+        updateBadge();
+
+        alert("🎉 Full Supabase Hydration Complete!");
+      } catch (err) {
+        alert("Hydration failed: " + err.message);
+      }
+    }
+
+    async function pushPendingToSupabase() {
+      if (!supabaseClient || !navigator.onLine) return;
+      try {
+        const [products, orders, customers] = await Promise.all([
+          dbGetAll("products"), dbGetAll("orders"), dbGetAll("customers")
+        ]);
+
+        const uP = products.filter(p => p._syncStatus === "pending_upload");
+        const uO = orders.filter(o => o._syncStatus === "pending_upload");
+        const uC = customers.filter(c => c._syncStatus === "pending_upload");
+
+        if (uP.length > 0) {
+          const payload = uP.map(p => ({
+            product_id: p.ProductID, item_code: p.ItemCode || "", name_mm: p.Name_MM,
+            sex: p.Sex, type: p.Type, length: p.Length, size: String(p.Size),
+            color_pattern: p.ColorPattern, remark: p.Remark, stock: Number(p.Stock) || 0,
+            selling_price: Number(p.SellingPrice) || 0, wholesale_price: Number(p.WholesalePrice) || 0,
+            total_capital: Number(p.TotalCapital) || 0, last_modified: p.LastModified || new Date().toISOString()
+          }));
+          const { error } = await supabaseClient.from("products").upsert(payload);
+          if (!error) await markSynced("products", uP);
+        }
+
+        if (uO.length > 0) {
+          const payload = uO.map(o => ({
+            sales_id: o.SalesID, date: o.Date, customer_id: o.CustomerID, customer_name: o.CustomerName,
+            phone: o.Phone, delivery_name: o.DeliveryName, delivery_address: o.DeliveryAddress,
+            township_city: o.TownshipCity, item_list: o.ItemList || [], subtotal: Number(o.Subtotal) || 0,
+            discount_type: o.DiscountType, discount_amount: Number(o.DiscountAmount) || 0,
+            total_amount: Number(o.TotalAmount) || 0, payment_type: o.PaymentType, paid_status: o.PaidStatus,
+            status: o.Status, remark: o.Remark, last_modified: o.LastModified || new Date().toISOString()
+          }));
+          const { error } = await supabaseClient.from("orders").upsert(payload);
+          if (!error) await markSynced("orders", uO);
+        }
+
+        if (uC.length > 0) {
+          const payload = uC.map(c => ({
+            customer_id: c.CustomerID, full_name: c.FullName, phone: c.Phone,
+            default_address: c.DefaultAddress, township_city: c.TownshipCity, remark: c.Remark,
+            total_spend: Number(c.TotalSpend) || 0, last_order_date: c.LastOrderDate || new Date().toISOString()
+          }));
+          const { error } = await supabaseClient.from("customers").upsert(payload);
+          if (!error) await markSynced("customers", uC);
+        }
+
+        updateBadge();
+      } catch (err) {
+        console.warn("Outbound push failed:", err);
+      }
+    }
+
+    async function markSynced(storeName, items) {
+      const tx = db.transaction(storeName, "readwrite");
+      const store = tx.objectStore(storeName);
+      items.forEach(i => { i._syncStatus = "synced"; store.put(i); });
+      return new Promise(r => { tx.oncomplete = r; });
+    }
+
+    // -------------------------------------------------------------------------
+    // SINGLE GAS URL SETUP & HYDRATION
+    // -------------------------------------------------------------------------
+    async function connectAndHydrateStore() {
+      const url = document.getElementById("cfgGasUrl")?.value.trim();
+      const status = document.getElementById("gasStatusText");
+
+      if (!url) return alert("Please enter your Google Apps Script URL.");
+      status.innerHTML = "⏳ Fetching cloud configuration from Google Sheets...";
+
+      try {
+        const res = await fetch(url, { method: "GET" });
+        const json = await res.json();
+
+        if (json.status !== "success") throw new Error(json.message || "Failed to fetch settings");
+
+        localStorage.setItem(KEY_GAS_URL, url);
+
+        // Store fetched settings & Supabase keys
+        const settings = json.data.settings || {};
+        if (settings.SupabaseUrl && settings.SupabaseAnonKey) {
+          localStorage.setItem(KEY_SB_URL, settings.SupabaseUrl);
+          localStorage.setItem(KEY_SB_KEY, settings.SupabaseAnonKey);
+        }
+
+        const tx = db.transaction("settings", "readwrite");
+        const sStore = tx.objectStore("settings");
+        Object.keys(settings).forEach(k => {
+          appSettings[k] = settings[k];
+          sStore.put({ key: k, value: settings[k], _syncStatus: "synced" });
+        });
+        await new Promise(r => { tx.oncomplete = r; });
+        applySettingsUI();
+
+        // Boot Supabase with received credentials
+        initSupabase();
+
+        // Hydrate from Supabase
+        await forceFullSupabaseHydration();
+
+        status.innerHTML = "<span style='color:green;'>✅ Connected & Hydrated!</span>";
+      } catch (err) {
+        status.innerHTML = `<span style='color:red;'>❌ Connection failed: ${err.message}</span>`;
+      }
+    }
+
+    async function testGasEndpoint() {
+      const url = document.getElementById("cfgGasUrl")?.value.trim();
+      const status = document.getElementById("gasStatusText");
+      if (!url) return alert("Enter URL first.");
+      status.innerHTML = "⏳ Testing...";
+      try {
+        const res = await fetch(url);
+        const json = await res.json();
+        status.innerHTML = json.status === "success" 
+          ? "<span style='color:green;'>✅ Google Sheets Connected!</span>" 
+          : `<span style='color:red;'>⚠️ Error: ${json.message}</span>`;
+      } catch(e) {
+        status.innerHTML = `<span style='color:red;'>❌ Failed: ${e.message}</span>`;
+      }
+    }
+
+    function openSettingsModal() {
+      document.getElementById("cfgGasUrl").value = localStorage.getItem(KEY_GAS_URL) || "";
+      document.getElementById("gasStatusText").innerHTML = "";
+      document.getElementById("settingsModal").style.display = "flex";
+    }
+
+    function saveMobileSettings() {
+      const url = document.getElementById("cfgGasUrl")?.value.trim();
+      if (url) localStorage.setItem(KEY_GAS_URL, url);
+      closeModal("settingsModal");
+      alert("Settings saved!");
+    }
+
+    // -------------------------------------------------------------------------
+    // POS CATALOG & CART
+    // -------------------------------------------------------------------------
+    async function renderPosCatalog() {
+      const products = await dbGetAll("products");
+      const query = (document.getElementById("posSearch")?.value || "").toLowerCase().trim();
+      const grid = document.getElementById("posGrid");
+      if (!grid) return;
+
+      const filtered = products.filter(p => {
+        const mSex = activeSex === "All" || p.Sex === activeSex;
+        const mType = activeType === "All" || p.Type === activeType;
+        const mSize = activeSize === "All" || String(p.Size) === activeSize;
+        const str = `${p.ProductID} ${p.Name_MM} ${p.ColorPattern} ${p.Type}`.toLowerCase();
+        return mSex && mType && mSize && (!query || str.includes(query)) && (Number(p.Stock) > 0);
+      });
+
+      if (filtered.length === 0) {
+        grid.innerHTML = `<div style="grid-column: 1/-1; text-align:center; color:#888; padding: 20px;">No available stock.</div>`;
+        return;
+      }
+
+      grid.innerHTML = filtered.map(p => `
+        <div class="product-card">
+          <div>
+            <div class="product-title">${p.Name_MM}</div>
+            <div class="product-meta">${p.Size} | ${p.ColorPattern}</div>
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-top:6px;">
+            <span class="product-price">${Number(p.SellingPrice).toLocaleString()} K</span>
+            <button class="btn btn-primary btn-sm" onclick="addToCart('${p.ProductID}')">➕ Add</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    async function addToCart(productId) {
       const products = await dbGetAll("products");
       const p = products.find(x => x.ProductID === productId);
       if (!p) return;
 
-      const availableStock = Number(p.Stock) || 0;
-      const existing = currentCart.find(item => item.ProductID === productId);
-      const unitPrice = isWholesaleActive ? (Number(p.WholesalePrice) || Number(p.SellingPrice)) : Number(p.SellingPrice);
+      const stock = Number(p.Stock) || 0;
+      const existing = currentCart.find(x => x.ProductID === productId);
 
       if (existing) {
-        if (existing.Quantity + 1 > availableStock) {
-          return alert(`Maximum available stock is ${availableStock}.`);
-        }
+        if (existing.Quantity + 1 > stock) return alert(`Only ${stock} available!`);
         existing.Quantity++;
         existing.Subtotal = existing.Quantity * existing.UnitPrice;
       } else {
-        if (availableStock <= 0) return alert("Item is out of stock!");
+        if (stock <= 0) return alert("Out of stock!");
         currentCart.push({
-          ProductID: p.ProductID,
-          Name_MM: p.Name_MM,
-          Size: p.Size,
-          ColorPattern: p.ColorPattern,
-          UnitPrice: unitPrice,
-          Quantity: 1,
-          Subtotal: unitPrice
+          ProductID: p.ProductID, Name_MM: p.Name_MM, Size: p.Size,
+          ColorPattern: p.ColorPattern, UnitPrice: Number(p.SellingPrice),
+          Quantity: 1, Subtotal: Number(p.SellingPrice)
         });
       }
-      renderMobileCartDrawer();
+      updateCartSummary();
     }
 
-    function updateMobileCartQty(productId, delta) {
-      const item = currentCart.find(x => x.ProductID === productId);
-      if (!item) return;
+    function updateCartSummary() {
+      const count = currentCart.reduce((sum, i) => sum + i.Quantity, 0);
+      const subtotal = currentCart.reduce((sum, i) => sum + i.Subtotal, 0);
 
-      dbGetAll("products").then(products => {
-        const p = products.find(x => x.ProductID === productId);
-        const stock = Number(p ? p.Stock : 0);
-
-        item.Quantity += delta;
-        if (item.Quantity > stock) item.Quantity = stock;
-        if (item.Quantity <= 0) {
-          currentCart = currentCart.filter(x => x.ProductID !== productId);
-        } else {
-          item.Subtotal = item.Quantity * item.UnitPrice;
-        }
-        renderMobileCartDrawer();
-      });
+      document.getElementById("cartFloatCount").innerText = count;
+      document.getElementById("cartFloatTotal").innerText = `${subtotal.toLocaleString()} K`;
     }
 
-    function clearMobileCart() {
-      currentCart = [];
-      document.getElementById('mOrderDiscountType').value = 'none';
-      handleMobileDiscountChange();
-      renderMobileCartDrawer();
-      closeDrawer('mCheckoutDrawer');
+    function openCheckoutModal() {
+      if (currentCart.length === 0) return alert("Cart is empty!");
+      renderCheckoutTotals();
+      document.getElementById("checkoutModal").style.display = "flex";
     }
 
-    function handleMobileDiscountChange() {
-      const type = document.getElementById("mOrderDiscountType").value;
-      const valInput = document.getElementById("mOrderDiscountVal");
-      const tieredRow = document.getElementById("mTieredDiscountRow");
-
-      if (type === 'none') {
-        valInput.style.display = 'none';
-        valInput.value = '';
-        tieredRow.style.display = 'none';
-      } else if (type === 'percentage') {
-        valInput.style.display = 'block';
-        valInput.placeholder = "Enter % (e.g. 10)";
-        tieredRow.style.display = 'none';
-      } else if (type === 'flat') {
-        valInput.style.display = 'block';
-        valInput.placeholder = "Enter Flat MMK (e.g. 5000)";
-        tieredRow.style.display = 'none';
-      } else if (type === 'tiered') {
-        valInput.style.display = 'none';
-        tieredRow.style.display = 'grid';
-      }
-      renderMobileCartDrawer();
-    }
-
-    function calculateMobileDiscountBreakdown(subtotal) {
-      const type = document.getElementById('mOrderDiscountType').value;
-      let discountAmount = 0;
-      let label = "Discount:";
-
-      if (type === 'percentage') {
-        const pct = parseFloat(document.getElementById('mOrderDiscountVal').value) || 0;
-        discountAmount = Math.round(subtotal * (pct / 100));
-        label = `Discount (${pct}%):`;
-      } else if (type === 'flat') {
-        const flat = parseFloat(document.getElementById('mOrderDiscountVal').value) || 0;
-        discountAmount = Math.min(subtotal, flat);
-        label = `Flat Discount:`;
-      } else if (type === 'tiered') {
-        const cashback = parseFloat(document.getElementById('mOrderTierCashback').value) || 0;
-        const threshold = parseFloat(document.getElementById('mOrderTierThreshold').value) || 100000;
-        if (threshold > 0 && subtotal >= threshold) {
-          const tiers = Math.floor(subtotal / threshold);
-          discountAmount = tiers * cashback;
-          label = `Cashback (${tiers}x Tier):`;
-        }
-      }
-
-      discountAmount = Math.min(subtotal, Math.max(0, discountAmount));
-      const netTotal = Math.max(0, subtotal - discountAmount);
-
-      return { type, discountAmount, netTotal, label };
-    }
-
-    function renderMobileCartDrawer() {
-      const bar = document.getElementById("mFloatingCartBar");
-      const list = document.getElementById("mCartDrawerItemsList");
-      const subtotalEl = document.getElementById("mDrawerSubtotalDisplay");
-      const totalEl = document.getElementById("mDrawerTotalDisplay");
-      const countEl = document.getElementById("mCartItemCountBadge");
-      const barTotalEl = document.getElementById("mCartBarTotalDisplay");
-      const cartItemsCountLbl = document.getElementById("mCartItemsCountLbl");
-      const discountRow = document.getElementById("mDrawerDiscountRow");
-      const discountLabel = document.getElementById("mDrawerDiscountLabel");
-      const discountDisplay = document.getElementById("mDrawerDiscountDisplay");
-      const discountBadge = document.getElementById("mDrawerDiscountBadge");
-
+    function renderCheckoutTotals() {
+      const tbody = document.getElementById("cCartTableBody");
       let subtotal = 0;
-      let totalQty = 0;
 
-      if (currentCart.length === 0) {
-        bar.style.display = "none";
-        list.innerHTML = `<div style="text-align:center; color:#888; padding:15px;">Cart is empty.</div>`;
-        subtotalEl.innerText = "0 MMK";
-        totalEl.innerText = "0 MMK";
-        cartItemsCountLbl.innerText = "0";
-        discountRow.style.display = 'none';
-        discountBadge.innerText = '';
-        return;
-      }
-
-      bar.style.display = "flex";
-      list.innerHTML = currentCart.map(i => {
-        subtotal += i.Subtotal;
-        totalQty += i.Quantity;
+      tbody.innerHTML = currentCart.map(item => {
+        subtotal += item.Subtotal;
         return `
-          <div style="display: flex; justify-content: space-between; align-items: center; background: #f8fafc; padding: 8px; border-radius: 8px; border: 1px solid var(--border);">
-            <div style="font-size: 12px;">
-              <b>${i.Name_MM}</b> (${i.Size} | ${i.ColorPattern})<br>
-              <span style="color: #666;">${Number(i.Subtotal).toLocaleString()} MMK</span>
-            </div>
-            <div style="display: flex; align-items: center; gap: 6px;">
-              <button class="stepper-btn" onclick="updateMobileCartQty('${i.ProductID}', -1)">-</button>
-              <span style="font-weight: bold; min-width: 20px; text-align: center;">${i.Quantity}</span>
-              <button class="stepper-btn" onclick="updateMobileCartQty('${i.ProductID}', 1)">+</button>
-            </div>
-          </div>
+          <tr>
+            <td><b>${item.Name_MM}</b> (${item.Size})</td>
+            <td style="text-align:center;">
+              <button class="cart-qty-btn" onclick="alterCartQty('${item.ProductID}', -1)">-</button>
+              <b>${item.Quantity}</b>
+              <button class="cart-qty-btn" onclick="alterCartQty('${item.ProductID}', 1)">+</button>
+            </td>
+            <td style="text-align:right;">${item.Subtotal.toLocaleString()}</td>
+          </tr>
         `;
       }).join('');
 
-      const disc = calculateMobileDiscountBreakdown(subtotal);
+      const discType = document.getElementById("cDiscountType").value;
+      const discVal = parseFloat(document.getElementById("cDiscountVal").value) || 0;
+      let discountAmount = 0;
 
-      countEl.innerText = `${totalQty} Items`;
-      cartItemsCountLbl.innerText = totalQty.toString();
-      barTotalEl.innerText = `${disc.netTotal.toLocaleString()} MMK`;
-      subtotalEl.innerText = `${subtotal.toLocaleString()} MMK`;
-      totalEl.innerText = `${disc.netTotal.toLocaleString()} MMK`;
+      if (discType === "flat") discountAmount = Math.min(subtotal, discVal);
+      else if (discType === "percentage") discountAmount = Math.round(subtotal * (discVal / 100));
 
-      if (disc.discountAmount > 0) {
-        discountRow.style.display = "flex";
-        discountLabel.innerText = disc.label;
-        discountDisplay.innerText = `-${disc.discountAmount.toLocaleString()} MMK`;
-        discountBadge.innerText = `Saved ${disc.discountAmount.toLocaleString()} K`;
-      } else {
-        discountRow.style.display = "none";
-        discountBadge.innerText = '';
-      }
+      const net = Math.max(0, subtotal - discountAmount);
+      document.getElementById("cNetTotalDisplay").innerText = `${net.toLocaleString()} MMK`;
     }
 
-    // --- Customer Lookup & Autocomplete ---
-    let custDebounce;
-    async function handleMobileCustInput() {
-      const input = document.getElementById("mCustName").value.trim().toLowerCase();
-      const list = document.getElementById("mCustSuggestList");
-
-      if (document.getElementById("mCustBoundId").value) {
-        unbindMobileCustomer(false);
-      }
-
-      clearTimeout(custDebounce);
-      if (input.length < 1) {
-        list.style.display = "none";
-        return;
-      }
-
-      custDebounce = setTimeout(async () => {
-        const customers = await dbGetAll("customers");
-        const matches = customers.filter(c => 
-          (c.FullName && c.FullName.toLowerCase().includes(input)) || 
-          (c.Phone && String(c.Phone).includes(input)) ||
-          (c.Remark && c.Remark.toLowerCase().includes(input))
-        ).slice(0, 4);
-
-        if (matches.length === 0) {
-          list.style.display = "none";
-          return;
-        }
-
-        list.innerHTML = matches.map(c => `
-          <div class="cust-mobile-suggest-item" onclick="bindMobileCustomer('${c.CustomerID}')">
-            <b>👤 ${c.FullName}</b> (${c.Phone || 'No Phone'})<br>
-            <span style="font-size: 11px; color: #666;">📍 ${c.TownshipCity || '-'}</span>
-          </div>
-        `).join('');
-        list.style.display = "block";
-      }, 150);
+    function alterCartQty(id, delta) {
+      const item = currentCart.find(x => x.ProductID === id);
+      if (!item) return;
+      item.Quantity += delta;
+      if (item.Quantity <= 0) currentCart = currentCart.filter(x => x.ProductID !== id);
+      else item.Subtotal = item.Quantity * item.UnitPrice;
+      updateCartSummary();
+      renderCheckoutTotals();
     }
 
-    async function bindMobileCustomer(customerId) {
-      const customers = await dbGetAll("customers");
-      const c = customers.find(x => x.CustomerID === customerId);
-      if (!c) return;
-
-      document.getElementById("mCustBoundId").value = c.CustomerID;
-      document.getElementById("mCustName").value = c.FullName || '';
-      document.getElementById("mCustPhone").value = c.Phone || '';
-      document.getElementById("mCustTownship").value = c.TownshipCity || '';
-      document.getElementById("mCustAddress").value = c.DefaultAddress || '';
-
-      const orders = await dbGetAll("orders");
-      const totalSpent = orders
-        .filter(o => o.CustomerID === c.CustomerID && o.Status !== "Cancelled")
-        .reduce((sum, o) => sum + (Number(o.TotalAmount) || 0), 0);
-
-      document.getElementById("mCustBadge").style.display = "block";
-      document.getElementById("mCustFoundText").innerText = `${c.FullName} (${c.CustomerID})`;
-      document.getElementById("mCustFoundSpend").innerText = totalSpent ? `${totalSpent.toLocaleString()} K` : 'Profile';
-      document.getElementById("mCustSuggestList").style.display = "none";
-    }
-
-    function unbindMobileCustomer(clearFields = true) {
-      document.getElementById("mCustBoundId").value = '';
-      document.getElementById("mCustBadge").style.display = 'none';
-      if (clearFields) {
-        document.getElementById("mCustPhone").value = '';
-        document.getElementById("mCustTownship").value = '';
-        document.getElementById("mCustAddress").value = '';
-      }
-    }
-
-    // --- ID Generators Matching Backend ---
-    async function generateNextSalesId() {
-      const orders = await dbGetAll("orders");
-      let maxNum = 0;
-      orders.forEach(o => {
-        if (o.SalesID) {
-          const match = String(o.SalesID).match(/\d+/);
-          if (match) {
-            const num = parseInt(match[0], 10);
-            if (num > maxNum) maxNum = num;
-          }
-        }
-      });
-      return "S" + String(maxNum + 1).padStart(6, "0");
-    }
-
-    async function generateNextCustomerId() {
-      const customers = await dbGetAll("customers");
-      let maxNum = 0;
-      customers.forEach(c => {
-        if (c.CustomerID) {
-          const match = String(c.CustomerID).match(/\d+/);
-          if (match) {
-            const num = parseInt(match[0], 10);
-            if (num > maxNum) maxNum = num;
-          }
-        }
-      });
-      return "C" + String(maxNum + 1).padStart(6, "0");
-    }
-
-    async function generateNextItemCode() {
-      const products = await dbGetAll("products");
-      let maxNum = 0;
-      products.forEach(p => {
-        if (p.ItemCode) {
-          const match = String(p.ItemCode).match(/\d+/);
-          if (match) {
-            const num = parseInt(match[0], 10);
-            if (num > maxNum) maxNum = num;
-          }
-        }
-      });
-      return "I" + String(maxNum + 1).padStart(6, "0");
-    }
-
-    function cleanColorCode(colorText) {
-      const map = {
-        "ပန်း": "PNK", "pink": "PNK",
-        "ဝါ": "YEL", "yellow": "YEL",
-        "ပြာ": "BLU", "blue": "BLU",
-        "ခဲ": "GRY", "grey": "GRY", "gray": "GRY",
-        "ဖြူ": "WHT", "white": "WHT",
-        "နီ": "RED", "red": "RED",
-        "စိမ်း": "GRN", "green": "GRN",
-        "နက်": "BLK", "black": "BLK",
-        "လိမ္မော်": "ORG", "orange": "ORG",
-        "ခရမ်း": "PUR", "purple": "PUR",
-        "ကြား": "STR", "striped": "STR",
-        "ပွင့်": "FLR", "floral": "FLR"
-      };
-      const normalized = String(colorText).toLowerCase().trim();
-      return map[normalized] || String(colorText).toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 3) || 'DEF';
-    }
-
-    // --- Complete Sale ---
     async function submitMobileOrder() {
-      const name = document.getElementById("mCustName").value.trim();
-      const phone = document.getElementById("mCustPhone").value.trim();
-      const address = document.getElementById("mCustAddress").value.trim();
-      const township = document.getElementById("mCustTownship").value.trim();
-      const delivery = document.getElementById("mOrderDeliveryName").value;
-      const payment = document.getElementById("mOrderPaymentType").value;
-      const paidStatus = document.getElementById("mOrderPaidStatus").value;
-      const status = document.getElementById("mOrderStatus").value;
-      const remark = document.getElementById("mOrderRemark").value.trim();
-      const boundId = document.getElementById("mCustBoundId").value;
-
-      if (!name) return alert("Customer Name is required.");
-      if (currentCart.length === 0) return alert("Cannot complete sale: Cart is empty.");
+      const name = document.getElementById("cCustName").value.trim();
+      if (!name) return alert("Customer name required.");
 
       const subtotal = currentCart.reduce((sum, i) => sum + i.Subtotal, 0);
-      const disc = calculateMobileDiscountBreakdown(subtotal);
+      const discType = document.getElementById("cDiscountType").value;
+      const discVal = parseFloat(document.getElementById("cDiscountVal").value) || 0;
+      let discAmount = 0;
+      if (discType === "flat") discAmount = Math.min(subtotal, discVal);
+      else if (discType === "percentage") discAmount = Math.round(subtotal * (discVal / 100));
+      const netTotal = Math.max(0, subtotal - discAmount);
+
       const timestamp = new Date().toISOString();
-      const salesId = await generateNextSalesId();
-      const customerId = boundId || await generateNextCustomerId();
+      const salesId = "S" + Date.now().toString().slice(-6);
+      const custId = document.getElementById("cBoundId").value || ("C" + Date.now().toString().slice(-6));
 
       const orderPayload = {
-        SalesID: salesId,
-        Date: timestamp,
-        CustomerID: customerId,
-        CustomerName: name,
-        Phone: phone,
-        DeliveryName: delivery,
-        DeliveryAddress: address,
-        TownshipCity: township,
-        ItemList: currentCart,
-        Subtotal: subtotal,
-        DiscountType: disc.type,
-        DiscountAmount: disc.discountAmount,
-        DiscountLabel: disc.label,
-        TotalAmount: disc.netTotal,
-        PaymentType: payment,
-        PaidStatus: paidStatus,
-        Status: status,
-        Remark: remark,
-        LastModified: timestamp,
-        _syncStatus: "pending_upload"
+        SalesID: salesId, Date: timestamp, CustomerID: custId, CustomerName: name,
+        Phone: document.getElementById("cCustPhone").value.trim(),
+        DeliveryName: document.getElementById("cDeliverySelect").value,
+        DeliveryAddress: document.getElementById("cAddress").value.trim(),
+        TownshipCity: document.getElementById("cTownship").value.trim(),
+        ItemList: currentCart, Subtotal: subtotal, DiscountType: discType,
+        DiscountAmount: discAmount, TotalAmount: netTotal,
+        PaymentType: document.getElementById("cPaymentSelect").value,
+        PaidStatus: document.getElementById("cPaidStatus").value,
+        Status: "Confirmed", Remark: "", LastModified: timestamp, _syncStatus: "pending_upload"
       };
 
       const tx = db.transaction(["orders", "products", "customers"], "readwrite");
-      const oStore = tx.objectStore("orders");
-      const pStore = tx.objectStore("products");
-      const cStore = tx.objectStore("customers");
+      tx.objectStore("orders").put(orderPayload);
 
+      // Deduct stock
+      const pStore = tx.objectStore("products");
       currentCart.forEach(item => {
         const req = pStore.get(item.ProductID);
         req.onsuccess = () => {
-          const prod = req.result;
-          if (prod) {
-            prod.Stock = Math.max(0, (Number(prod.Stock) || 0) - item.Quantity);
-            prod.LastModified = timestamp;
-            prod._syncStatus = "pending_upload";
-            pStore.put(prod);
+          const p = req.result;
+          if (p) {
+            p.Stock = Math.max(0, (Number(p.Stock) || 0) - item.Quantity);
+            p.LastModified = timestamp;
+            p._syncStatus = "pending_upload";
+            pStore.put(p);
           }
         };
       });
 
-      oStore.put(orderPayload);
-
-      const custReq = cStore.get(customerId);
-      custReq.onsuccess = () => {
-        const existing = custReq.result;
-        if (existing) {
-          existing.FullName = name;
-          existing.Phone = phone || existing.Phone || "";
-          existing.DefaultAddress = address || existing.DefaultAddress || "";
-          existing.TownshipCity = township || existing.TownshipCity || "";
-          existing.LastOrderDate = timestamp;
-          existing._syncStatus = "pending_upload";
-          cStore.put(existing);
+      // Upsert Customer
+      const cStore = tx.objectStore("customers");
+      const cReq = cStore.get(custId);
+      cReq.onsuccess = () => {
+        const c = cReq.result;
+        if (c) {
+          c.FullName = name;
+          c.TotalSpend = (Number(c.TotalSpend) || 0) + netTotal;
+          c.LastOrderDate = timestamp;
+          c._syncStatus = "pending_upload";
+          cStore.put(c);
         } else {
           cStore.put({
-            CustomerID: customerId,
-            FullName: name,
-            Phone: phone || "",
-            DefaultAddress: address || "",
-            TownshipCity: township || "",
-            Remark: "",
-            TotalSpend: disc.netTotal,
-            LastOrderDate: timestamp,
-            _syncStatus: "pending_upload"
+            CustomerID: custId, FullName: name, Phone: orderPayload.Phone,
+            TownshipCity: orderPayload.TownshipCity, DefaultAddress: orderPayload.DeliveryAddress,
+            TotalSpend: netTotal, LastOrderDate: timestamp, _syncStatus: "pending_upload"
           });
         }
       };
 
       tx.oncomplete = () => {
-        lastSavedOrder = orderPayload;
-        clearMobileCart();
-        document.getElementById("mCustName").value = '';
-        document.getElementById("mCustPhone").value = '';
-        document.getElementById("mCustAddress").value = '';
-        document.getElementById("mCustTownship").value = '';
-        document.getElementById("mOrderRemark").value = '';
-        unbindMobileCustomer();
-
-        closeDrawer('mCheckoutDrawer');
-        renderMobilePosCatalog();
-        renderMobileInventoryList();
-        renderMobileOrdersList();
-        renderMobileCustomersList();
-        updateUnsavedBadge();
-        openMobileVoucher(orderPayload);
+        currentCart = [];
+        updateCartSummary();
+        closeModal("checkoutModal");
+        renderPosCatalog();
+        renderInventoryTable();
+        renderOrdersTable();
+        renderAnalytics();
+        pushPendingToSupabase();
+        alert(`✅ Order #${salesId} recorded successfully!`);
       };
-
-      tx.onerror = (e) => alert("Order placement failed: " + e.target.error);
     }
 
-    // --- Mobile Voucher Rendering & Export ---
-    function openMobileVoucher(o) {
-      if (!o) return;
-      if (typeof o.ItemList === "string") {
-        try { o.ItemList = JSON.parse(o.ItemList); } catch(e) { o.ItemList = []; }
-      }
-
-      const subtotal = o.Subtotal || (o.ItemList || []).reduce((s, i) => s + (i.Subtotal || 0), 0);
-      const discountAmount = Number(o.DiscountAmount) || 0;
-
-      document.getElementById("mvSalesId").innerText = o.SalesID;
-      document.getElementById("mvDate").innerText = new Date(o.Date).toLocaleString();
-      document.getElementById("mvCustName").innerText = o.CustomerName;
-      document.getElementById("mvPhone").innerText = o.Phone || 'None';
-      document.getElementById("mvDelivery").innerText = o.DeliveryName || 'Standard';
-      document.getElementById("mvAddress").innerText = `${o.DeliveryAddress || ''}${o.TownshipCity ? ', ' + o.TownshipCity : ''}` || 'Not specified';
-      document.getElementById("mvSubtotal").innerText = `${Number(subtotal).toLocaleString()} MMK`;
-
-      const discRow = document.getElementById("mvDiscountRow");
-      if (discountAmount > 0) {
-        discRow.style.display = "flex";
-        document.getElementById("mvDiscountLabel").innerText = o.DiscountLabel || 'Discount:';
-        document.getElementById("mvDiscountAmount").innerText = `-${discountAmount.toLocaleString()} MMK`;
-      } else {
-        discRow.style.display = "none";
-      }
-
-      document.getElementById("mvTotal").innerText = `${Number(o.TotalAmount).toLocaleString()} MMK`;
-      document.getElementById("mvPayment").innerText = o.PaymentType || 'KPay';
-      document.getElementById("mvPaidStatus").innerText = (o.PaidStatus || 'not received yet').toUpperCase();
-
-      document.getElementById("mvItemsList").innerHTML = (o.ItemList || []).map(i => `
-        <div style="display:flex; justify-content:space-between; margin-bottom:3px; font-size:11px;">
-          <span>${i.Name_MM} (${i.Size}) x${i.Quantity}</span>
-          <b>${Number(i.Subtotal).toLocaleString()} K</b>
-        </div>
-      `).join('');
-
-      document.getElementById("mvStatusMsg").innerText = '';
-      openDrawer('mVoucherDrawer');
-    }
-
-    async function generateMobileVoucherCanvas() {
-      const card = document.getElementById("mVoucherCaptureTarget");
-      return await html2canvas(card, { scale: 2, backgroundColor: "#ffffff", useCORS: true });
-    }
-
-    async function shareMobileVoucher() {
-      const status = document.getElementById("mvStatusMsg");
-      status.innerText = "📸 Preparing share...";
-      try {
-        const canvas = await generateMobileVoucherCanvas();
-        const salesId = document.getElementById("mvSalesId").innerText || 'Order';
-        canvas.toBlob(async (blob) => {
-          if (!blob) return status.innerText = "❌ Image generation failed.";
-          const file = new File([blob], `Voucher_${salesId}.png`, { type: 'image/png' });
-          if (navigator.canShare && navigator.canShare({ files: [file] })) {
-            await navigator.share({
-              files: [file],
-              title: `Voucher #${salesId}`,
-              text: `Order Voucher #${salesId} from Mini-M`
-            });
-            status.innerText = "✅ Shared successfully!";
-          } else {
-            downloadMobileVoucher();
-            status.innerText = "ℹ️ Web Share unsupported. Voucher image downloaded.";
-          }
-        }, 'image/png');
-      } catch(e) {
-        status.innerText = "❌ Share cancelled or failed.";
-      }
-    }
-
-    async function downloadMobileVoucher() {
-      const status = document.getElementById("mvStatusMsg");
-      status.innerText = "📸 Saving image...";
-      try {
-        const canvas = await generateMobileVoucherCanvas();
-        const salesId = document.getElementById("mvSalesId").innerText || 'Order';
-        const a = document.createElement("a");
-        a.download = `Voucher_${salesId}.png`;
-        a.href = canvas.toDataURL("image/png");
-        a.click();
-        status.innerText = "✅ Voucher image saved!";
-      } catch(e) {
-        status.innerText = "❌ Download failed.";
-      }
-    }
-
-    // --- Thermal Receipt Printing (80mm Formatted) ---
-    function printReceiptFromMobile(order) {
-      if (!order) return alert("Please select or complete an order first.");
-
-      let items = order.ItemList || [];
-      if (typeof items === "string") {
-        try { items = JSON.parse(items); } catch(e) { items = []; }
-      }
-
-      const subtotal = order.Subtotal || items.reduce((s, i) => s + (Number(i.Subtotal) || 0), 0);
-      const discountAmount = Number(order.DiscountAmount) || 0;
-
-      document.getElementById("mpsSalesId").innerText = order.SalesID || "-";
-      document.getElementById("mpsDate").innerText = new Date(order.Date).toLocaleDateString();
-      document.getElementById("mpsCustName").innerText = order.CustomerName || "-";
-      document.getElementById("mpsPhone").innerText = order.Phone || "N/A";
-      document.getElementById("mpsDelivery").innerText = order.DeliveryName || "Standard";
-      document.getElementById("mpsAddress").innerText = `${order.DeliveryAddress || ''}${order.TownshipCity ? ', ' + order.TownshipCity : ''}` || 'N/A';
-
-      const itemsBody = document.getElementById("mpsItemsBody");
-      itemsBody.innerHTML = items.map(i => {
-        const unitPrice = Number(i.UnitPrice) || (Number(i.Subtotal) / Number(i.Quantity)) || 0;
-        return `
-          <tr>
-            <td>
-              <b>${i.Name_MM}</b><br>
-              <span style="font-size: 10px; color: #333;">${i.Size || '-'} | ${i.ColorPattern || '-'}</span>
-            </td>
-            <td style="text-align: center; font-weight: bold;">${i.Quantity}</td>
-            <td style="text-align: right;">${unitPrice.toLocaleString()}</td>
-            <td style="text-align: right; font-weight: bold;">${Number(i.Subtotal).toLocaleString()}</td>
-          </tr>
-        `;
-      }).join('');
-
-      document.getElementById("mpsSubtotal").innerText = `${Number(subtotal).toLocaleString()} K`;
-
-      const discRow = document.getElementById("mpsDiscountRow");
-      if (discountAmount > 0) {
-        discRow.style.display = "flex";
-        document.getElementById("mpsDiscountLabel").innerText = order.DiscountLabel || "Discount:";
-        document.getElementById("mpsDiscountAmount").innerText = `-${discountAmount.toLocaleString()} K`;
-      } else {
-        discRow.style.display = "none";
-      }
-
-      document.getElementById("mpsTotal").innerText = `${Number(order.TotalAmount).toLocaleString()} MMK`;
-      document.getElementById("mpsPayment").innerText = order.PaymentType || "Cash";
-      document.getElementById("mpsPaidStatus").innerText = (order.PaidStatus || "not received yet").toUpperCase();
-
-      const remarkRow = document.getElementById("mpsRemarkRow");
-      if (order.Remark && order.Remark.trim()) {
-        remarkRow.style.display = "block";
-        document.getElementById("mpsRemark").innerText = order.Remark;
-      } else {
-        remarkRow.style.display = "none";
-      }
-
-      // Print preview trigger
-      document.body.classList.add("printing-mobile-slip");
-      window.print();
-      document.body.classList.remove("printing-mobile-slip");
-    }
-
-    async function printMobileSlipById(salesId) {
-      const orders = await dbGetAll("orders");
-      const o = orders.find(x => x.SalesID === salesId);
-      if (o) printReceiptFromMobile(o);
-    }
-
-    // --- Inventory Management ---
-    async function renderMobileInventoryList() {
+    // -------------------------------------------------------------------------
+    // INVENTORY & SHIPMENT MATRIX
+    // -------------------------------------------------------------------------
+    async function renderInventoryTable() {
       const products = await dbGetAll("products");
-      const query = (document.getElementById("mInvSearch")?.value || "").toLowerCase().trim();
-      const showOut = document.getElementById("mInvShowOut")?.checked || false;
-      const list = document.getElementById("mInventoryList");
+      const query = (document.getElementById("invSearch")?.value || "").toLowerCase().trim();
+      const showOut = document.getElementById("invShowOutOfStock")?.checked;
+      const tbody = document.getElementById("invTableBody");
+      if (!tbody) return;
 
       const filtered = products.filter(p => {
-        const matchStock = showOut ? true : (Number(p.Stock) || 0) > 0;
-        const str = `${p.ProductID || ''} ${p.Name_MM || ''} ${p.Sex || ''} ${p.Type || ''} ${p.Length || ''} ${p.Size || ''} ${p.ColorPattern || ''} ${p.Remark || ''}`.toLowerCase();
-        return matchStock && (!query || str.includes(query));
+        const matchType = activeInvType === "All" || p.Type === activeInvType;
+        const matchQuery = !query || `${p.ProductID} ${p.Name_MM} ${p.ColorPattern}`.toLowerCase().includes(query);
+        const matchStock = showOut ? true : (Number(p.Stock) > 0);
+        return matchType && matchQuery && matchStock;
       });
 
-      if (filtered.length === 0) {
-        list.innerHTML = `<div style="text-align:center; color:#888; padding:20px;">No product SKUs found.</div>`;
-        return;
-      }
-
-      list.innerHTML = filtered.map(p => {
-        const stock = Number(p.Stock) || 0;
-        return `
-          <div style="background:white; border:1px solid var(--border); border-radius:8px; padding:10px; display:flex; justify-content:space-between; align-items:center;" onclick="openProductDrawerForEdit('${p.ProductID}')">
-            <div>
-              <b>${p.Name_MM}</b><br>
-              <span style="font-size:11px; color:#666;">${p.Size} | ${p.ColorPattern} | ${p.ProductID}</span><br>
-              <b style="color:var(--primary); font-size:13px;">${Number(p.SellingPrice).toLocaleString()} K</b>
-              <span style="font-size:11px; color:#888;">(Cost: ${Number(p.TotalCapital || 0).toLocaleString()} K)</span>
-            </div>
-            <div style="display:flex; align-items:center; gap:6px;" onclick="event.stopPropagation();">
-              <button class="stepper-btn" onclick="adjustMobileStock('${p.ProductID}', -1)">-</button>
-              <span style="font-weight:bold; min-width:24px; text-align:center;">${stock}</span>
-              <button class="stepper-btn" onclick="adjustMobileStock('${p.ProductID}', 1)">+</button>
-            </div>
-          </div>
-        `;
-      }).join('');
+      tbody.innerHTML = filtered.map(p => `
+        <tr>
+          <td><b>${p.ProductID}</b><br>${p.Name_MM} (${p.Size}|${p.ColorPattern})</td>
+          <td><b>${Number(p.SellingPrice).toLocaleString()}</b></td>
+          <td style="text-align:center; white-space:nowrap;">
+            <button class="cart-qty-btn" onclick="adjustStock('${p.ProductID}', -1)">-</button>
+            <span style="padding: 0 4px; font-weight:bold;">${p.Stock}</span>
+            <button class="cart-qty-btn" onclick="adjustStock('${p.ProductID}', 1)">+</button>
+          </td>
+        </tr>
+      `).join('');
     }
 
-    async function adjustMobileStock(productId, delta) {
+    async function adjustStock(productId, delta) {
       const tx = db.transaction("products", "readwrite");
       const store = tx.objectStore("products");
       const req = store.get(productId);
@@ -2016,705 +1346,301 @@
         }
       };
       tx.oncomplete = () => {
-        renderMobileInventoryList();
-        renderMobilePosCatalog();
-        updateUnsavedBadge();
+        renderInventoryTable();
+        renderPosCatalog();
+        pushPendingToSupabase();
       };
     }
 
-    // --- Product Single SKU Creation & Editing ---
-    function roundUpToThousand(num) {
-      if (!num || num <= 0) return 0;
-      return Math.ceil(num / 1000) * 1000;
+    // -------------------------------------------------------------------------
+    // BULK SHIPMENT MATRIX
+    // -------------------------------------------------------------------------
+    function openBulkMatrixModal() {
+      document.getElementById("bmItemCode").value = "I" + Date.now().toString().slice(-6);
+      document.getElementById("bmName").value = "";
+      document.getElementById("bmSellingPrice").value = "";
+
+      const sizes = appSettings.ProductSizes || [];
+      const colors = appSettings.ProductColors || [];
+
+      document.getElementById("bmSizeChecks").innerHTML = sizes.map((s, idx) => `
+        <label class="chip ${idx < 4 ? 'active' : ''}">
+          <input type="checkbox" value="${s}" ${idx < 4 ? 'checked' : ''} onchange="this.parentElement.classList.toggle('active'); renderBmGrid();" style="display:none;">
+          ${s}
+        </label>
+      `).join('');
+
+      document.getElementById("bmColorChecks").innerHTML = colors.map((c, idx) => `
+        <label class="chip ${idx < 3 ? 'active' : ''}">
+          <input type="checkbox" value="${c}" ${idx < 3 ? 'checked' : ''} onchange="this.parentElement.classList.toggle('active'); renderBmGrid();" style="display:none;">
+          ${c}
+        </label>
+      `).join('');
+
+      renderBmGrid();
+      document.getElementById("bulkMatrixModal").style.display = "flex";
     }
 
-    function calculateMobilePricingEngine() {
-      const buyingYuan = parseFloat(document.getElementById('mpBuyingYuan').value) || 0;
-      const supplierPct = parseFloat(document.getElementById('mpSupplierPct').value) || 0;
-      const yuanRate = parseFloat(document.getElementById('mpYuanRate').value) || (appSettings.DefaultYuanRate || 620);
-      const cargoFee = parseFloat(document.getElementById('mpCargoFee').value) || (appSettings.DefaultCargoFee || 2500);
+    function renderBmGrid() {
+      const sizes = Array.from(document.querySelectorAll("#bmSizeChecks input:checked")).map(x => x.value);
+      const colors = Array.from(document.querySelectorAll("#bmColorChecks input:checked")).map(x => x.value);
+      const table = document.getElementById("bmTable");
 
-      const capital = ((buyingYuan * (1 + (supplierPct / 100))) * yuanRate) + cargoFee;
-      const totalCapital = Math.round(capital);
-      
-      const regMarginPct = Number(appSettings.RegularProfitMargin || 33) / 100;
-      const wsMarginPct = Number(appSettings.WholesaleProfitMargin || 15) / 100;
-
-      const normalPrice = Math.round(totalCapital * (1 + regMarginPct));
-      const rawWholesale = totalCapital * (1 + wsMarginPct);
-      const wholesaleSuggested = roundUpToThousand(rawWholesale);
-      const sellingPriceSuggested = roundUpToThousand(normalPrice);
-
-      document.getElementById('mpTotalCapital').value = totalCapital;
-      document.getElementById('mpNormalPrice').value = normalPrice;
-
-      if (!isProductEditMode || !document.getElementById('mpPrice').value) {
-        document.getElementById('mpPrice').value = sellingPriceSuggested;
+      if (sizes.length === 0 || colors.length === 0) {
+        table.innerHTML = "<tr><td style='text-align:center;'>Select sizes & colors above</td></tr>";
+        return;
       }
-      if (!isProductEditMode || !document.getElementById('mpWholesalePrice').value) {
-        document.getElementById('mpWholesalePrice').value = wholesaleSuggested;
-      }
+
+      table.innerHTML = `
+        <thead>
+          <tr>
+            <th>Color</th>
+            ${sizes.map(s => `<th>${s}</th>`).join('')}
+          </tr>
+        </thead>
+        <tbody>
+          ${colors.map(c => `
+            <tr>
+              <td><b>${c}</b></td>${sizes.map(s => `
+                <td><input type="number" class="matrix-input-cell" data-color="${c}" data-size="${s}" value="5" min="0"></td>
+              `).join('')}
+            </tr>
+          `).join('')}
+        </tbody>
+      `;
     }
 
-    function autoGenerateMobileSku() {
-      if (isProductEditMode) return;
-      const code = document.getElementById('mpItemCode').value.trim() || 'I000000';
-      const size = (document.getElementById('mpSize').value || '').replace(/[^a-zA-Z0-9]/g, '');
-      const color = cleanColorCode(document.getElementById('mpColor').value);
-      document.getElementById('mpSku').value = `${code}-${size}-${color}`;
-    }
+    async function submitBulkMatrixMobile() {
+      const code = document.getElementById("bmItemCode").value;
+      const name = document.getElementById("bmName").value.trim();
+      const price = Number(document.getElementById("bmSellingPrice").value) || 0;
+      const type = document.getElementById("bmType").value;
 
-    async function openProductDrawerForAdd() {
-      isProductEditMode = false;
-      document.getElementById('mpDrawerTitle').innerText = "➕ Add Product Variant SKU";
-      document.getElementById('mpItemCode').disabled = false;
-      document.getElementById('mpSize').disabled = false;
-      document.getElementById('mpColor').disabled = false;
+      if (!name || price <= 0) return alert("Product name and selling price are required.");
 
-      const nextCode = await generateNextItemCode();
-      document.getElementById('mpItemCode').value = nextCode;
-      document.getElementById('mpName').value = '';
-      document.getElementById('mpSex').value = 'Unisex';
-      document.getElementById('mpLength').value = 'တို';
-      
-      if (document.getElementById('mpType').options.length > 0) document.getElementById('mpType').selectedIndex = 0;
-      if (document.getElementById('mpSize').options.length > 0) document.getElementById('mpSize').selectedIndex = 0;
-      if (document.getElementById('mpColor').options.length > 0) document.getElementById('mpColor').selectedIndex = 0;
+      const cells = document.querySelectorAll(".matrix-input-cell");
+      const records = [];
+      const timestamp = new Date().toISOString();
 
-      document.getElementById('mpBuyingYuan').value = '';
-      document.getElementById('mpSupplierPct').value = '0';
-      document.getElementById('mpYuanRate').value = appSettings.DefaultYuanRate || 620;
-      document.getElementById('mpCargoFee').value = appSettings.DefaultCargoFee || 2500;
-      document.getElementById('mpTotalCapital').value = '';
-      document.getElementById('mpNormalPrice').value = '';
-      document.getElementById('mpPrice').value = '';
-      document.getElementById('mpWholesalePrice').value = '';
-      document.getElementById('mpStock').value = '5';
-      document.getElementById('mpRemark').value = '';
+      cells.forEach(cell => {
+        const qty = parseInt(cell.value, 10) || 0;
+        const color = cell.dataset.color;
+        const size = cell.dataset.size;
+        const sku = `${code}-${size}-${color.slice(0, 3).toUpperCase()}`;
 
-      autoGenerateMobileSku();
-      openDrawer('mProductAddDrawer');
-    }
+        records.push({
+          ProductID: sku, ItemCode: code, Name_MM: name, Type: type,
+          Sex: "Unisex", Length: "တို", Size: size, ColorPattern: color,
+          Remark: "Bulk mobile intake", Stock: qty, SellingPrice: price,
+          WholesalePrice: price, TotalCapital: Math.round(price * 0.6),
+          LastModified: timestamp, _syncStatus: "pending_upload"
+        });
+      });
 
-    async function openProductDrawerForEdit(productId) {
-      const products = await dbGetAll("products");
-      const p = products.find(x => x.ProductID === productId);
-      if (!p) return;
-
-      isProductEditMode = true;
-      document.getElementById('mpDrawerTitle').innerText = `✏️ Edit: ${p.ProductID}`;
-      document.getElementById('mpItemCode').disabled = true;
-      document.getElementById('mpSize').disabled = true;
-      document.getElementById('mpColor').disabled = true;
-
-      document.getElementById('mpSku').value = p.ProductID;
-      document.getElementById('mpItemCode').value = p.ItemCode || '';
-      document.getElementById('mpName').value = p.Name_MM || '';
-      document.getElementById('mpSex').value = p.Sex || 'Unisex';
-      document.getElementById('mpLength').value = p.Length || 'တို';
-      document.getElementById('mpType').value = p.Type || '';
-      document.getElementById('mpSize').value = p.Size || '';
-      document.getElementById('mpColor').value = p.ColorPattern || '';
-      document.getElementById('mpBuyingYuan').value = p.BuyingYuan || '';
-      document.getElementById('mpSupplierPct').value = p.SupplierPct || '0';
-      document.getElementById('mpYuanRate').value = p.YuanRate || (appSettings.DefaultYuanRate || 620);
-      document.getElementById('mpCargoFee').value = p.CargoFee || (appSettings.DefaultCargoFee || 2500);
-      document.getElementById('mpTotalCapital').value = p.TotalCapital || '';
-      document.getElementById('mpNormalPrice').value = p.NormalPrice || '';
-      document.getElementById('mpPrice').value = p.SellingPrice || '';
-      document.getElementById('mpWholesalePrice').value = p.WholesalePrice || '';
-      document.getElementById('mpStock').value = p.Stock !== undefined ? p.Stock : 0;
-      document.getElementById('mpRemark').value = p.Remark || '';
-
-      openDrawer('mProductAddDrawer');
-    }
-
-    async function saveMobileProduct() {
-      const sku = document.getElementById("mpSku").value.trim();
-      const code = document.getElementById("mpItemCode").value.trim();
-      const name = document.getElementById("mpName").value.trim();
-      const sex = document.getElementById("mpSex").value;
-      const length = document.getElementById("mpLength").value;
-      const type = document.getElementById("mpType").value;
-      const size = document.getElementById("mpSize").value;
-      const color = document.getElementById("mpColor").value;
-      const price = Number(document.getElementById("mpPrice").value) || 0;
-      const wholesale = Number(document.getElementById("mpWholesalePrice").value) || 0;
-      const stock = Number(document.getElementById("mpStock").value) || 0;
-      const remark = document.getElementById("mpRemark").value.trim();
-
-      const buyingYuan = parseFloat(document.getElementById('mpBuyingYuan').value) || 0;
-      const supplierPct = parseFloat(document.getElementById('mpSupplierPct').value) || 0;
-      const yuanRate = parseFloat(document.getElementById('mpYuanRate').value) || 0;
-      const cargoFee = parseFloat(document.getElementById('mpCargoFee').value) || 0;
-      const totalCapital = Number(document.getElementById('mpTotalCapital').value) || 0;
-      const normalPrice = Number(document.getElementById('mpNormalPrice').value) || 0;
-
-      if (!name) return alert("Product Name is required.");
-      if (price <= 0) return alert("Selling Price is required.");
-
-      const productPayload = {
-        ProductID: sku,
-        ItemCode: code,
-        Name_MM: name,
-        Sex: sex,
-        Type: type,
-        Length: length,
-        Size: size,
-        ColorPattern: color,
-        Remark: remark,
-        Stock: stock,
-        BuyingYuan: buyingYuan,
-        SupplierPct: supplierPct,
-        YuanRate: yuanRate,
-        CargoFee: cargoFee,
-        TotalCapital: totalCapital,
-        NormalPrice: normalPrice,
-        SellingPrice: price,
-        WholesalePrice: wholesale,
-        LastModified: new Date().toISOString(),
-        _syncStatus: "pending_upload"
+      const tx = db.transaction("products", "readwrite");
+      records.forEach(r => tx.objectStore("products").put(r));
+      tx.oncomplete = () => {
+        closeModal("bulkMatrixModal");
+        renderInventoryTable();
+        renderPosCatalog();
+        pushPendingToSupabase();
+        alert(`✅ Created ${records.length} matrix variants!`);
       };
-
-      await dbPut("products", productPayload);
-      alert(`✅ SKU ${sku} saved!`);
-      closeDrawer('mProductAddDrawer');
-      renderMobileInventoryList();
-      renderMobilePosCatalog();
     }
 
-    // --- Mobile Orders Management ---
-    async function renderMobileOrdersList() {
+    // -------------------------------------------------------------------------
+    // ORDERS FULFILLMENT & EDIT
+    // -------------------------------------------------------------------------
+    async function renderOrdersTable() {
       const orders = await dbGetAll("orders");
-      const query = (document.getElementById("mOrderSearch")?.value || "").toLowerCase().trim();
-      const list = document.getElementById("mOrdersList");
+      const query = (document.getElementById("orderSearch")?.value || "").toLowerCase().trim();
+      const container = document.getElementById("ordersCardsContainer");
+      if (!container) return;
 
       orders.sort((a, b) => new Date(b.Date) - new Date(a.Date));
-      const filtered = orders.filter(o => {
-        const str = `${o.SalesID || ''} ${o.CustomerName || ''} ${o.Phone || ''} ${o.DeliveryName || ''} ${o.PaidStatus || ''} ${o.Status || ''}`.toLowerCase();
-        return !query || str.includes(query);
-      });
+      const filtered = orders.filter(o => !query || `${o.SalesID} ${o.CustomerName} ${o.Phone}`.toLowerCase().includes(query));
 
       if (filtered.length === 0) {
-        list.innerHTML = `<div style="text-align:center; color:#888; padding:20px;">No sales orders found.</div>`;
+        container.innerHTML = `<div style="text-align:center; color:#888; padding:20px;">No matching orders found.</div>`;
         return;
       }
 
-      const deliveryServices = appSettings.DeliveryServices || ["Royal", "Wepots", "Ninja Van", "Safe", "self"];
-      const paidStatuses = appSettings.PaidStatuses || ["paid", "not received yet"];
-
-      list.innerHTML = filtered.map(o => {
-        const curCourier = o.DeliveryName || 'Royal';
-        let courierList = [...deliveryServices];
-        if (curCourier && !courierList.includes(curCourier)) courierList.push(curCourier);
-        const courierOptions = courierList.map(c => `<option value="${c}" ${c === curCourier ? 'selected' : ''}>${c}</option>`).join('');
-
-        const curPaid = o.PaidStatus || 'not received yet';
-        let paidList = [...paidStatuses];
-        if (curPaid && !paidList.includes(curPaid)) paidList.push(curPaid);
-        const paidOptions = paidList.map(p => `<option value="${p}" ${p === curPaid ? 'selected' : ''}>${p}</option>`).join('');
-
-        const isPaid = curPaid.toLowerCase() === 'paid';
+      container.innerHTML = filtered.map(o => {
+        const curStatus = o.PaidStatus ? String(o.PaidStatus).trim() : "";
+        let badgeClass = "status-badge";
+        if (curStatus.toLowerCase() === "paid") badgeClass = "status-badge badge-synced";
+        else if (curStatus.toLowerCase() === "unpaid") badgeClass = "status-badge badge-alert";
 
         return `
-          <div style="background:white; border:1px solid var(--border); border-radius:8px; padding:10px;">
-            <div style="display:flex; justify-content:space-between; font-weight:bold;">
-              <span>${o.SalesID} • ${o.CustomerName}</span>
-              <span style="color:var(--primary);">${Number(o.TotalAmount).toLocaleString()} K</span>
+          <div class="card-panel">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <b>#${o.SalesID}</b>
+              <span class="${badgeClass}">${curStatus || 'Not Set'}</span>
             </div>
-            <div style="font-size:11px; color:#666; margin:4px 0;">
-              ${(o.ItemList || []).map(i => `${i.Name_MM} (${i.Size}) x${i.Quantity}`).join(', ')}
-            </div>
+            <div style="font-size:12px; margin-top:4px;"><b>${o.CustomerName}</b> (${o.Phone || 'No phone'})</div>
+            <div style="font-size:11px; color:#666;">${(o.ItemList || []).map(i => `${i.Name_MM} x${i.Quantity}`).join(', ')}</div>
+            <div style="font-size:13px; font-weight:bold; color:var(--primary); margin-top:4px;">${Number(o.TotalAmount).toLocaleString()} MMK</div>
             
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 6px;">
-              <select onchange="quickUpdateMobileOrderCourier('${o.SalesID}', this.value)" style="padding: 4px; font-size: 11px;">
-                ${courierOptions}
+            <div style="display:flex; gap:6px; margin-top:8px;">
+              <select onchange="quickUpdatePaid('${o.SalesID}', this.value)" style="font-size:11px; padding:4px;">
+                ${!curStatus ? `<option value="" selected>-- Not Set --</option>` : ''}
+                <option value="Paid" ${curStatus === 'Paid' ? 'selected' : ''}>Paid</option>
+                <option value="Unpaid" ${curStatus === 'Unpaid' ? 'selected' : ''}>Unpaid</option>
               </select>
-              <select onchange="quickUpdateMobileOrderPaidStatus('${o.SalesID}', this.value)" style="padding: 4px; font-size: 11px; font-weight:bold; color:${isPaid ? '#155724' : '#721c24'};">
-                ${paidOptions}
-              </select>
-            </div>
-
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:6px;">
-              <select onchange="quickUpdateMobileOrderStatus('${o.SalesID}', this.value)" style="width: auto; padding: 4px; font-size: 11px;">
-                <option value="Confirmed" ${o.Status === 'Confirmed' ? 'selected' : ''}>Confirmed</option>
-                <option value="Pending" ${o.Status === 'Pending' ? 'selected' : ''}>Pending</option>
-                <option value="Shipped" ${o.Status === 'Shipped' ? 'selected' : ''}>Shipped</option>
-                <option value="Delivered" ${o.Status === 'Delivered' ? 'selected' : ''}>Delivered</option>
-                <option value="Cancelled" ${o.Status === 'Cancelled' ? 'selected' : ''}>Cancelled</option>
-              </select>
-              <div style="display: flex; gap: 4px;">
-                <button class="btn btn-secondary btn-sm" onclick='printMobileSlipById("${o.SalesID}")'>🖨️ Slip</button>
-                <button class="btn btn-success btn-sm" onclick='openMobileVoucher(${JSON.stringify(o).replace(/'/g, "&apos;")})'>📸 Voucher</button>
-              </div>
+              <button class="btn btn-secondary btn-sm" onclick="printReceiptMobile('${o.SalesID}')">🖨️ Slip</button>
             </div>
           </div>
         `;
       }).join('');
     }
 
-    async function quickUpdateMobileOrderCourier(salesId, courier) {
+    async function quickUpdatePaid(salesId, val) {
       const orders = await dbGetAll("orders");
       const o = orders.find(x => x.SalesID === salesId);
-      if (!o) return;
-      o.DeliveryName = courier;
-      o.LastModified = new Date().toISOString();
-      o._syncStatus = "pending_upload";
-      await dbPut("orders", o);
-      renderMobileOrdersList();
+      if (o) {
+        o.PaidStatus = val;
+        o.LastModified = new Date().toISOString();
+        o._syncStatus = "pending_upload";
+        await dbPut("orders", o);
+        renderOrdersTable();
+        pushPendingToSupabase();
+      }
     }
 
-    async function quickUpdateMobileOrderPaidStatus(salesId, paidStatus) {
-      const orders = await dbGetAll("orders");
-      const o = orders.find(x => x.SalesID === salesId);
-      if (!o) return;
-      o.PaidStatus = paidStatus;
-      o.LastModified = new Date().toISOString();
-      o._syncStatus = "pending_upload";
-      await dbPut("orders", o);
-      renderMobileOrdersList();
-    }
-
-    async function quickUpdateMobileOrderStatus(salesId, newStatus) {
+    async function printReceiptMobile(salesId) {
       const orders = await dbGetAll("orders");
       const o = orders.find(x => x.SalesID === salesId);
       if (!o) return;
 
-      if (newStatus === "Cancelled" && o.Status !== "Cancelled") {
-        if (confirm("Marking as Cancelled will return items to stock inventory. Proceed?")) {
-          await refundOrderStock(o.ItemList);
-        } else {
-          renderMobileOrdersList();
-          return;
-        }
-      } else if (newStatus !== "Cancelled" && o.Status === "Cancelled") {
-        if (confirm("Reactivating order will deduct items from stock again. Proceed?")) {
-          await deductOrderStock(o.ItemList);
-        } else {
-          renderMobileOrdersList();
-          return;
-        }
-      }
+      document.getElementById("slipId").innerText = o.SalesID;
+      document.getElementById("slipCust").innerText = `${o.CustomerName} (${o.Phone || ''})`;
+      document.getElementById("slipTotal").innerText = `${Number(o.TotalAmount).toLocaleString()} MMK`;
+      document.getElementById("slipItems").innerHTML = (o.ItemList || []).map(i => `
+        <div>${i.Name_MM} (${i.Size}) x${i.Quantity} - ${Number(i.Subtotal).toLocaleString()} K</div>
+      `).join('');
 
-      o.Status = newStatus;
-      o.LastModified = new Date().toISOString();
-      o._syncStatus = "pending_upload";
-      await dbPut("orders", o);
-      renderMobileOrdersList();
-      renderMobileInventoryList();
-      renderMobilePosCatalog();
+      window.print();
     }
 
-    async function refundOrderStock(items) {
-      const tx = db.transaction("products", "readwrite");
-      const store = tx.objectStore("products");
-      for (let item of (items || [])) {
-        const req = store.get(item.ProductID);
-        req.onsuccess = () => {
-          const prod = req.result;
-          if (prod) {
-            prod.Stock = (Number(prod.Stock) || 0) + Number(item.Quantity);
-            prod.LastModified = new Date().toISOString();
-            prod._syncStatus = "pending_upload";
-            store.put(prod);
-          }
-        };
-      }
-    }
-
-    async function deductOrderStock(items) {
-      const tx = db.transaction("products", "readwrite");
-      const store = tx.objectStore("products");
-      for (let item of (items || [])) {
-        const req = store.get(item.ProductID);
-        req.onsuccess = () => {
-          const prod = req.result;
-          if (prod) {
-            prod.Stock = Math.max(0, (Number(prod.Stock) || 0) - Number(item.Quantity));
-            prod.LastModified = new Date().toISOString();
-            prod._syncStatus = "pending_upload";
-            store.put(prod);
-          }
-        };
-      }
-    }
-
-    // --- Customers Management ---
-    async function renderMobileCustomersList() {
+    // -------------------------------------------------------------------------
+    // CUSTOMERS DIRECTORY
+    // -------------------------------------------------------------------------
+    async function renderCustomersTable() {
       const customers = await dbGetAll("customers");
-      const orders = await dbGetAll("orders");
-      const query = (document.getElementById("mCustSearch")?.value || "").toLowerCase().trim();
-      const list = document.getElementById("mCustomersList");
+      const query = (document.getElementById("custSearch")?.value || "").toLowerCase().trim();
+      const container = document.getElementById("customersContainer");
 
-      const filtered = customers.filter(c => {
-        const str = `${c.CustomerID || ''} ${c.FullName || ''} ${c.Phone || ''} ${c.TownshipCity || ''} ${c.DefaultAddress || ''} ${c.Remark || ''}`.toLowerCase();
-        return !query || str.includes(query);
-      });
+      const filtered = customers.filter(c => !query || `${c.FullName} ${c.Phone} ${c.TownshipCity}`.toLowerCase().includes(query));
 
-      if (filtered.length === 0) {
-        list.innerHTML = `<div style="text-align:center; color:#888; padding:20px;">No customer records found.</div>`;
-        return;
-      }
-
-      list.innerHTML = filtered.map(c => {
-        const custOrders = orders.filter(o => o.CustomerID === c.CustomerID && o.Status !== "Cancelled");
-        const totalSpend = custOrders.reduce((sum, o) => sum + (Number(o.TotalAmount) || 0), 0);
-
-        return `
-          <div style="background:white; border:1px solid var(--border); border-radius:8px; padding:10px; display:flex; justify-content:space-between; align-items:center;">
-            <div onclick="openCustomerDrawerForEdit('${c.CustomerID}')">
-              <b>${c.FullName}</b> (${c.CustomerID})<br>
-              <span style="font-size:11px; color:#666;">📞 ${c.Phone || 'No Phone'} • 📍 ${c.TownshipCity || '-'}</span><br>
-              <b style="font-size:12px; color:var(--primary);">${totalSpend.toLocaleString()} MMK</b>
-              <span style="font-size:11px; color:#888;">(${custOrders.length} orders)</span>
-            </div>
-            <button class="btn btn-primary btn-sm" onclick="startMobilePosForCust('${c.CustomerID}')">🛒 Sale</button>
+      container.innerHTML = filtered.map(c => `
+        <div class="card-panel">
+          <div style="display:flex; justify-content:space-between;">
+            <b>${c.FullName}</b>
+            <span style="font-weight:bold; color:var(--primary); font-size:11px;">${Number(c.TotalSpend || 0).toLocaleString()} K</span>
           </div>
-        `;
-      }).join('');
+          <div style="font-size:11px; color:#555;">📞 ${c.Phone || 'No phone'} | 📍 ${c.TownshipCity || 'N/A'}</div>
+          <button class="btn btn-primary btn-sm" style="margin-top:6px;" onclick="startOrderForCust('${c.CustomerID}')">🛒 Create Order</button>
+        </div>
+      `).join('');
     }
 
-    async function openNewCustomerDrawer() {
-      const nextId = await generateNextCustomerId();
-      document.getElementById('mcDrawerTitle').innerText = "➕ Create Customer Profile";
-      document.getElementById('mcCustId').value = nextId;
-      document.getElementById('mcFullName').value = '';
-      document.getElementById('mcPhone').value = '';
-      document.getElementById('mcTownship').value = '';
-      document.getElementById('mcAddress').value = '';
-      document.getElementById('mcRemark').value = '';
-      document.getElementById('btnMcStartSale').style.display = 'none';
-      openDrawer('mCustomerDrawer');
-    }
-
-    async function openCustomerDrawerForEdit(customerId) {
-      const customers = await dbGetAll("customers");
-      const c = customers.find(x => x.CustomerID === customerId);
-      if (!c) return;
-
-      document.getElementById('mcDrawerTitle').innerText = `👤 Profile: ${c.FullName}`;
-      document.getElementById('mcCustId').value = c.CustomerID;
-      document.getElementById('mcFullName').value = c.FullName || '';
-      document.getElementById('mcPhone').value = c.Phone || '';
-      document.getElementById('mcTownship').value = c.TownshipCity || '';
-      document.getElementById('mcAddress').value = c.DefaultAddress || '';
-      document.getElementById('mcRemark').value = c.Remark || '';
-      document.getElementById('btnMcStartSale').style.display = 'inline-flex';
-      openDrawer('mCustomerDrawer');
-    }
-
-    async function saveMobileCustomer() {
-      const id = document.getElementById('mcCustId').value;
-      const name = document.getElementById('mcFullName').value.trim();
-      const phone = document.getElementById('mcPhone').value.trim();
-      const township = document.getElementById('mcTownship').value.trim();
-      const address = document.getElementById('mcAddress').value.trim();
-      const remark = document.getElementById('mcRemark').value.trim();
-
-      if (!name) return alert("Full Name is required.");
-
-      const customers = await dbGetAll("customers");
-      const existing = customers.find(c => c.CustomerID === id);
-
-      const payload = {
-        CustomerID: id,
-        FullName: name,
-        Phone: phone,
-        TownshipCity: township,
-        DefaultAddress: address,
-        Remark: remark,
-        TotalSpend: existing ? (existing.TotalSpend || 0) : 0,
-        LastOrderDate: existing ? (existing.LastOrderDate || new Date().toISOString()) : new Date().toISOString(),
-        _syncStatus: "pending_upload"
-      };
-
-      await dbPut("customers", payload);
-      alert("✅ Customer profile saved!");
-      closeDrawer('mCustomerDrawer');
-      renderMobileCustomersList();
-    }
-
-    function startPosFromMobileCustomerModal() {
-      const custId = document.getElementById('mcCustId').value;
-      closeDrawer('mCustomerDrawer');
-      startMobilePosForCust(custId);
-    }
-
-    function startMobilePosForCust(customerId) {
-      bindMobileCustomer(customerId);
-      switchMobileTab('mPosView', document.querySelectorAll('.nav-tab-btn')[0]);
-      openDrawer('mCheckoutDrawer');
-    }
-
-    // --- Google Apps Script Sync & Offline JSON ---
-    function saveMobileGasUrl() {
-      const url = document.getElementById("mGasEndpointInput").value.trim();
-      if (!url.startsWith("https://script.google.com/")) return alert("Invalid Google Apps Script Web App URL.");
-      localStorage.setItem("gas_endpoint_url", url);
-      document.getElementById("mGasSaveStatus").innerHTML = "<span style='color:green;'>✅ Saved!</span>";
-    }
-
-    async function testMobileGasConnection() {
-      const url = document.getElementById("mGasEndpointInput").value.trim();
-      const status = document.getElementById("mGasSaveStatus");
-      if (!url) return status.innerHTML = "<span style='color:red;'>⚠️ Enter URL first.</span>";
-      status.innerHTML = "⏳ Connecting...";
-      try {
-        const res = await (await fetch(url)).json();
-        if (res.status === "success") {
-          status.innerHTML = "<span style='color:green;'>✅ Connected!</span>";
-        } else {
-          status.innerHTML = `<span style='color:orange;'>⚠️ Response: ${res.message || 'Error'}</span>`;
+    function startOrderForCust(id) {
+      dbGetAll("customers").then(customers => {
+        const c = customers.find(x => x.CustomerID === id);
+        if (c) {
+          document.getElementById("cBoundId").value = c.CustomerID;
+          document.getElementById("cCustName").value = c.FullName;
+          document.getElementById("cCustPhone").value = c.Phone || "";
+          document.getElementById("cTownship").value = c.TownshipCity || "";
+          document.getElementById("cAddress").value = c.DefaultAddress || "";
+          switchTab("posView", document.querySelectorAll(".nav-item")[0]);
         }
-      } catch(e) {
-        status.innerHTML = `<span style='color:red;'>❌ Connection failed: ${e.message}</span>`;
-      }
-    }
-
-    function setSyncLoading(active, text = "Syncing...") {
-      const overlay = document.getElementById("mSyncLoadingOverlay");
-      const overlayText = document.getElementById("mSyncLoadingText");
-      const badge = document.getElementById("mSyncStatus");
-      const btnDown = document.getElementById("btnMDownload");
-      const btnUp = document.getElementById("btnMUpload");
-
-      if (active) {
-        if (overlayText) overlayText.innerText = text;
-        if (overlay) overlay.style.display = "flex";
-        if (badge) {
-          badge.className = "status-badge badge-unsaved";
-          badge.innerText = "⏳ In Progress";
-        }
-        if (btnDown) btnDown.disabled = true;
-        if (btnUp) btnUp.disabled = true;
-      } else {
-        if (overlay) overlay.style.display = "none";
-        if (btnDown) btnDown.disabled = false;
-        if (btnUp) btnUp.disabled = false;
-      }
-    }
-
-    async function downloadFromGoogleSheetsMobile() {
-      const endpoint = localStorage.getItem("gas_endpoint_url");
-      if (!endpoint) {
-        alert("Please configure and save your Google Apps Script URL first.");
-        return;
-      }
-
-      closeDrawer('mSyncDrawer');
-      setSyncLoading(true, "Downloading Sheets...");
-
-      try {
-        const res = await (await fetch(endpoint, { method: "GET" })).json();
-        if (res.status !== "success") throw new Error(res.message);
-
-        const { products, orders, customers, settings } = res.data;
-
-        await smartMergeStore("products", "ProductID", products || []);
-
-        const normalizedOrders = (orders || []).map(o => {
-          if (typeof o.ItemList === "string") {
-            try { o.ItemList = JSON.parse(o.ItemList); } catch(e) { o.ItemList = []; }
-          }
-          return o;
-        });
-        await smartMergeStore("orders", "SalesID", normalizedOrders);
-
-        let counter = 1;
-        const normalizedCustomers = (customers || []).map(c => {
-          return {
-            ...c,
-            CustomerID: c.CustomerID || ("C" + String(counter++).padStart(6, "0")),
-            FullName: c.FullName || "Customer",
-            Phone: c.Phone ? String(c.Phone).trim() : "",
-            DefaultAddress: c.DefaultAddress || "",
-            TownshipCity: c.TownshipCity || "",
-            Remark: c.Remark || "",
-            LastOrderDate: c.LastOrderDate || new Date().toISOString()
-          };
-        });
-        await smartMergeStore("customers", "CustomerID", normalizedCustomers);
-
-        if (settings && typeof settings === "object") {
-          const tx = db.transaction("settings", "readwrite");
-          const sStore = tx.objectStore("settings");
-          Object.keys(settings).forEach(k => {
-            appSettings[k] = settings[k];
-            sStore.put({ key: k, value: settings[k] });
-          });
-          await new Promise(r => { tx.oncomplete = r; });
-          applyDynamicSettings();
-        }
-
-        renderMobilePosCatalog();
-        renderMobileInventoryList();
-        renderMobileOrdersList();
-        renderMobileCustomersList();
-        await updateUnsavedBadge();
-    
-        setSyncLoading(false);
-        alert("✅ Cloud data and settings merged successfully!");
-      } catch(e) {
-        setSyncLoading(false);
-        await updateUnsavedBadge();
-        alert("Sync Download Error: " + e.message);
-      }
-    }
-
-    async function smartMergeStore(storeName, keyField, cloudItems) {
-      const localItems = await dbGetAll(storeName);
-      const localMap = new Map(localItems.map(item => [item[keyField], item]));
-
-      const tx = db.transaction(storeName, "readwrite");
-      const store = tx.objectStore(storeName);
-
-      for (let cloudItem of cloudItems) {
-        const key = cloudItem[keyField];
-        const local = localMap.get(key);
-
-        if (!local || local._syncStatus !== "pending_upload") {
-          cloudItem._syncStatus = "synced";
-          store.put(cloudItem);
-        }
-      }
-
-      return new Promise((resolve, reject) => {
-        tx.oncomplete = () => resolve(true);
-        tx.onerror = () => reject(tx.error);
       });
     }
 
-    async function uploadToGoogleSheetsMobile() {
-      const endpoint = localStorage.getItem("gas_endpoint_url");
-      if (!endpoint) {
-        alert("Please configure and save your Google Apps Script URL first.");
-        return;
-      }
+    // -------------------------------------------------------------------------
+    // ANALYTICS ENGINE
+    // -------------------------------------------------------------------------
+    async function renderAnalytics() {
+      const orders = await dbGetAll("orders");
+      const products = await dbGetAll("products");
+      const pMap = new Map(products.map(p => [p.ProductID, p]));
 
-      closeDrawer('mSyncDrawer');
-      setSyncLoading(true, "Uploading to Sheets...");
+      let rev = 0, cost = 0, units = 0;
+      const catMap = new Map();
 
-      try {
-        const [products, orders, customers] = await Promise.all([
-          dbGetAll("products"), dbGetAll("orders"), dbGetAll("customers")
-        ]);
+      orders.filter(o => o.Status !== "Cancelled").forEach(o => {
+        rev += Number(o.TotalAmount) || 0;
+        (o.ItemList || []).forEach(i => {
+          const q = Number(i.Quantity) || 0;
+          units += q;
+          const p = pMap.get(i.ProductID);
+          cost += q * (p ? Number(p.TotalCapital) || 0 : 0);
+          const cat = (p && p.Type) ? p.Type : "Other";
+          catMap.set(cat, (catMap.get(cat) || 0) + q);
+        });
+      });
 
-        const payload = {
-          products: products.map(cleanSyncRecord),
-          orders: orders.map(cleanSyncRecord),
-          customers: customers.map(cleanSyncRecord)
-        };
+      document.getElementById("anRev").innerText = `${rev.toLocaleString()} MMK`;
+      document.getElementById("anProfit").innerText = `Gross Profit: ${(rev - cost).toLocaleString()} MMK`;
+      document.getElementById("anUnits").innerText = `${units} items sold`;
 
-        const res = await (await fetch(endpoint, {
-          method: "POST",
-          headers: { "Content-Type": "text/plain;charset=utf-8" },
-          body: JSON.stringify(payload)
-        })).json();
-
-        if (res.status !== "success") throw new Error(res.message);
-
-        await markStoreAsSynced("products", products);
-        await markStoreAsSynced("orders", orders);
-        await markStoreAsSynced("customers", customers);
-
-        await updateUnsavedBadge();
-        setSyncLoading(false);
-        alert("✅ Google Sheets backup updated successfully!");
-      } catch(e) {
-        setSyncLoading(false);
-        await updateUnsavedBadge();
-        alert("Upload Error: " + e.message);
-      }
-    } 
-
-    function cleanSyncRecord(record) {
-      const copy = { ...record };
-      delete copy._syncStatus;
-      return copy;
+      document.getElementById("anCategoryBars").innerHTML = [...catMap.entries()].map(([cat, q]) => `
+        <div style="display:flex; justify-content:space-between; font-size:11px; margin-bottom:2px;">
+          <span>${cat}</span><b>${q} units</b>
+        </div>
+      `).join('') || "No sales yet";
     }
 
-    async function markStoreAsSynced(storeName, items) {
-      const tx = db.transaction(storeName, "readwrite");
-      const store = tx.objectStore(storeName);
-      for (let item of items) {
-        item._syncStatus = "synced";
-        store.put(item);
-      }
-      return new Promise(r => { tx.oncomplete = () => r(true); });
+    // -------------------------------------------------------------------------
+    // HELPERS & UI CONTROLLERS
+    // -------------------------------------------------------------------------
+    function switchTab(viewId, btn) {
+      document.querySelectorAll(".view-content").forEach(v => v.classList.remove("active"));
+      document.querySelectorAll(".nav-item").forEach(n => n.classList.remove("active"));
+      document.getElementById(viewId).classList.add("active");
+      if (btn) btn.classList.add("active");
     }
 
-    async function updateUnsavedBadge() {
-      const [prods, orders, custs] = await Promise.all([
-        dbGetAll("products"), dbGetAll("orders"), dbGetAll("customers")
-      ]);
-      const unsaved = prods.filter(p => p._syncStatus === "pending_upload").length +
-                      orders.filter(o => o._syncStatus === "pending_upload").length +
-                      custs.filter(c => c._syncStatus === "pending_upload").length;
+    function closeModal(id) { document.getElementById(id).style.display = "none"; }
 
-      const badge = document.getElementById("mSyncStatus");
+    async function loadLocalSettings() {
+      const s = await dbGetAll("settings");
+      s.forEach(row => { appSettings[row.key] = row.value; });
+      applySettingsUI();
+    }
+
+    function applySettingsUI() {
+      const types = ["All", ...(appSettings.ProductTypes || [])];
+      const sizes = ["All", ...(appSettings.ProductSizes || [])];
+
+      document.getElementById("posTypeChips").innerHTML = types.map(t => `
+        <div class="chip ${t === activeType ? 'active' : ''}" onclick="activeType='${t}'; renderPosCatalog();">${t}</div>
+      `).join('');
+
+      document.getElementById("posSizeChips").innerHTML = sizes.map(s => `
+        <div class="chip ${s === activeSize ? 'active' : ''}" onclick="activeSize='${s}'; renderPosCatalog();">${s}</div>
+      `).join('');
+
+      document.getElementById("cDeliverySelect").innerHTML = (appSettings.DeliveryServices || []).map(d => `<option value="${d}">${d}</option>`).join('');
+      document.getElementById("cPaymentSelect").innerHTML = (appSettings.PaymentMethods || []).map(p => `<option value="${p}">${p}</option>`).join('');
+      document.getElementById("bmType").innerHTML = (appSettings.ProductTypes || []).map(t => `<option value="${t}">${t}</option>`).join('');
+    }
+
+    async function updateBadge() {
+      const [p, o, c] = await Promise.all([dbGetAll("products"), dbGetAll("orders"), dbGetAll("customers")]);
+      const unsaved = p.filter(x => x._syncStatus === "pending_upload").length +
+                      o.filter(x => x._syncStatus === "pending_upload").length +
+                      c.filter(x => x._syncStatus === "pending_upload").length;
+
+      const badge = document.getElementById("syncBadge");
       if (unsaved > 0) {
         badge.className = "status-badge badge-unsaved";
-        badge.innerText = `⏳ ${unsaved} Unsaved`;
+        badge.innerText = `⏳ ${unsaved} Pending`;
       } else {
         badge.className = "status-badge badge-synced";
         badge.innerText = "⚡ Synced";
       }
-    }
-
-    async function exportMobileJsonBackup() {
-      try {
-        const [products, orders, customers, settings] = await Promise.all([
-          dbGetAll("products"), dbGetAll("orders"), dbGetAll("customers"), dbGetAll("settings")
-        ]);
-
-        const backupData = {
-          version: "5.3",
-          exportDate: new Date().toISOString(),
-          products, orders, customers, settings
-        };
-
-        const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: "application/json" });
-        const a = document.createElement("a");
-        a.href = URL.createObjectURL(blob);
-        a.download = `BabyStore_MobileBackup_${new Date().toISOString().slice(0, 10)}.json`;
-        a.click();
-      } catch (err) {
-        alert("Export Backup Failed: " + err.message);
-      }
-    }
-
-    function importMobileJsonBackup(event) {
-      const file = event.target.files[0];
-      if (!file) return;
-
-      const reader = new FileReader();
-      reader.onload = async (e) => {
-        try {
-          const data = JSON.parse(e.target.result);
-          if (!data.products || !data.orders || !data.customers) throw new Error("Invalid backup structure.");
-
-          if (!confirm("Restore database from this JSON backup? Existing records will be replaced.")) return;
-
-          await dbReplaceAll("products", data.products);
-          await dbReplaceAll("orders", data.orders);
-          await dbReplaceAll("customers", data.customers);
-          if (data.settings) await dbReplaceAll("settings", data.settings);
-
-          await loadSettings();
-          renderMobilePosCatalog();
-          renderMobileInventoryList();
-          renderMobileOrdersList();
-          renderMobileCustomersList();
-          await updateUnsavedBadge();
-          alert("✅ Restored successfully from file!");
-          closeDrawer('mSyncDrawer');
-        } catch (err) {
-          alert("Restore Failed: " + err.message);
-        } finally {
-          event.target.value = "";
-        }
-      };
-      reader.readAsText(file);
     }
   </script>
 </body>
