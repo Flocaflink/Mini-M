@@ -475,14 +475,12 @@
   Mini-M Baby Clothing Store Owner Portal
 </h2>
     <div class="sync-controls" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-      <span id="syncStatus" class="status-badge badge-synced">⚡ All Synced</span>
-      <button class="btn btn-secondary btn-sm" onclick="downloadFromGoogleSheets()">📥 Download Sheets</button>
-      <button id="btnUploadSheets" class="btn btn-primary btn-sm" onclick="uploadToGoogleSheets()">☁️ Upload Sheets</button>
-      <button class="btn btn-sm" style="background: #4a5568; color: white;" onclick="openGasConfigModal()" title="Configure Google Apps Script Web App URL">⚙️ Cloud URL</button>
-      <button class="btn btn-sm" style="background: #4a5568; color: white;" onclick="exportLocalJsonBackup()" title="Download offline JSON backup">💾 JSON Backup</button>
-      <button class="btn btn-sm" style="background: #718096; color: white;" onclick="document.getElementById('jsonFileInput').click()" title="Restore from local JSON file">📂 Restore</button>
-      <input type="file" id="jsonFileInput" style="display: none;" accept=".json" onchange="importLocalJsonBackup(event)">
-    </div>
+  <span id="syncStatus" class="status-badge badge-synced">⚡ All Synced</span>
+  <button id="btnDownloadSheets" class="btn btn-secondary btn-sm" onclick="downloadFromGoogleSheets()">📥 Download Sheets</button>
+  <button id="btnUploadSheets" class="btn btn-success btn-sm" onclick="uploadToGoogleSheets()">☁️ Upload Sheets</button>
+  <button class="btn btn-sm" style="background: #2b6cb0; color: white;" onclick="openStoreSettingsModal()" title="Store Defaults & Catalog Lists">⚙️ Settings</button>
+  <button class="btn btn-sm" style="background: #4a5568; color: white;" onclick="openGasConfigModal()" title="Configure Apps Script Web App URL">⚙️ Cloud URL</button>
+</div>
   </div>
 
   <div class="tab-nav">
@@ -672,11 +670,12 @@
 
   <div id="inventoryTab" class="tab-content">
     <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 10px;">
-      <div style="display: flex; gap: 12px; flex: 1; max-width: 550px; align-items: center;">
-        <input type="text" id="invSearchInput" placeholder="Search SKU, name, color, type, remark..." oninput="renderInventoryTable()">
-        <label style="display: flex; align-items: center; gap: 4px; font-size: 12px; cursor: pointer; user-select: none; white-space: nowrap; margin-top: 4px;">
+      <div style="display: flex; gap: 8px; flex: 1; max-width: 600px; align-items: center;">
+        <input type="text" id="invSearchInput" placeholder="🔍 Search SKU, name, color, type, remark..." oninput="renderInventoryTable()">
+        <button class="btn btn-secondary btn-sm" onclick="resetInvFilters()">Reset</button>
+        <label style="display: flex; align-items: center; gap: 4px; font-size: 12px; cursor: pointer; user-select: none; white-space: nowrap; margin: 0 0 0 4px;">
           <input type="checkbox" id="invShowOutOfStock" onchange="renderInventoryTable()" style="width: auto; margin: 0;">
-          <b>Show Out of Stock (0 Stock)</b>
+          <b>Show Out of Stock</b>
         </label>
       </div>
       <div style="display: flex; gap: 6px;">
@@ -685,7 +684,25 @@
       </div>
     </div>
 
+    <!-- Inventory Filter Chips -->
+    <div style="background: #fafbfc; border: 1px solid var(--border); padding: 8px 12px; border-radius: 6px; margin-bottom: 12px;">
+      <label style="margin-top: 0;">Sex Filter:</label>
+      <div class="chip-group" id="invSexChips">
+        <div class="chip active" onclick="setInvSex('All', this)">All</div>
+        <div class="chip" onclick="setInvSex('Unisex', this)">Unisex</div>
+        <div class="chip" onclick="setInvSex('Male', this)">Male</div>
+        <div class="chip" onclick="setInvSex('Female', this)">Female</div>
+      </div>
+
+      <label>Type Category Filter:</label>
+      <div class="chip-group" id="invTypeChips"></div>
+
+      <label>Size Filter:</label>
+      <div class="chip-group" id="invSizeChips"></div>
+    </div>
+
     <div style="overflow-x: auto;">
+      <!-- Table continues below -->
       <table class="data-table">
         <thead>
           <tr>
@@ -869,11 +886,28 @@
     </div>
 
     <div style="background:#f8f9fa; border:1px solid var(--border); padding:10px; border-radius:6px;">
-      <div style="font-weight:bold; font-size:12px; color:var(--primary); margin-bottom:4px;">1. Base Product Information (Shared across variants)</div>
+      <!-- Intake Mode Switcher -->
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; border-bottom: 1px dashed #cbd5e0; padding-bottom: 6px;">
+        <div style="font-weight:bold; font-size:12px; color:var(--primary);">1. Base Product Information</div>
+        <div style="display: flex; gap: 12px; font-size: 12px;">
+          <label style="margin: 0; display: flex; align-items: center; gap: 4px; cursor: pointer;">
+            <input type="radio" name="bmMode" id="bmModeNew" value="new" checked onchange="toggleBulkMatrixMode()" style="width: auto; margin: 0;">
+            <b>➕ Create New Item</b>
+          </label>
+          <label style="margin: 0; display: flex; align-items: center; gap: 4px; cursor: pointer;">
+            <input type="radio" name="bmMode" id="bmModeExisting" value="existing" onchange="toggleBulkMatrixMode()" style="width: auto; margin: 0;">
+            <b>🔍 Edit / Restock Existing Item</b>
+          </label>
+        </div>
+      </div>
+
       <div style="display: grid; grid-template-columns: 1fr 1.5fr 1fr 1fr; gap: 8px;">
         <div>
-          <label>Base Item Code:</label>
+          <label id="lblBmItemCode">Base Item Code:</label>
+          <!-- Displayed in New Mode -->
           <input type="text" id="bmItemCode" readonly style="background:#e9ecef; font-weight:bold; color:var(--primary);">
+          <!-- Displayed in Existing Mode -->
+          <select id="bmExistingItemSelect" style="display: none;" onchange="handleSelectExistingBulkItem(this.value)"></select>
         </div>
         <div>
           <label>Product Name (MM/EN) <span style="color:red;">*</span>:</label>
@@ -1335,6 +1369,73 @@
   </div>
 </div>
 
+<div id="storeSettingsModal" class="modal-overlay">
+  <div class="modal-card" style="max-width: 680px;">
+    <div class="modal-header">
+      <h3 style="display: flex; align-items: center; gap: 6px;">⚙️ Store Defaults & Catalog Configuration</h3>
+      <button class="close-btn" onclick="closeModal('storeSettingsModal')">&times;</button>
+    </div>
+
+    <div class="calc-box">
+      <div style="font-weight: bold; font-size: 12px; color: var(--primary); margin-bottom: 4px;">1. Default Cost & Pricing Baselines</div>
+      <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;">
+        <div>
+          <label style="font-size: 11px;">Default Yuan Rate (MMK):</label>
+          <input type="number" id="cfgYuanRate">
+        </div>
+        <div>
+          <label style="font-size: 11px;">Default Cargo Fee (MMK):</label>
+          <input type="number" id="cfgCargoFee">
+        </div>
+        <div>
+          <label style="font-size: 11px;">Default Supplier Markup %:</label>
+          <input type="number" id="cfgSupplierPct" step="0.1">
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 6px;">
+        <div>
+          <label style="font-size: 11px;">Regular Margin %:</label>
+          <input type="number" id="cfgRegularMargin" step="0.5">
+        </div>
+        <div>
+          <label style="font-size: 11px;">Wholesale Margin %:</label>
+          <input type="number" id="cfgWholesaleMargin" step="0.5">
+        </div>
+      </div>
+    </div>
+
+    <div style="margin-top: 10px;">
+      <div style="font-weight: bold; font-size: 12px; color: #0d5c75; margin-bottom: 4px;">2. Catalog Options (Comma-Separated)</div>
+      
+      <label style="font-size: 11px;">Product Types / Categories:</label>
+      <input type="text" id="cfgProductTypes">
+
+      <label style="font-size: 11px;">Product Sizes:</label>
+      <input type="text" id="cfgProductSizes">
+
+      <label style="font-size: 11px;">Colors / Patterns:</label>
+      <input type="text" id="cfgProductColors">
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 6px;">
+        <div>
+          <label style="font-size: 11px;">Courier Services:</label>
+          <input type="text" id="cfgDeliveryServices">
+        </div>
+        <div>
+          <label style="font-size: 11px;">Payment Methods:</label>
+          <input type="text" id="cfgPaymentMethods">
+        </div>
+      </div>
+    </div>
+
+    <div style="display: flex; gap: 8px; margin-top: 16px;">
+      <button class="btn btn-primary" style="flex: 1;" onclick="saveStoreSettingsModal()">💾 Save Store Settings</button>
+      <button class="btn" style="background: #ccc;" onclick="closeModal('storeSettingsModal')">Cancel</button>
+    </div>
+  </div>
+</div>
+
 <div id="voucherModal" class="modal-overlay">
   <div class="modal-card">
     <div class="modal-header">
@@ -1483,6 +1584,7 @@
     WholesaleProfitMargin: 15,
     DefaultYuanRate: 620,
     DefaultCargoFee: 2500,
+    DefaultSupplierPct: 3,
     ProductTypes: ["Dress", "Pant", "Top", "T shirt", "Shirt", "Cap", "Set", "Boiler", "Romper", "Accessories"],
     ProductSizes: ["73", "80", "90", "100", "110", "120", "130", "140", "150"],
     ProductColors: ["ပန်း", "ဝါ", "ပြာ", "ခဲ", "ဖြူ", "နီ", "စိမ်း", "နက်", "လိမ္မော်", "ခရမ်း", "ကြား", "ပွင့်"],
@@ -1490,6 +1592,34 @@
     DeliveryServices: ["Royal", "Wepots", "Ninja Van", "Safe", "self"],
     PaidStatuses: ["Paid", "Unpaid"]
   };
+
+  let currentCart = [];
+  let activeSex = "All";
+  let activeType = "All";
+  let activeSize = "All";
+
+  let activeInvSex = "All";
+  let activeInvType = "All";
+  let activeInvSize = "All";
+
+  let lastSavedOrder = null;
+  let isWholesaleActive = false;
+  let isEditMode = false;
+  let isBulkEditMode = false;
+  let bulkExistingStockMap = new Map();
+  
+  let editingOrderOriginal = null;
+  let editingOrderItems = [];
+  let currentModalCustomer = null;
+  let activeAnalyticsPeriod = "today";
+
+  // Clean record helper defined early to prevent hoisting errors
+  function cleanRecordForSync(record) {
+    if (!record || typeof record !== "object") return {};
+    const copy = { ...record };
+    delete copy._syncStatus;
+    return copy;
+  }
 
   function initDatabase() {
     return new Promise((resolve, reject) => {
@@ -1534,6 +1664,7 @@
 
   function dbGetAll(storeName) {
     return new Promise((resolve) => {
+      if (!db) return resolve([]);
       const tx = db.transaction(storeName, "readonly");
       tx.objectStore(storeName).getAll().onsuccess = (e) => resolve(e.target.result || []);
     });
@@ -1541,6 +1672,7 @@
 
   function dbPut(storeName, record) {
     return new Promise((resolve, reject) => {
+      if (!db) return reject(new Error("Database not initialized"));
       const tx = db.transaction(storeName, "readwrite");
       tx.objectStore(storeName).put(record).onsuccess = () => {
         updateUnsavedChangesBadge();
@@ -1549,19 +1681,6 @@
       tx.onerror = (e) => reject(e.target.error);
     });
   }
-
-  let currentCart = [];
-  let activeSex = "All";
-  let activeType = "All";
-  let activeSize = "All";
-  let lastSavedOrder = null;
-  let isWholesaleActive = false;
-  let isEditMode = false;
-  
-  let editingOrderOriginal = null;
-  let editingOrderItems = [];
-  let currentModalCustomer = null;
-  let activeAnalyticsPeriod = "today";
 
   async function loadSettings() {
     try {
@@ -1578,21 +1697,44 @@
   }
 
   function applyDynamicSettingsToUI() {
-    const typeChips = document.getElementById("posTypeChips");
-    if (typeChips) {
-      const types = ["All", ...(appSettings.ProductTypes || [])];
-      typeChips.innerHTML = types.map((t) => `
+    const types = ["All", ...(appSettings.ProductTypes || [])];
+    const sizes = ["All", ...(appSettings.ProductSizes || [])];
+    const colors = appSettings.ProductColors || [];
+    const paymentMethods = appSettings.PaymentMethods || ["KPay", "WavePay", "COD", "AYA Pay"];
+    const deliveryServices = appSettings.DeliveryServices || ["Royal", "Wepots", "Ninja Van", "Safe", "self"];
+    const paidStatuses = appSettings.PaidStatuses || ["paid", "not received yet"];
+
+    const posTypeChips = document.getElementById("posTypeChips");
+    if (posTypeChips) {
+      posTypeChips.innerHTML = types.map(t => `
         <div class="chip ${t === activeType ? 'active' : ''}" onclick="setPosType('${t}', this)">
           ${t === 'All' ? 'All Types' : t}
         </div>
       `).join('');
     }
 
-    const sizeChips = document.getElementById("posSizeChips");
-    if (sizeChips) {
-      const sizes = ["All", ...(appSettings.ProductSizes || [])];
-      sizeChips.innerHTML = sizes.map((s) => `
+    const posSizeChips = document.getElementById("posSizeChips");
+    if (posSizeChips) {
+      posSizeChips.innerHTML = sizes.map(s => `
         <div class="chip ${s === activeSize ? 'active' : ''}" onclick="setPosSize('${s}', this)">
+          ${s === 'All' ? 'All Sizes' : s}
+        </div>
+      `).join('');
+    }
+
+    const invTypeChips = document.getElementById("invTypeChips");
+    if (invTypeChips) {
+      invTypeChips.innerHTML = types.map(t => `
+        <div class="chip ${t === activeInvType ? 'active' : ''}" onclick="setInvType('${t}', this)">
+          ${t === 'All' ? 'All Types' : t}
+        </div>
+      `).join('');
+    }
+
+    const invSizeChips = document.getElementById("invSizeChips");
+    if (invSizeChips) {
+      invSizeChips.innerHTML = sizes.map(s => `
+        <div class="chip ${s === activeInvSize ? 'active' : ''}" onclick="setInvSize('${s}', this)">
           ${s === 'All' ? 'All Sizes' : s}
         </div>
       `).join('');
@@ -1623,7 +1765,7 @@
     const prodColorSelect = document.getElementById("mProdColorSelect");
     if (prodColorSelect) {
       const curVal = prodColorSelect.value;
-      prodColorSelect.innerHTML = (appSettings.ProductColors || []).map(c => 
+      prodColorSelect.innerHTML = colors.map(c => 
         `<option value="${c}">${c}</option>`
       ).join('') + `<option value="__CUSTOM__">➕ Custom Color...</option>`;
       if (curVal && [...prodColorSelect.options].some(o => o.value === curVal)) {
@@ -1633,10 +1775,13 @@
 
     const bmType = document.getElementById("bmType");
     if (bmType) {
+      const curBmVal = bmType.value;
       bmType.innerHTML = (appSettings.ProductTypes || []).map(t => `<option value="${t}">${t}</option>`).join('');
+      if (curBmVal && [...bmType.options].some(o => o.value === curBmVal)) {
+        bmType.value = curBmVal;
+      }
     }
 
-    const paymentMethods = appSettings.PaymentMethods || ["KPay", "WavePay", "COD", "AYA Pay"];
     const posPay = document.getElementById("orderPaymentType");
     if (posPay) {
       const curVal = posPay.value;
@@ -1650,7 +1795,6 @@
       if (curVal && [...eoPay.options].some(o => o.value === curVal)) eoPay.value = curVal;
     }
 
-    const deliveryServices = appSettings.DeliveryServices || ["Royal", "Wepots", "Ninja Van", "Safe", "self"];
     const posDelivery = document.getElementById("posDeliveryName");
     if (posDelivery) {
       const curVal = posDelivery.value;
@@ -1664,7 +1808,6 @@
       if (curVal && [...eoDelivery.options].some(o => o.value === curVal)) eoDelivery.value = curVal;
     }
 
-    const paidStatuses = appSettings.PaidStatuses || ["paid", "not received yet"];
     const posPaid = document.getElementById("orderPaidStatus");
     if (posPaid) {
       const curVal = posPaid.value;
@@ -1680,43 +1823,146 @@
 
     const regMargin = appSettings.RegularProfitMargin || 33;
     const wsMargin = appSettings.WholesaleProfitMargin || 15;
+
     const lblNormal = document.getElementById("lblNormalPriceCalc");
     if (lblNormal) lblNormal.innerText = `Normal Price (+${regMargin}% Exact):`;
+
     const lblWs = document.getElementById("lblWholesalePriceCalc");
     if (lblWs) lblWs.innerText = `Wholesale Price (+${wsMargin}% Sug):`;
+
     const lblBmNormal = document.getElementById("lblBmNormalPrice");
     if (lblBmNormal) lblBmNormal.innerText = `Normal (+${regMargin}%):`;
   }
 
-  async function updateUnsavedChangesBadge() {
-    try {
-      const [products, orders, customers] = await Promise.all([
-        dbGetAll("products"),
-        dbGetAll("orders"),
-        dbGetAll("customers")
-      ]);
+  function setInvSex(sex, el) {
+    activeInvSex = sex;
+    document.querySelectorAll('#invSexChips .chip').forEach(c => c.classList.remove('active'));
+    if (el) el.classList.add('active');
+    renderInventoryTable();
+  }
 
-      const unsavedProds = products.filter(p => p._syncStatus === "pending_upload").length;
-      const unsavedOrders = orders.filter(o => o._syncStatus === "pending_upload").length;
-      const unsavedCusts = customers.filter(c => c._syncStatus === "pending_upload").length;
-      const totalUnsaved = unsavedProds + unsavedOrders + unsavedCusts;
+  function setInvType(type, el) {
+    activeInvType = type;
+    document.querySelectorAll('#invTypeChips .chip').forEach(c => c.classList.remove('active'));
+    if (el) el.classList.add('active');
+    renderInventoryTable();
+  }
 
-      const badge = document.getElementById("syncStatus");
-      const btnUpload = document.getElementById("btnUploadSheets");
+  function setInvSize(size, el) {
+    activeInvSize = size;
+    document.querySelectorAll('#invSizeChips .chip').forEach(c => c.classList.remove('active'));
+    if (el) el.classList.add('active');
+    renderInventoryTable();
+  }
 
-      if (totalUnsaved > 0) {
-        badge.className = "status-badge badge-unsaved";
-        badge.innerText = `⏳ ${totalUnsaved} Unsaved Changes`;
-        btnUpload.innerText = `☁️ Upload Sheets (${totalUnsaved})`;
-      } else {
-        badge.className = "status-badge badge-synced";
-        badge.innerText = "⚡ All Synced";
-        btnUpload.innerText = "☁️ Upload Sheets";
+  function resetInvFilters() {
+    const searchInput = document.getElementById('invSearchInput');
+    if (searchInput) searchInput.value = '';
+    
+    activeInvSex = "All";
+    activeInvType = "All";
+    activeInvSize = "All";
+
+    document.querySelectorAll('#invSexChips .chip, #invTypeChips .chip, #invSizeChips .chip').forEach(c => c.classList.remove('active'));
+    document.querySelectorAll('#invSexChips div:first-child, #invTypeChips div:first-child, #invSizeChips div:first-child').forEach(c => c.classList.add('active'));
+
+    renderInventoryTable();
+  }
+
+  async function persistUpdatedSettings(newRates = {}) {
+    let hasChanges = false;
+    for (const [k, v] of Object.entries(newRates)) {
+      if (v !== undefined && v !== null && appSettings[k] !== v) {
+        appSettings[k] = v;
+        hasChanges = true;
       }
-    } catch (e) {
-      console.warn("Could not calculate unsaved status", e);
+    }
+
+    if (hasChanges && db) {
+      const tx = db.transaction("settings", "readwrite");
+      const store = tx.objectStore("settings");
+      for (const [k, v] of Object.entries(appSettings)) {
+        store.put({ key: k, value: v, _syncStatus: "pending_upload" });
+      }
+      await new Promise(r => { tx.oncomplete = r; });
+      applyDynamicSettingsToUI();
+      updateUnsavedChangesBadge();
     }
   }
+
+  function openStoreSettingsModal() {
+    document.getElementById('cfgYuanRate').value = appSettings.DefaultYuanRate || 620;
+    document.getElementById('cfgCargoFee').value = appSettings.DefaultCargoFee || 2500;
+    document.getElementById('cfgSupplierPct').value = appSettings.DefaultSupplierPct ?? 0;
+    document.getElementById('cfgRegularMargin').value = appSettings.RegularProfitMargin || 33;
+    document.getElementById('cfgWholesaleMargin').value = appSettings.WholesaleProfitMargin || 15;
+
+    document.getElementById('cfgProductTypes').value = (appSettings.ProductTypes || []).join(', ');
+    document.getElementById('cfgProductSizes').value = (appSettings.ProductSizes || []).join(', ');
+    document.getElementById('cfgProductColors').value = (appSettings.ProductColors || []).join(', ');
+    document.getElementById('cfgDeliveryServices').value = (appSettings.DeliveryServices || []).join(', ');
+    document.getElementById('cfgPaymentMethods').value = (appSettings.PaymentMethods || []).join(', ');
+
+    document.getElementById('storeSettingsModal').style.display = 'flex';
+  }
+
+  async function saveStoreSettingsModal() {
+    const parseList = (val) => val.split(',').map(s => s.trim()).filter(Boolean);
+
+    const updated = {
+      DefaultYuanRate: parseFloat(document.getElementById('cfgYuanRate').value) || 620,
+      DefaultCargoFee: parseFloat(document.getElementById('cfgCargoFee').value) || 2500,
+      DefaultSupplierPct: parseFloat(document.getElementById('cfgSupplierPct').value) || 0,
+      RegularProfitMargin: parseFloat(document.getElementById('cfgRegularMargin').value) || 33,
+      WholesaleProfitMargin: parseFloat(document.getElementById('cfgWholesaleMargin').value) || 15,
+      ProductTypes: parseList(document.getElementById('cfgProductTypes').value),
+      ProductSizes: parseList(document.getElementById('cfgProductSizes').value),
+      ProductColors: parseList(document.getElementById('cfgProductColors').value),
+      DeliveryServices: parseList(document.getElementById('cfgDeliveryServices').value),
+      PaymentMethods: parseList(document.getElementById('cfgPaymentMethods').value)
+    };
+
+    await persistUpdatedSettings(updated);
+    closeModal('storeSettingsModal');
+    alert("✅ Store settings saved!");
+  }
+
+  async function updateUnsavedChangesBadge() {
+  try {
+    const [products, orders, customers, settings] = await Promise.all([
+      dbGetAll("products"),
+      dbGetAll("orders"),
+      dbGetAll("customers"),
+      dbGetAll("settings")
+    ]);
+
+    const unsavedProds = products.filter(p => p._syncStatus === "pending_upload").length;
+    const unsavedOrders = orders.filter(o => o._syncStatus === "pending_upload").length;
+    const unsavedCusts = customers.filter(c => c._syncStatus === "pending_upload").length;
+    const unsavedSettings = settings.filter(s => s._syncStatus === "pending_upload").length;
+
+    const totalUnsaved = unsavedProds + unsavedOrders + unsavedCusts + (unsavedSettings > 0 ? 1 : 0);
+
+    const badge = document.getElementById("syncStatus");
+    const btnUpload = document.getElementById("btnUploadSheets");
+
+    if (totalUnsaved > 0) {
+      if (badge) {
+        badge.className = "status-badge badge-unsaved";
+        badge.innerText = `⏳ ${totalUnsaved} Unsaved Changes`;
+      }
+      if (btnUpload) btnUpload.innerText = `☁️ Upload Sheets (${totalUnsaved})`;
+    } else {
+      if (badge) {
+        badge.className = "status-badge badge-synced";
+        badge.innerText = "⚡ All Synced";
+      }
+      if (btnUpload) btnUpload.innerText = "☁️ Upload Sheets";
+    }
+  } catch (e) {
+    console.warn("Could not update unsaved badge:", e);
+  }
+}
 
   async function generateNextSalesId() {
     const orders = await dbGetAll("orders");
@@ -1769,6 +2015,7 @@
   }
 
   window.addEventListener("DOMContentLoaded", async () => {
+  try {
     await initDatabase();
     await loadSettings();
     renderPosCatalog();
@@ -1777,14 +2024,17 @@
     renderCustomersTable();
     renderAnalyticsDashboard();
     updateUnsavedChangesBadge();
+  } catch (err) {
+    console.error("Boot failure:", err);
+  }
+});
 
-    document.addEventListener("click", (e) => {
-      if (!e.target.closest(".customer-suggestion-dropdown")) {
-        const popup = document.getElementById("custSuggestionsPopup");
-        if (popup) popup.style.display = "none";
-      }
-    });
-  });
+document.addEventListener("click", (e) => {
+  if (!e.target.closest(".customer-suggestion-dropdown")) {
+    const popup = document.getElementById("custSuggestionsPopup");
+    if (popup) popup.style.display = "none";
+  }
+});
 
   function switchTab(tabId) {
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -1810,43 +2060,92 @@
   }
 
   function calculatePricingEngine() {
-  const buyingYuan = parseFloat(document.getElementById('mProdBuyingYuan').value) || 0;
-  const supplierPct = parseFloat(document.getElementById('mProdSupplierPct').value) || 0;
-  const yuanRate = parseFloat(document.getElementById('mProdYuanRate').value) || (appSettings.DefaultYuanRate || 620);
-  const cargoFee = parseFloat(document.getElementById('mProdCargoFee').value) || (appSettings.DefaultCargoFee || 2500);
+    const buyingYuan = parseFloat(document.getElementById('mProdBuyingYuan').value) || 0;
+    const supplierPct = parseFloat(document.getElementById('mProdSupplierPct').value) || 0;
+    const yuanRate = parseFloat(document.getElementById('mProdYuanRate').value) || (appSettings.DefaultYuanRate || 620);
+    const cargoFee = parseFloat(document.getElementById('mProdCargoFee').value) || (appSettings.DefaultCargoFee || 2500);
 
-  // Total Capital Calculation
-  const capital = ((buyingYuan * (1 + (supplierPct / 100))) * yuanRate) + cargoFee;
-  const totalCapital = Math.round(capital);
-  
-  const regMarginPct = Number(appSettings.RegularProfitMargin || 33) / 100;
-  const wsMarginPct = Number(appSettings.WholesaleProfitMargin || 15) / 100;
+    const capital = ((buyingYuan * (1 + (supplierPct / 100))) * yuanRate) + cargoFee;
+    const totalCapital = Math.round(capital);
+    
+    const regMarginPct = Number(appSettings.RegularProfitMargin || 33) / 100;
+    const wsMarginPct = Number(appSettings.WholesaleProfitMargin || 15) / 100;
 
-  // Exact Markup Pricing
-  const normalPrice = Math.round(totalCapital * (1 + regMarginPct));
-  const rawWholesale = totalCapital * (1 + wsMarginPct);
+    const normalPrice = Math.round(totalCapital * (1 + regMarginPct));
+    const rawWholesale = totalCapital * (1 + wsMarginPct);
 
-  // Rounded Pricing (Nearest 100 MMK or 1,000 MMK depending on pricing Strategy)
-  const sellingPriceSuggested = roundUpToThousand(normalPrice);
-  const wholesaleSuggested = roundUpToThousand(rawWholesale);
+    const sellingPriceSuggested = roundUpToThousand(normalPrice);
+    const wholesaleSuggested = roundUpToThousand(rawWholesale);
 
-  // Set Output Field Values Cleanly
-  document.getElementById('mProdTotalCapital').value = totalCapital;
-  document.getElementById('mProdNormalPrice').value = normalPrice;
+    document.getElementById('mProdTotalCapital').value = totalCapital;
+    document.getElementById('mProdNormalPrice').value = normalPrice;
 
-  // Automatically update suggested selling and wholesale prices
-  const sellingInput = document.getElementById('mProdSellingPrice');
-  const wholesaleInput = document.getElementById('mProdWholesalePrice');
+    const sellingInput = document.getElementById('mProdSellingPrice');
+    const wholesaleInput = document.getElementById('mProdWholesalePrice');
 
-  if (!isEditMode || !sellingInput.value) {
-    sellingInput.value = sellingPriceSuggested;
+    if (!isEditMode || !sellingInput.value) {
+      sellingInput.value = sellingPriceSuggested;
+    }
+    if (!isEditMode || !wholesaleInput.value) {
+      wholesaleInput.value = wholesaleSuggested;
+    }
   }
-  if (!isEditMode || !wholesaleInput.value) {
-    wholesaleInput.value = wholesaleSuggested;
-  }
-}
 
-  async function openBulkMatrixModal() {
+  async function openBulkMatrixModal(preselectedItemCode = null) {
+    const products = await dbGetAll("products");
+    
+    const itemMap = new Map();
+    products.forEach(p => {
+      const code = p.ItemCode || (p.ProductID ? p.ProductID.split('-')[0] : '');
+      if (code && !itemMap.has(code)) {
+        itemMap.set(code, p.Name_MM || code);
+      }
+    });
+
+    const selectEl = document.getElementById('bmExistingItemSelect');
+    selectEl.innerHTML = '<option value="">-- Choose Existing Item --</option>' + 
+      [...itemMap.entries()].map(([code, name]) => `<option value="${code}">${code} — ${name}</option>`).join('');
+
+    if (preselectedItemCode && itemMap.has(preselectedItemCode)) {
+      document.getElementById('bmModeExisting').checked = true;
+      toggleBulkMatrixMode();
+      selectEl.value = preselectedItemCode;
+      await handleSelectExistingBulkItem(preselectedItemCode);
+    } else {
+      document.getElementById('bmModeNew').checked = true;
+      toggleBulkMatrixMode();
+      await resetBulkMatrixForNew();
+    }
+
+    document.getElementById('bulkMatrixModal').style.display = 'flex';
+  }
+
+  async function toggleBulkMatrixMode() {
+    isBulkEditMode = document.getElementById('bmModeExisting').checked;
+    const codeInput = document.getElementById('bmItemCode');
+    const selectEl = document.getElementById('bmExistingItemSelect');
+    const lbl = document.getElementById('lblBmItemCode');
+
+    if (isBulkEditMode) {
+      codeInput.style.display = 'none';
+      selectEl.style.display = 'block';
+      lbl.innerText = "Select Existing Item:";
+      if (selectEl.value) {
+        await handleSelectExistingBulkItem(selectEl.value);
+      } else {
+        bulkExistingStockMap.clear();
+        renderBulkMatrixTable();
+      }
+    } else {
+      selectEl.style.display = 'none';
+      codeInput.style.display = 'block';
+      lbl.innerText = "Base Item Code:";
+      await resetBulkMatrixForNew();
+    }
+  }
+
+  async function resetBulkMatrixForNew() {
+    bulkExistingStockMap.clear();
     const nextCode = await generateNextItemCode();
     document.getElementById('bmItemCode').value = nextCode;
     document.getElementById('bmName').value = '';
@@ -1858,7 +2157,7 @@
     if (bmType && bmType.options.length > 0) bmType.selectedIndex = 0;
 
     document.getElementById('bmBuyingYuan').value = '';
-    document.getElementById('bmSupplierPct').value = '0';
+    document.getElementById('bmSupplierPct').value = appSettings.DefaultSupplierPct ?? '0';
     document.getElementById('bmYuanRate').value = appSettings.DefaultYuanRate || '620';
     document.getElementById('bmCargoFee').value = appSettings.DefaultCargoFee || '2500';
     document.getElementById('bmTotalCapital').value = '';
@@ -1867,49 +2166,98 @@
     document.getElementById('bmWholesalePrice').value = '';
     document.getElementById('bmQuickFillQty').value = '5';
 
+    initBulkMatrixCheckboxes([], []);
+  }
+
+  function initBulkMatrixCheckboxes(checkedSizes = [], checkedColors = []) {
     const sizeBox = document.getElementById('bmSizeCheckboxGrid');
     const sizes = appSettings.ProductSizes || [];
-    sizeBox.innerHTML = sizes.map((s, idx) => `
-      <label class="matrix-checkbox-item">
-        <input type="checkbox" value="${s}" ${idx < 5 ? 'checked' : ''} onchange="renderBulkMatrixTable()">
-        <b>${s}</b>
-      </label>
-    `).join('');
+    sizeBox.innerHTML = sizes.map((s, idx) => {
+      const isChecked = checkedSizes.length > 0 ? checkedSizes.includes(String(s)) : idx < 5;
+      return `
+        <label class="matrix-checkbox-item">
+          <input type="checkbox" value="${s}" ${isChecked ? 'checked' : ''} onchange="renderBulkMatrixTable()">
+          <b>${s}</b>
+        </label>
+      `;
+    }).join('');
 
     const colorBox = document.getElementById('bmColorCheckboxGrid');
     const colors = appSettings.ProductColors || [];
-    colorBox.innerHTML = colors.map((c, idx) => `
-      <label class="matrix-checkbox-item">
-        <input type="checkbox" value="${c}" ${idx < 3 ? 'checked' : ''} onchange="renderBulkMatrixTable()">
-        <span>${c}</span>
-      </label>
-    `).join('');
+    colorBox.innerHTML = colors.map((c, idx) => {
+      const isChecked = checkedColors.length > 0 ? checkedColors.includes(c) : idx < 3;
+      return `
+        <label class="matrix-checkbox-item">
+          <input type="checkbox" value="${c}" ${isChecked ? 'checked' : ''} onchange="renderBulkMatrixTable()">
+          <span>${c}</span>
+        </label>
+      `;
+    }).join('');
 
     renderBulkMatrixTable();
-    document.getElementById('bulkMatrixModal').style.display = 'flex';
+  }
+
+  async function handleSelectExistingBulkItem(itemCode) {
+    if (!itemCode) return;
+    const products = await dbGetAll("products");
+    const variants = products.filter(p => (p.ItemCode === itemCode) || (p.ProductID && p.ProductID.startsWith(itemCode + '-')));
+
+    if (variants.length === 0) return;
+
+    const first = variants[0];
+    document.getElementById('bmName').value = first.Name_MM || '';
+    document.getElementById('bmSex').value = first.Sex || 'Unisex';
+    document.getElementById('bmType').value = first.Type || (appSettings.ProductTypes ? appSettings.ProductTypes[0] : '');
+    document.getElementById('bmLength').value = first.Length || 'တို';
+    document.getElementById('bmRemark').value = first.Remark || '';
+
+    document.getElementById('bmBuyingYuan').value = first.BuyingYuan || '';
+    document.getElementById('bmSupplierPct').value = first.SupplierPct ?? (appSettings.DefaultSupplierPct || '0');
+    document.getElementById('bmYuanRate').value = first.YuanRate || (appSettings.DefaultYuanRate || '620');
+    document.getElementById('bmCargoFee').value = first.CargoFee || (appSettings.DefaultCargoFee || '2500');
+    document.getElementById('bmTotalCapital').value = first.TotalCapital || '';
+    document.getElementById('bmNormalPrice').value = first.NormalPrice || '';
+    document.getElementById('bmSellingPrice').value = first.SellingPrice || '';
+    document.getElementById('bmWholesalePrice').value = first.WholesalePrice || '';
+
+    bulkExistingStockMap.clear();
+    const existingSizes = new Set();
+    const existingColors = new Set();
+
+    variants.forEach(v => {
+      const cleanCol = cleanColorCode(v.ColorPattern);
+      const cleanSz = String(v.Size).replace(/[^a-zA-Z0-9]/g, '');
+      const key = `${cleanCol}_${cleanSz}`;
+      bulkExistingStockMap.set(key, Number(v.Stock) || 0);
+
+      if (v.Size) existingSizes.add(String(v.Size));
+      if (v.ColorPattern) existingColors.add(v.ColorPattern);
+    });
+
+    initBulkMatrixCheckboxes([...existingSizes], [...existingColors]);
   }
 
   function calculateBulkPricingEngine() {
-  const buyingYuan = parseFloat(document.getElementById('bmBuyingYuan').value) || 0;
-  const supplierPct = parseFloat(document.getElementById('bmSupplierPct').value) || 0;
-  const yuanRate = parseFloat(document.getElementById('bmYuanRate').value) || (appSettings.DefaultYuanRate || 620);
-  const cargoFee = parseFloat(document.getElementById('bmCargoFee').value) || (appSettings.DefaultCargoFee || 2500);
+    const buyingYuan = parseFloat(document.getElementById('bmBuyingYuan').value) || 0;
+    const supplierPct = parseFloat(document.getElementById('bmSupplierPct').value) || 0;
+    const yuanRate = parseFloat(document.getElementById('bmYuanRate').value) || (appSettings.DefaultYuanRate || 620);
+    const cargoFee = parseFloat(document.getElementById('bmCargoFee').value) || (appSettings.DefaultCargoFee || 2500);
 
-  const capital = ((buyingYuan * (1 + (supplierPct / 100))) * yuanRate) + cargoFee;
-  const totalCapital = Math.round(capital);
-  
-  const regMarginPct = Number(appSettings.RegularProfitMargin || 33) / 100;
-  const wsMarginPct = Number(appSettings.WholesaleProfitMargin || 15) / 100;
+    const capital = ((buyingYuan * (1 + (supplierPct / 100))) * yuanRate) + cargoFee;
+    const totalCapital = Math.round(capital);
+    
+    const regMarginPct = Number(appSettings.RegularProfitMargin || 33) / 100;
+    const wsMarginPct = Number(appSettings.WholesaleProfitMargin || 15) / 100;
 
-  const normalPrice = Math.round(totalCapital * (1 + regMarginPct));
-  const rawWholesale = totalCapital * (1 + wsMarginPct);
+    const normalPrice = Math.round(totalCapital * (1 + regMarginPct));
+    const rawWholesale = totalCapital * (1 + wsMarginPct);
 
-  document.getElementById('bmTotalCapital').value = totalCapital;
-  document.getElementById('bmNormalPrice').value = normalPrice;
-  
-  document.getElementById('bmSellingPrice').value = roundUpToThousand(normalPrice);
-  document.getElementById('bmWholesalePrice').value = roundUpToThousand(rawWholesale);
-}
+    document.getElementById('bmTotalCapital').value = totalCapital;
+    document.getElementById('bmNormalPrice').value = normalPrice;
+    
+    document.getElementById('bmSellingPrice').value = roundUpToThousand(normalPrice);
+    document.getElementById('bmWholesalePrice').value = roundUpToThousand(rawWholesale);
+  }
 
   function getSelectedBulkSizes() {
     return Array.from(document.querySelectorAll('#bmSizeCheckboxGrid input:checked')).map(cb => cb.value);
@@ -1950,8 +2298,20 @@
         <tr>
           <td><b>${c}</b></td>
           ${selectedSizes.map(s => {
-            const cellId = `cell_${cleanColorCode(c)}_${s}`;
-            const val = currentValues[cellId] !== undefined ? currentValues[cellId] : '5';
+            const cleanCol = cleanColorCode(c);
+            const cleanSz = String(s).replace(/[^a-zA-Z0-9]/g, '');
+            const cellId = `cell_${cleanCol}_${cleanSz}`;
+            const key = `${cleanCol}_${cleanSz}`;
+
+            let val;
+            if (currentValues[cellId] !== undefined) {
+              val = currentValues[cellId];
+            } else if (isBulkEditMode) {
+              val = bulkExistingStockMap.has(key) ? bulkExistingStockMap.get(key) : 0;
+            } else {
+              val = '5';
+            }
+
             return `
               <td style="text-align:center;">
                 <input type="number" class="matrix-input-cell" 
@@ -2017,7 +2377,10 @@
   }
 
   async function submitBulkMatrixIntake() {
-    const itemCode = document.getElementById('bmItemCode').value.trim();
+    const itemCode = isBulkEditMode 
+      ? document.getElementById('bmExistingItemSelect').value 
+      : document.getElementById('bmItemCode').value.trim();
+
     const name = document.getElementById('bmName').value.trim();
     const sex = document.getElementById('bmSex').value;
     const type = document.getElementById('bmType').value;
@@ -2034,22 +2397,26 @@
     const wholesalePrice = Number(document.getElementById('bmWholesalePrice').value) || totalCapital;
 
     if (!name) return alert("Product Name is required.");
-    if (!itemCode) return alert("Base Item Code is missing.");
+    if (!itemCode) return alert("Please select or specify a Base Item Code.");
 
     const matrixInputs = Array.from(document.querySelectorAll('.matrix-input-cell'));
-    const variantsToCreate = [];
+    const variantsToUpsert = [];
     const timestamp = new Date().toISOString();
 
     for (let input of matrixInputs) {
-      const qty = parseInt(input.value, 10) || 0;
-      if (qty <= 0) continue;
+      const qty = parseInt(input.value, 10);
+      if (isNaN(qty) || qty < 0) continue;
 
       const color = input.dataset.color;
       const size = input.dataset.size;
       const cleanColor = cleanColorCode(color);
-      const sku = `${itemCode}-${String(size).replace(/[^a-zA-Z0-9]/g, '')}-${cleanColor}`;
+      const cleanSize = String(size).replace(/[^a-zA-Z0-9]/g, '');
+      const sku = `${itemCode}-${cleanSize}-${cleanColor}`;
 
-      variantsToCreate.push({
+      const exists = isBulkEditMode && bulkExistingStockMap.has(`${cleanColor}_${cleanSize}`);
+      if (qty === 0 && !exists) continue;
+
+      variantsToUpsert.push({
         ProductID: sku,
         ItemCode: itemCode,
         Name_MM: name,
@@ -2073,16 +2440,21 @@
       });
     }
 
-    if (variantsToCreate.length === 0) {
-      return alert("No stock entered! Please enter quantity (> 0) in at least one matrix cell.");
+    if (variantsToUpsert.length === 0) {
+      return alert("No stock entered! Please enter quantities in the grid.");
     }
 
     const tx = db.transaction("products", "readwrite");
     const store = tx.objectStore("products");
-    variantsToCreate.forEach(variant => store.put(variant));
+    variantsToUpsert.forEach(variant => store.put(variant));
 
-    tx.oncomplete = () => {
-      alert(`✅ Successfully created and stocked ${variantsToCreate.length} variant SKUs for "${name}"!`);
+    tx.oncomplete = async () => {
+      await persistUpdatedSettings({
+        DefaultSupplierPct: supplierPct,
+        DefaultYuanRate: yuanRate,
+        DefaultCargoFee: cargoFee
+      });
+      alert(`✅ Successfully processed ${variantsToUpsert.length} variant SKUs for "${name}"!`);
       closeModal('bulkMatrixModal');
       renderInventoryTable();
       renderPosCatalog();
@@ -2242,21 +2614,21 @@
   function setPosSex(sex, el) {
     activeSex = sex;
     document.querySelectorAll('#posSexChips .chip').forEach(c => c.classList.remove('active'));
-    el.classList.add('active');
+    if (el) el.classList.add('active');
     renderPosCatalog();
   }
 
   function setPosType(type, el) {
     activeType = type;
     document.querySelectorAll('#posTypeChips .chip').forEach(c => c.classList.remove('active'));
-    el.classList.add('active');
+    if (el) el.classList.add('active');
     renderPosCatalog();
   }
 
   function setPosSize(size, el) {
     activeSize = size;
     document.querySelectorAll('#posSizeChips .chip').forEach(c => c.classList.remove('active'));
-    el.classList.add('active');
+    if (el) el.classList.add('active');
     renderPosCatalog();
   }
 
@@ -2276,8 +2648,9 @@
 
   async function renderPosCatalog() {
     const products = await dbGetAll("products");
-    const query = (document.getElementById('posSearchInput').value || '').toLowerCase().trim();
+    const query = (document.getElementById('posSearchInput')?.value || '').toLowerCase().trim();
     const container = document.getElementById('posProductGrid');
+    if (!container) return;
 
     const filtered = products.filter(p => {
       const matchSex = activeSex === "All" || p.Sex === activeSex;
@@ -2581,7 +2954,6 @@
     const disc = calculateDiscountBreakdown(subtotal);
     const timestamp = new Date().toISOString();
     const salesId = await generateNextSalesId();
-    
     const customerId = boundId || await generateNextCustomerId();
 
     const orderPayload = {
@@ -2612,24 +2984,33 @@
     const prodStore = tx.objectStore("products");
     const custStore = tx.objectStore("customers");
 
-    for (let item of currentCart) {
-      const pReq = prodStore.get(item.ProductID);
-      pReq.onsuccess = () => {
-        const prod = pReq.result;
-        if (prod) {
-          prod.Stock = Math.max(0, (Number(prod.Stock) || 0) - item.Quantity);
-          prod.LastModified = timestamp;
-          prod._syncStatus = "pending_upload";
-          prodStore.put(prod);
-        }
-      };
-    }
-
+    // 1. Write the order record
     orderStore.put(orderPayload);
 
+    // 2. Safely deduct inventory for every cart item
+    if (status !== "Cancelled") {
+      currentCart.forEach(item => {
+        const pReq = prodStore.get(item.ProductID);
+        pReq.onsuccess = (e) => {
+          const prod = e.target.result;
+          if (prod) {
+            const currentStock = Number(prod.Stock) || 0;
+            prod.Stock = Math.max(0, currentStock - Number(item.Quantity));
+            prod.LastModified = timestamp;
+            prod._syncStatus = "pending_upload";
+            prodStore.put(prod);
+          } else {
+            console.warn(`Product SKU not found in local DB: ${item.ProductID}`);
+          }
+        };
+        pReq.onerror = (err) => console.error("Stock deduction read error:", err);
+      });
+    }
+
+    // 3. Upsert Customer Record
     const cReq = custStore.get(customerId);
-    cReq.onsuccess = () => {
-      const existing = cReq.result;
+    cReq.onsuccess = (e) => {
+      const existing = e.target.result;
       if (existing) {
         existing.FullName = name;
         existing.Phone = phone || existing.Phone || "";
@@ -2676,23 +3057,33 @@
     };
 
     tx.onerror = (e) => alert("Transaction failed: " + e.target.error);
-  }
+  } 
 
   async function renderInventoryTable() {
     const products = await dbGetAll("products");
     const query = (document.getElementById('invSearchInput')?.value || '').toLowerCase().trim();
     const showOutOfStock = document.getElementById('invShowOutOfStock')?.checked || false;
     const tbody = document.getElementById('inventoryTableBody');
+    if (!tbody) return;
 
     const filtered = products.filter(p => {
       const isAvailable = (Number(p.Stock) || 0) > 0;
       const matchStock = showOutOfStock ? true : isAvailable;
+      
+      const matchSex = activeInvSex === "All" || p.Sex === activeInvSex;
+      const matchType = activeInvType === "All" || p.Type === activeInvType;
+      const matchSize = activeInvSize === "All" || String(p.Size) === activeInvSize;
+
       const str = `${p.ProductID} ${p.Name_MM} ${p.Type} ${p.Sex} ${p.Length} ${p.Size} ${p.ColorPattern} ${p.Remark || ''}`.toLowerCase();
-      return matchStock && (!query || str.includes(query));
+      const matchQuery = !query || str.includes(query);
+
+      return matchStock && matchSex && matchType && matchSize && matchQuery;
     });
 
     if (filtered.length === 0) {
-      const msg = showOutOfStock ? "No product SKUs found." : "No in-stock product SKUs found (Check 'Show Out of Stock' to view all).";
+      const msg = showOutOfStock 
+        ? "No product SKUs found matching your filters." 
+        : "No in-stock product SKUs found (Check 'Show Out of Stock' or adjust filters).";
       tbody.innerHTML = `<tr><td colspan="13" style="text-align: center; color:#888;">${msg}</td></tr>`;
       return;
     }
@@ -2719,6 +3110,7 @@
             <button class="cart-qty-btn" onclick="adjustProductStock('${p.ProductID}', -1)">-</button>
             <span style="font-weight:bold; padding: 0 6px; font-size:12px;">${stock}</span>
             <button class="cart-qty-btn" onclick="adjustProductStock('${p.ProductID}', 1)">+</button>
+            <button class="btn btn-secondary btn-sm" style="margin-left: 4px; padding: 2px 5px; font-size: 10px;" onclick="openBulkMatrixModal('${p.ItemCode || p.ProductID.split('-')[0]}')" title="Open full color/size matrix for this item">📦</button>
           </td>
           <td><span class="status-badge ${badgeClass}">${stock} left</span></td>
         </tr>
@@ -2753,6 +3145,7 @@
     const orders = await dbGetAll("orders");
     const query = (document.getElementById('orderSearchInput')?.value || '').toLowerCase().trim();
     const tbody = document.getElementById('ordersTableBody');
+    if (!tbody) return;
 
     orders.sort((a, b) => new Date(b.Date) - new Date(a.Date));
 
@@ -2767,7 +3160,7 @@
     }
 
     const deliveryServices = appSettings.DeliveryServices || ["Royal", "Wepots", "Ninja Van", "Safe", "Self"];
-    const standardPaidStatuses = appSettings.PaidStatuses || ["Paid", "Unpaid"];;
+    const standardPaidStatuses = appSettings.PaidStatuses || ["Paid", "Unpaid"];
 
     tbody.innerHTML = filtered.map(o => {
       const items = Array.isArray(o.ItemList) ? o.ItemList : [];
@@ -2775,7 +3168,6 @@
       const dateStr = new Date(o.Date).toLocaleDateString();
       const discountText = o.DiscountAmount > 0 ? `<span style="color:#2e7d32; font-weight:bold;">-${Number(o.DiscountAmount).toLocaleString()}</span>` : '-';
       
-      // Dynamic Courier Handling
       const currentCourier = o.DeliveryName || 'Not assigned';
       let courierList = [...deliveryServices];
       if (currentCourier && !courierList.includes(currentCourier)) {
@@ -2785,7 +3177,6 @@
         `<option value="${d}" ${d === currentCourier ? 'selected' : ''}>${d}</option>`
       ).join('');
 
-      // Dynamic Paid Status Handling
       const currentPaidStatus = o.PaidStatus || 'Unpaid';
       let paidStatusList = [...standardPaidStatuses];
       if (currentPaidStatus && !paidStatusList.includes(currentPaidStatus)) {
@@ -2851,16 +3242,16 @@
   }
 
   async function quickUpdateOrderCourier(salesId, newCourier) {
-  const orders = await dbGetAll("orders");
-  const o = orders.find(x => x.SalesID === salesId);
-  if (!o) return;
+    const orders = await dbGetAll("orders");
+    const o = orders.find(x => x.SalesID === salesId);
+    if (!o) return;
 
-  o.DeliveryName = newCourier;
-  o.LastModified = new Date().toISOString();
-  o._syncStatus = "pending_upload";
-  await dbPut("orders", o);
-  renderOrdersTable();
-}
+    o.DeliveryName = newCourier;
+    o.LastModified = new Date().toISOString();
+    o._syncStatus = "pending_upload";
+    await dbPut("orders", o);
+    renderOrdersTable();
+  }
 
   async function quickUpdateOrderStatus(salesId, newStatus) {
     const orders = await dbGetAll("orders");
@@ -2935,11 +3326,11 @@
           <td style="font-size:11px; max-width: 220px;">${latestSummary}</td>
           <td><span style="font-size:11px; color:#555;">${c.Remark || '-'}</span></td>
           <td style="width: 80px; padding: 4px 6px;" onclick="event.stopPropagation();">
-          <div class="action-btn-group">
-            <button class="btn btn-warning btn-sm" onclick="openCustomerModal('${c.CustomerID}')">✏️ Edit</button>
-            <button class="btn btn-primary btn-sm" onclick="startPosForCustomerDirectly('${c.CustomerID}')">🛒 Sale</button>
-          </div>
-        </td>
+            <div class="action-btn-group">
+              <button class="btn btn-warning btn-sm" onclick="openCustomerModal('${c.CustomerID}')">✏️ Edit</button>
+              <button class="btn btn-primary btn-sm" onclick="startPosForCustomerDirectly('${c.CustomerID}')">🛒 Sale</button>
+            </div>
+          </td>
         </tr>
       `;
     }).join('');
@@ -3064,7 +3455,6 @@
     document.getElementById('eoCustName').value = o.CustomerName || '';
     document.getElementById('eoPhone').value = o.Phone || '';
 
-    // Dynamic Courier Handling for Edit Modal
     const eoDelivery = document.getElementById('eoDeliveryName');
     const deliveryVal = o.DeliveryName || (appSettings.DeliveryServices ? appSettings.DeliveryServices[0] : 'Royal');
     if (![...eoDelivery.options].some(opt => opt.value === deliveryVal)) {
@@ -3076,7 +3466,6 @@
     document.getElementById('eoAddress').value = o.DeliveryAddress || '';
     document.getElementById('eoPaymentType').value = o.PaymentType || 'KPay';
 
-    // Dynamic Paid Status Handling for Edit Modal
     const eoPaid = document.getElementById('eoPaidStatus');
     const defaultPaidStatus = (appSettings.PaidStatuses && appSettings.PaidStatuses.length > 0) ? appSettings.PaidStatuses[0] : 'paid';
     const paidVal = o.PaidStatus || defaultPaidStatus;
@@ -3325,6 +3714,8 @@
     const netTotal = Math.max(0, subtotal - discountAmount);
 
     const oldStatus = editingOrderOriginal.Status;
+    const timestamp = new Date().toISOString();
+
     const updatedOrder = {
       ...editingOrderOriginal,
       CustomerID: custId || editingOrderOriginal.CustomerID,
@@ -3343,7 +3734,7 @@
       DiscountAmount: discountAmount,
       DiscountLabel: label,
       TotalAmount: netTotal,
-      LastModified: new Date().toISOString(),
+      LastModified: timestamp,
       _syncStatus: "pending_upload"
     };
 
@@ -3352,40 +3743,55 @@
     const prodStore = tx.objectStore("products");
     const custStore = tx.objectStore("customers");
 
-    const originalItemMap = new Map();
-    (editingOrderOriginal.ItemList || []).forEach(i => originalItemMap.set(i.ProductID, i.Quantity));
+    if (oldStatus !== "Cancelled" && newStatus !== "Cancelled") {
+      const oldQtyMap = new Map((editingOrderOriginal.ItemList || []).map(i => [i.ProductID, Number(i.Quantity) || 0]));
+      const newQtyMap = new Map(editingOrderItems.map(i => [i.ProductID, Number(i.Quantity) || 0]));
+      const allProdIds = new Set([...oldQtyMap.keys(), ...newQtyMap.keys()]);
 
-    const newItemMap = new Map();
-    editingOrderItems.forEach(i => newItemMap.set(i.ProductID, i.Quantity));
+      for (let pid of allProdIds) {
+        const oldQ = oldQtyMap.get(pid) || 0;
+        const newQ = newQtyMap.get(pid) || 0;
+        const diff = newQ - oldQ;
 
-    const allProductIds = new Set([...originalItemMap.keys(), ...newItemMap.keys()]);
-
-    for (let pid of allProductIds) {
-      const oldQty = originalItemMap.get(pid) || 0;
-      const newQty = newItemMap.get(pid) || 0;
-      const deltaStock = oldQty - newQty;
-
-      const pReq = prodStore.get(pid);
-      pReq.onsuccess = () => {
-        const prod = pReq.result;
-        if (prod) {
-          let currentStock = Number(prod.Stock) || 0;
-
-          if (newStatus === "Cancelled" && oldStatus !== "Cancelled") {
-            prod.Stock = currentStock + oldQty;
-          } else if (newStatus !== "Cancelled" && oldStatus === "Cancelled") {
-            prod.Stock = Math.max(0, currentStock - newQty);
-          } else if (newStatus !== "Cancelled" && oldStatus !== "Cancelled") {
-            if (deltaStock !== 0) {
-              prod.Stock = Math.max(0, currentStock + deltaStock);
+        if (diff !== 0) {
+          const pReq = prodStore.get(pid);
+          pReq.onsuccess = (e) => {
+            const prod = e.target.result;
+            if (prod) {
+              prod.Stock = Math.max(0, (Number(prod.Stock) || 0) - diff);
+              prod.LastModified = timestamp;
+              prod._syncStatus = "pending_upload";
+              prodStore.put(prod);
             }
-          }
-
-          prod.LastModified = new Date().toISOString();
-          prod._syncStatus = "pending_upload";
-          prodStore.put(prod);
+          };
         }
-      };
+      }
+    } else if (oldStatus === "Cancelled" && newStatus !== "Cancelled") {
+      for (let item of editingOrderItems) {
+        const pReq = prodStore.get(item.ProductID);
+        pReq.onsuccess = (e) => {
+          const prod = e.target.result;
+          if (prod) {
+            prod.Stock = Math.max(0, (Number(prod.Stock) || 0) - Number(item.Quantity));
+            prod.LastModified = timestamp;
+            prod._syncStatus = "pending_upload";
+            prodStore.put(prod);
+          }
+        };
+      }
+    } else if (oldStatus !== "Cancelled" && newStatus === "Cancelled") {
+      for (let item of (editingOrderOriginal.ItemList || [])) {
+        const pReq = prodStore.get(item.ProductID);
+        pReq.onsuccess = (e) => {
+          const prod = e.target.result;
+          if (prod) {
+            prod.Stock = (Number(prod.Stock) || 0) + Number(item.Quantity);
+            prod.LastModified = timestamp;
+            prod._syncStatus = "pending_upload";
+            prodStore.put(prod);
+          }
+        };
+      }
     }
 
     orderStore.put(updatedOrder);
@@ -3393,21 +3799,21 @@
     const targetCustId = custId || editingOrderOriginal.CustomerID;
     if (targetCustId) {
       const cReq = custStore.get(targetCustId);
-      cReq.onsuccess = () => {
-        const cust = cReq.result;
-        if (cust) {
-          cust.FullName = name;
-          if (phone) cust.Phone = phone;
-          if (township) cust.TownshipCity = township;
-          if (address) cust.DefaultAddress = address;
-          cust._syncStatus = "pending_upload";
-          custStore.put(cust);
+      cReq.onsuccess = (e) => {
+        const existing = e.target.result;
+        if (existing) {
+          existing.FullName = name;
+          if (phone) existing.Phone = phone;
+          if (address) existing.DefaultAddress = address;
+          if (township) existing.TownshipCity = township;
+          existing.LastOrderDate = timestamp;
+          existing._syncStatus = "pending_upload";
+          custStore.put(existing);
         }
       };
     }
 
     tx.oncomplete = () => {
-      alert(`✅ Order ${salesId} updated successfully!`);
       closeModal('editOrderModal');
       renderOrdersTable();
       renderInventoryTable();
@@ -3415,9 +3821,10 @@
       renderCustomersTable();
       renderAnalyticsDashboard();
       updateUnsavedChangesBadge();
+      alert("✅ Order updated successfully!");
     };
 
-    tx.onerror = (e) => alert("Failed to update order: " + e.target.error);
+    tx.onerror = (e) => alert("Transaction failed: " + e.target.error);
   }
 
   async function refundOrderStock(items) {
@@ -3486,7 +3893,7 @@
     document.getElementById('mProdStock').value = '5';
 
     document.getElementById('mProdBuyingYuan').value = '';
-    document.getElementById('mProdSupplierPct').value = '0';
+    document.getElementById('mProdSupplierPct').value = appSettings.DefaultSupplierPct ?? '0';
     document.getElementById('mProdYuanRate').value = appSettings.DefaultYuanRate || '620';
     document.getElementById('mProdCargoFee').value = appSettings.DefaultCargoFee || '2500';
     document.getElementById('mProdTotalCapital').value = '';
@@ -3625,6 +4032,11 @@
     };
 
     await dbPut("products", productRecord);
+    await persistUpdatedSettings({
+      DefaultSupplierPct: supplierPct,
+      DefaultYuanRate: yuanRate,
+      DefaultCargoFee: cargoFee
+    });
     closeModal('productModal');
     renderInventoryTable();
     renderPosCatalog();
@@ -3764,7 +4176,7 @@
     }
   }
 
-  function printReceipt() {
+    function printReceipt() {
     if (!lastSavedOrder) return alert("Please complete a sale first.");
     renderReceiptSlip(lastSavedOrder);
   }
@@ -3816,135 +4228,137 @@
   }
 
   function openGasConfigModal() {
-  const url = localStorage.getItem("gas_endpoint_url") || "";
-  document.getElementById("gasEndpointInput").value = url;
-  document.getElementById("gasConfigStatus").innerText = "";
-  document.getElementById("gasConfigModal").style.display = "flex";
-}
-
-function getGasEndpointUrl() {
-  return localStorage.getItem("gas_endpoint_url") || "";
-}
-
-function saveGasEndpointUrl() {
-  const url = document.getElementById("gasEndpointInput").value.trim();
-  localStorage.setItem("gas_endpoint_url", url);
-  document.getElementById("gasConfigStatus").innerHTML = "<span style='color:green;'>✅ Saved to local storage!</span>";
-}
-
-async function testGasEndpointConnection() {
-  const url = document.getElementById("gasEndpointInput").value.trim();
-  const status = document.getElementById("gasConfigStatus");
-  if (!url) {
-    status.innerHTML = "<span style='color:red;'>⚠️ Please enter a URL first.</span>";
-    return;
+    const url = localStorage.getItem("gas_endpoint_url") || "";
+    document.getElementById("gasEndpointInput").value = url;
+    document.getElementById("gasConfigStatus").innerText = "";
+    document.getElementById("gasConfigModal").style.display = "flex";
   }
-  status.innerHTML = "⏳ Testing connection...";
-  try {
-    const res = await fetch(url);
-    const data = await res.json();
-    if (data.status === "success") {
-      status.innerHTML = "<span style='color:green;'>✅ Connection successful!</span>";
-    } else {
-      status.innerHTML = `<span style='color:orange;'>⚠️ Response: ${data.message || 'Unknown response'}</span>`;
+
+  function getGasEndpointUrl() {
+    return localStorage.getItem("gas_endpoint_url") || "";
+  }
+
+  function saveGasEndpointUrl() {
+    const url = document.getElementById("gasEndpointInput").value.trim();
+    localStorage.setItem("gas_endpoint_url", url);
+    document.getElementById("gasConfigStatus").innerHTML = "<span style='color:green;'>✅ Saved to local storage!</span>";
+  }
+
+  async function testGasEndpointConnection() {
+    const url = document.getElementById("gasEndpointInput").value.trim();
+    const status = document.getElementById("gasConfigStatus");
+    if (!url) {
+      status.innerHTML = "<span style='color:red;'>⚠️ Please enter a URL first.</span>";
+      return;
     }
-  } catch (err) {
-    status.innerHTML = `<span style='color:red;'>❌ Connection failed: ${err.message}</span>`;
+    status.innerHTML = "⏳ Testing connection...";
+    try {
+      const res = await fetch(url);
+      const data = await res.json();
+      if (data.status === "success") {
+        status.innerHTML = "<span style='color:green;'>✅ Connection successful!</span>";
+      } else {
+        status.innerHTML = `<span style='color:orange;'>⚠️ Response: ${data.message || 'Unknown response'}</span>`;
+      }
+    } catch (err) {
+      status.innerHTML = `<span style='color:red;'>❌ Connection failed: ${err.message}</span>`;
+    }
   }
-}
 
   async function downloadFromGoogleSheets() {
-  const gasUrl = getGasEndpointUrl();
-  if (!gasUrl) {
-    alert("⚠️ Web App URL is missing. Please click '⚙️ Cloud URL' to configure your Google Apps Script endpoint.");
-    openGasConfigModal();
-    return;
-  }
-
-  const [localProds, localOrders, localCusts] = await Promise.all([
-    dbGetAll("products"),
-    dbGetAll("orders"),
-    dbGetAll("customers")
-  ]);
-
-  const totalUnsaved = localProds.filter(p => p._syncStatus === "pending_upload").length +
-                       localOrders.filter(o => o._syncStatus === "pending_upload").length +
-                       localCusts.filter(c => c._syncStatus === "pending_upload").length;
-
-  if (totalUnsaved > 0) {
-    const confirmDownload = confirm(
-      `⚠️ WARNING: You have ${totalUnsaved} unsaved local record(s) pending upload.\n\n` +
-      `Downloading will merge cloud records without wiping your unsaved sales. Proceed?`
-    );
-    if (!confirmDownload) return;
-  }
-
-  const status = document.getElementById('syncStatus');
-  status.className = "status-badge badge-unsaved";
-  status.innerText = "⏳ Merging Sheets...";
-
-  try {
-    const response = await fetch(gasUrl, { method: "GET" });
-    const res = await response.json();
-
-    if (res.status !== "success") throw new Error(res.message || "Failed to pull data");
-
-    const { products, orders, customers, settings } = res.data;
-
-    await smartMergeCollection("products", "ProductID", products || []);
-
-    const normalizedOrders = (orders || []).map(o => {
-      if (typeof o.ItemList === "string") {
-        try { o.ItemList = JSON.parse(o.ItemList); } catch(e) { o.ItemList = []; }
-      }
-      return o;
-    });
-    await smartMergeCollection("orders", "SalesID", normalizedOrders);
-
-    let legacyCounter = 1;
-    const normalizedCustomers = (customers || []).map(c => {
-      let custId = c.CustomerID;
-      if (!custId) {
-        custId = "C" + String(legacyCounter).padStart(6, "0");
-        legacyCounter++;
-      }
-      return {
-        ...c,
-        CustomerID: custId,
-        FullName: c.FullName || "Customer",
-        Phone: c.Phone ? String(c.Phone).trim() : "",
-        DefaultAddress: c.DefaultAddress || "",
-        TownshipCity: c.TownshipCity || "",
-        Remark: c.Remark || "",
-        LastOrderDate: c.LastOrderDate || new Date().toISOString()
-      };
-    });
-    await smartMergeCollection("customers", "CustomerID", normalizedCustomers);
-
-    if (settings && typeof settings === "object") {
-      const tx = db.transaction("settings", "readwrite");
-      const sStore = tx.objectStore("settings");
-      Object.keys(settings).forEach(k => {
-        appSettings[k] = settings[k];
-        sStore.put({ key: k, value: settings[k] });
-      });
-      await new Promise(r => { tx.oncomplete = r; });
-      applyDynamicSettingsToUI();
+    const gasUrl = getGasEndpointUrl();
+    if (!gasUrl) {
+      alert("⚠️ Web App URL is missing. Please configure your Google Apps Script endpoint in Settings.");
+      openGasConfigModal();
+      return;
     }
 
-    renderPosCatalog();
-    renderInventoryTable();
-    renderOrdersTable();
-    renderCustomersTable();
-    renderAnalyticsDashboard();
-    await updateUnsavedChangesBadge();
+    const [localProds, localOrders, localCusts] = await Promise.all([
+      dbGetAll("products"),
+      dbGetAll("orders"),
+      dbGetAll("customers")
+    ]);
 
-    alert("✅ Cloud data & Settings merged successfully!");
-  } catch (err) {
-    alert("Download Error: " + err.message);
-    await updateUnsavedChangesBadge();
+    const totalUnsaved = localProds.filter(p => p._syncStatus === "pending_upload").length +
+                         localOrders.filter(o => o._syncStatus === "pending_upload").length +
+                         localCusts.filter(c => c._syncStatus === "pending_upload").length;
+
+    if (totalUnsaved > 0) {
+      const confirmDownload = confirm(
+        `⚠️ WARNING: You have ${totalUnsaved} unsaved local record(s) pending upload.\n\n` +
+        `Downloading will merge cloud records without wiping your unsaved sales. Proceed?`
+      );
+      if (!confirmDownload) return;
+    }
+
+    const status = document.getElementById('syncStatus');
+    if (status) {
+      status.className = "status-badge badge-unsaved";
+      status.innerText = "⏳ Merging Sheets...";
+    }
+
+    try {
+      const response = await fetch(gasUrl, { method: "GET" });
+      const res = await response.json();
+
+      if (res.status !== "success") throw new Error(res.message || "Failed to pull data");
+
+      const { products, orders, customers, settings } = res.data;
+
+      await smartMergeCollection("products", "ProductID", products || []);
+
+      const normalizedOrders = (orders || []).map(o => {
+        if (typeof o.ItemList === "string") {
+          try { o.ItemList = JSON.parse(o.ItemList); } catch(e) { o.ItemList = []; }
+        }
+        return o;
+      });
+      await smartMergeCollection("orders", "SalesID", normalizedOrders);
+
+      let legacyCounter = 1;
+      const normalizedCustomers = (customers || []).map(c => {
+        let custId = c.CustomerID;
+        if (!custId) {
+          custId = "C" + String(legacyCounter).padStart(6, "0");
+          legacyCounter++;
+        }
+        return {
+          ...c,
+          CustomerID: custId,
+          FullName: c.FullName || "Customer",
+          Phone: c.Phone ? String(c.Phone).trim() : "",
+          DefaultAddress: c.DefaultAddress || "",
+          TownshipCity: c.TownshipCity || "",
+          Remark: c.Remark || "",
+          LastOrderDate: c.LastOrderDate || new Date().toISOString()
+        };
+      });
+      await smartMergeCollection("customers", "CustomerID", normalizedCustomers);
+
+      if (settings && typeof settings === "object") {
+        const tx = db.transaction("settings", "readwrite");
+        const sStore = tx.objectStore("settings");
+        Object.keys(settings).forEach(k => {
+          appSettings[k] = settings[k];
+          sStore.put({ key: k, value: settings[k] });
+        });
+        await new Promise(r => { tx.oncomplete = r; });
+        applyDynamicSettingsToUI();
+      }
+
+      renderPosCatalog();
+      renderInventoryTable();
+      renderOrdersTable();
+      renderCustomersTable();
+      renderAnalyticsDashboard();
+      await updateUnsavedChangesBadge();
+
+      alert("✅ Cloud data & Settings merged successfully!");
+    } catch (err) {
+      alert("Download Error: " + err.message);
+      await updateUnsavedChangesBadge();
+    }
   }
-}
 
   async function smartMergeCollection(storeName, keyField, cloudItems) {
     const localItems = await dbGetAll(storeName);
@@ -3973,56 +4387,59 @@ async function testGasEndpointConnection() {
   }
 
   async function uploadToGoogleSheets() {
-  const gasUrl = getGasEndpointUrl();
-  if (!gasUrl) {
-    alert("⚠️ Web App URL is missing. Please click '⚙️ Cloud URL' to configure your Google Apps Script endpoint.");
-    openGasConfigModal();
-    return;
-  }
+    const gasUrl = getGasEndpointUrl();
+    if (!gasUrl) {
+      alert("⚠️ Web App URL is missing. Please configure your Google Apps Script endpoint in Settings.");
+      openGasConfigModal();
+      return;
+    }
 
-  if (!confirm("This will backup local records into Google Sheets. Continue?")) return;
-  const status = document.getElementById('syncStatus');
-  status.className = "status-badge badge-unsaved";
-  status.innerText = "⏳ Uploading...";
+    if (!confirm("This will backup local records into Google Sheets. Continue?")) return;
+    const status = document.getElementById('syncStatus');
+    if (status) {
+      status.className = "status-badge badge-unsaved";
+      status.innerText = "⏳ Uploading...";
+    }
 
-  try {
-    const [products, orders, customers] = await Promise.all([
-      dbGetAll("products"),
-      dbGetAll("orders"),
-      dbGetAll("customers")
-    ]);
+    try {
+      const [products, orders, customers] = await Promise.all([
+        dbGetAll("products"),
+        dbGetAll("orders"),
+        dbGetAll("customers")
+      ]);
 
-    const payload = {
-      products: products.map(cleanRecordForSync),
-      orders: orders.map(cleanRecordForSync),
-      customers: customers.map(cleanRecordForSync)
-    };
+      const payload = {
+        products: products.map(cleanRecordForSync),
+        orders: orders.map(cleanRecordForSync),
+        customers: customers.map(cleanRecordForSync),
+        settings: appSettings
+      };
 
-    const response = await fetch(gasUrl, {
-      method: "POST",
-      headers: { "Content-Type": "text/plain;charset=utf-8" },
-      body: JSON.stringify(payload)
-    });
+      const response = await fetch(gasUrl, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify(payload)
+      });
 
-    const res = await response.json();
-    if (res.status !== "success") throw new Error(res.message || "Failed to push data");
+      const res = await response.json();
+      if (res.status !== "success") throw new Error(res.message || "Failed to push data");
 
-    await markAllAsSynced("products", products);
-    await markAllAsSynced("orders", orders);
-    await markAllAsSynced("customers", customers);
+      await markAllAsSynced("products", products);
+      await markAllAsSynced("orders", orders);
+      await markAllAsSynced("customers", customers);
 
-    await updateUnsavedChangesBadge();
-    alert("✅ Google Sheets backup updated successfully!");
-  } catch (err) {
-    alert("Upload Error: " + err.message);
-    await updateUnsavedChangesBadge();
-  }
-}
+      const sTx = db.transaction("settings", "readwrite");
+      const sStore = sTx.objectStore("settings");
+      for (let [k, v] of Object.entries(appSettings)) {
+        sStore.put({ key: k, value: v });
+      }
 
-  function cleanRecordForSync(record) {
-    const copy = { ...record };
-    delete copy._syncStatus;
-    return copy;
+      await updateUnsavedChangesBadge();
+      alert("✅ Google Sheets backup updated successfully!");
+    } catch (err) {
+      alert("Upload Error: " + err.message);
+      await updateUnsavedChangesBadge();
+    }
   }
 
   async function markAllAsSynced(storeName, items) {
@@ -4037,89 +4454,10 @@ async function testGasEndpointConnection() {
     });
   }
 
-  async function exportLocalJsonBackup() {
-    try {
-      const [products, orders, customers, settings] = await Promise.all([
-        dbGetAll("products"),
-        dbGetAll("orders"),
-        dbGetAll("customers"),
-        dbGetAll("settings")
-      ]);
-
-      const backupData = {
-        version: "5.3",
-        exportDate: new Date().toISOString(),
-        products,
-        orders,
-        customers,
-        settings
-      };
-
-      const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: "application/json" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `BabyStore_Backup_${new Date().toISOString().slice(0, 10)}.json`;
-      a.click();
-      URL.revokeObjectURL(url);
-    } catch (err) {
-      alert("Export Backup Failed: " + err.message);
-    }
-  }
-
-  function importLocalJsonBackup(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = async (e) => {
-      try {
-        const data = JSON.parse(e.target.result);
-        if (!data.products || !data.orders || !data.customers) {
-          throw new Error("Invalid backup file structure.");
-        }
-
-        if (!confirm("Restore database from this JSON file? Pending un-synced items will be replaced.")) return;
-
-        await dbReplaceAll("products", data.products);
-        await dbReplaceAll("orders", data.orders);
-        await dbReplaceAll("customers", data.customers);
-        if (data.settings) await dbReplaceAll("settings", data.settings);
-
-        await loadSettings();
-        renderPosCatalog();
-        renderInventoryTable();
-        renderOrdersTable();
-        renderCustomersTable();
-        renderAnalyticsDashboard();
-        await updateUnsavedChangesBadge();
-
-        alert("✅ Database restored successfully from JSON backup file!");
-      } catch (err) {
-        alert("Restore Failed: " + err.message);
-      } finally {
-        event.target.value = "";
-      }
-    };
-    reader.readAsText(file);
-  }
-
-  function dbReplaceAll(storeName, items) {
-    return new Promise((resolve, reject) => {
-      const tx = db.transaction(storeName, "readwrite");
-      const store = tx.objectStore(storeName);
-      store.clear().onsuccess = () => {
-        for (let item of items) store.put(item);
-      };
-      tx.oncomplete = () => resolve(true);
-      tx.onerror = () => reject(tx.error);
-    });
-  }
-
   function setAnalyticsPeriod(period, el) {
     activeAnalyticsPeriod = period;
     document.querySelectorAll('#analyticsPeriodChips .chip').forEach(c => c.classList.remove('active'));
-    el.classList.add('active');
+    if (el) el.classList.add('active');
 
     const customDateBox = document.getElementById('analyticsCustomDateInputs');
     if (period === 'custom') {
@@ -4159,8 +4497,8 @@ async function testGasEndpointConnection() {
         thirtyDaysAgo.setDate(now.getDate() - 30);
         return orderDate >= thirtyDaysAgo;
       } else if (activeAnalyticsPeriod === 'custom') {
-        const start = document.getElementById('analyticsStartDate').value;
-        const end = document.getElementById('analyticsEndDate').value;
+        const start = document.getElementById('analyticsStartDate')?.value;
+        const end = document.getElementById('analyticsEndDate')?.value;
         if (start && orderDateStr < start) return false;
         if (end && orderDateStr > end) return false;
         return true;
@@ -4220,14 +4558,29 @@ async function testGasEndpointConnection() {
       totalShelfUnits += stock;
     });
 
-    document.getElementById('anTotalRevenue').innerText = `${totalRevenue.toLocaleString()} MMK`;
-    document.getElementById('anOrderCount').innerText = `${validOrders.length} valid sales completed`;
-    document.getElementById('anGrossProfit').innerText = `${grossProfit.toLocaleString()} MMK`;
-    document.getElementById('anProfitMargin').innerText = `Profit Margin: ${profitMargin}%`;
-    document.getElementById('anItemsSold').innerText = `${totalItemsSold} Units`;
-    document.getElementById('anAvgOrderVal').innerText = `Avg Order: ${aov.toLocaleString()} MMK`;
-    document.getElementById('anShelfValuation').innerText = `${shelfValuation.toLocaleString()} MMK`;
-    document.getElementById('anTotalShelfUnits').innerText = `${totalShelfUnits} units in stock`;
+    const elTotalRev = document.getElementById('anTotalRevenue');
+    if (elTotalRev) elTotalRev.innerText = `${totalRevenue.toLocaleString()} MMK`;
+    
+    const elOrderCount = document.getElementById('anOrderCount');
+    if (elOrderCount) elOrderCount.innerText = `${validOrders.length} valid sales completed`;
+    
+    const elGrossProfit = document.getElementById('anGrossProfit');
+    if (elGrossProfit) elGrossProfit.innerText = `${grossProfit.toLocaleString()} MMK`;
+    
+    const elProfitMargin = document.getElementById('anProfitMargin');
+    if (elProfitMargin) elProfitMargin.innerText = `Profit Margin: ${profitMargin}%`;
+    
+    const elItemsSold = document.getElementById('anItemsSold');
+    if (elItemsSold) elItemsSold.innerText = `${totalItemsSold} Units`;
+    
+    const elAvgOrder = document.getElementById('anAvgOrderVal');
+    if (elAvgOrder) elAvgOrder.innerText = `Avg Order: ${aov.toLocaleString()} MMK`;
+    
+    const elShelfVal = document.getElementById('anShelfValuation');
+    if (elShelfVal) elShelfVal.innerText = `${shelfValuation.toLocaleString()} MMK`;
+    
+    const elShelfUnits = document.getElementById('anTotalShelfUnits');
+    if (elShelfUnits) elShelfUnits.innerText = `${totalShelfUnits} units in stock`;
 
     renderMetricBars('anCategoryBarsContainer', categoryCountMap, totalItemsSold, 'Units');
     renderMetricBars('anSizeBarsContainer', sizeCountMap, totalItemsSold, 'Units');
@@ -4236,17 +4589,19 @@ async function testGasEndpointConnection() {
     const sortedVariants = [...variantSalesMap.values()].sort((a, b) => b.qty - a.qty).slice(0, 5);
     const topBody = document.getElementById('anTopProductsBody');
 
-    if (sortedVariants.length === 0) {
-      topBody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#888; padding: 12px;">No item sales in this period.</td></tr>`;
-    } else {
-      topBody.innerHTML = sortedVariants.map((v, idx) => `
-        <tr>
-          <td><b style="color:var(--primary);">#${idx + 1}</b></td>
-          <td><b>${v.name}</b><br><span style="font-size:10px; color:#666;">Size: ${v.size} | ${v.color}</span></td>
-          <td style="text-align:center; font-weight:bold;">${v.qty}</td>
-          <td style="text-align:right; font-weight:bold;">${v.revenue.toLocaleString()} MMK</td>
-        </tr>
-      `).join('');
+    if (topBody) {
+      if (sortedVariants.length === 0) {
+        topBody.innerHTML = `<tr><td colspan="4" style="text-align:center; color:#888; padding: 12px;">No item sales in this period.</td></tr>`;
+      } else {
+        topBody.innerHTML = sortedVariants.map((v, idx) => `
+          <tr>
+            <td><b style="color:var(--primary);">#${idx + 1}</b></td>
+            <td><b>${v.name}</b><br><span style="font-size:10px; color:#666;">Size: ${v.size} | ${v.color}</span></td>
+            <td style="text-align:center; font-weight:bold;">${v.qty}</td>
+            <td style="text-align:right; font-weight:bold;">${v.revenue.toLocaleString()} MMK</td>
+          </tr>
+        `).join('');
+      }
     }
   }
 
