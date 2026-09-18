@@ -101,6 +101,29 @@
     .nav-item span { font-size: 17px; margin-bottom: 2px; }
     .nav-item.active { color: var(--primary); }
 
+    /* Customer Suggestion Dropdown for Mobile */
+    .cust-suggest-item {
+      padding: 8px 10px;
+      border-bottom: 1px solid #eee;
+      cursor: pointer;
+      background: #fff;
+    }
+    .cust-suggest-item:active {
+      background: var(--primary-light);
+    }
+    .cust-suggest-name {
+      font-weight: bold;
+      font-size: 12px;
+      display: flex;
+      justify-content: space-between;
+      color: var(--text);
+    }
+    .cust-suggest-sub {
+      font-size: 10px;
+      color: #666;
+      margin-top: 2px;
+    }
+
     /* Views */
     .view-content { display: none; padding: 12px; }
     .view-content.active { display: block; }
@@ -434,6 +457,12 @@
           <label>Phone:</label>
           <input type="tel" id="cCustPhone" placeholder="09xxxxxxxxx">
         </div>
+      </div>
+
+      <!-- Mobile Selected Profile Badge -->
+      <div id="cLookupBadge" style="display: none; font-size: 10px; margin: 4px 0 6px 0; color: var(--success); font-weight: bold;">
+        ✅ Linked: <span id="cFoundTitle"></span>
+        <button type="button" style="border: none; background: none; color: red; font-size: 10px; cursor: pointer; padding: 0 4px;" onclick="unbindMobileCustomer()">✕ Unlink</button>
       </div>
 
       <div style="display: flex; gap: 6px; margin-top: 4px;">
@@ -1303,6 +1332,116 @@
       document.getElementById("cartFloatTotal").innerText = `${subtotal.toLocaleString()} K`;
     }
 
+    let mCustSuggestDebounce;
+
+    async function handleMobileCustSuggest() {
+      const input = document.getElementById("cCustName").value.trim();
+      const popup = document.getElementById("cSuggestBox");
+
+      if (document.getElementById("cBoundId").value) {
+        unbindMobileCustomer(false);
+      }
+
+      clearTimeout(mCustSuggestDebounce);
+
+      if (input.length < 1) {
+        popup.style.display = "none";
+        popup.innerHTML = "";
+        return;
+      }
+
+      mCustSuggestDebounce = setTimeout(async () => {
+        const [customers, orders] = await Promise.all([
+          dbGetAll("customers"),
+          dbGetAll("orders")
+        ]);
+        const query = input.toLowerCase();
+
+        const matches = customers.filter(c => 
+          (c.FullName && c.FullName.toLowerCase().includes(query)) ||
+          (c.Phone && String(c.Phone).includes(query)) ||
+          (c.Remark && c.Remark.toLowerCase().includes(query))
+        ).slice(0, 5);
+
+        if (matches.length === 0) {
+          popup.style.display = "none";
+          popup.innerHTML = "";
+          return;
+        }
+
+        popup.innerHTML = matches.map(c => {
+          const custOrders = orders.filter(o => o.CustomerID === c.CustomerID && o.Status !== "Cancelled");
+          custOrders.sort((a, b) => new Date(b.Date) - new Date(a.Date));
+          const last = custOrders[0];
+
+          let summary = "New customer (no previous purchases)";
+          if (last && Array.isArray(last.ItemList) && last.ItemList.length > 0) {
+            summary = `Last: ${last.ItemList.map(i => `${i.Name_MM} (${i.Size})`).join(', ')}`;
+          }
+
+          const phoneStr = c.Phone ? ` • 📞 ${c.Phone}` : '';
+          const cityStr = c.TownshipCity ? ` • 📍 ${c.TownshipCity}` : '';
+
+          return `
+            <div class="cust-suggest-item" onclick="selectMobileSuggestedCustomer('${c.CustomerID}')">
+              <div class="cust-suggest-name">
+                <span>👤 ${c.FullName}${phoneStr}</span>
+                <span style="color:var(--primary); font-family:monospace; font-size:9px;">${c.CustomerID}</span>
+              </div>
+              <div class="cust-suggest-sub">${summary}${cityStr}</div>
+            </div>
+          `;
+        }).join('');
+
+        popup.style.display = "block";
+      }, 150);
+    }
+
+    async function selectMobileSuggestedCustomer(customerId) {
+      const [customers, orders] = await Promise.all([
+        dbGetAll("customers"),
+        dbGetAll("orders")
+      ]);
+      const cust = customers.find(c => c.CustomerID === customerId);
+      if (!cust) return;
+
+      document.getElementById("cBoundId").value = cust.CustomerID;
+      document.getElementById("cCustName").value = cust.FullName || "";
+      document.getElementById("cCustPhone").value = cust.Phone || "";
+      document.getElementById("cTownship").value = cust.TownshipCity || "";
+      document.getElementById("cAddress").value = cust.DefaultAddress || "";
+
+      const totalSpent = orders
+        .filter(o => o.CustomerID === cust.CustomerID && o.Status !== "Cancelled")
+        .reduce((sum, o) => sum + (Number(o.TotalAmount) || 0), 0);
+
+      const badge = document.getElementById("cLookupBadge");
+      document.getElementById("cFoundTitle").innerText = `${cust.FullName} (${Number(totalSpent).toLocaleString()} MMK spent)`;
+      badge.style.display = "block";
+
+      const popup = document.getElementById("cSuggestBox");
+      popup.style.display = "none";
+      popup.innerHTML = "";
+    }
+
+    function unbindMobileCustomer(clearFields = true) {
+      document.getElementById("cBoundId").value = "";
+      document.getElementById("cLookupBadge").style.display = "none";
+      if (clearFields) {
+        document.getElementById("cCustPhone").value = "";
+        document.getElementById("cTownship").value = "";
+        document.getElementById("cAddress").value = "";
+      }
+    }
+
+    // Dismiss suggestion popup when tapping outside
+    document.addEventListener("click", (e) => {
+      if (!e.target.closest("#cCustName") && !e.target.closest("#cSuggestBox")) {
+        const popup = document.getElementById("cSuggestBox");
+        if (popup) popup.style.display = "none";
+      }
+    });
+
     function openCheckoutModal() {
       if (currentCart.length === 0) return alert("Cart is empty!");
       renderCheckoutTotals();
@@ -1419,6 +1558,8 @@
       tx.oncomplete = () => {
         currentCart = [];
         updateCartSummary();
+        unbindMobileCustomer(true);
+        document.getElementById("cCustName").value = "";
         closeModal("checkoutModal");
         renderPosCatalog();
         renderInventoryTable();
