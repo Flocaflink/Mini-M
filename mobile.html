@@ -307,6 +307,14 @@
         <button class="btn btn-primary btn-sm" onclick="openNewProductModal()">➕ Single SKU</button>
       </div>
 
+      <!-- Sex Filter Chips -->
+      <div class="chip-group" id="invSexChips">
+        <div class="chip active" onclick="setInvSex('All', this)">All</div>
+        <div class="chip" onclick="setInvSex('Unisex', this)">Unisex</div>
+        <div class="chip" onclick="setInvSex('Male', this)">Male</div>
+        <div class="chip" onclick="setInvSex('Female', this)">Female</div>
+      </div>
+
       <div class="chip-group" id="invTypeChips"></div>
 
       <div style="overflow-x: auto;">
@@ -709,7 +717,7 @@
     let supabaseClient = null;
     let currentCart = [];
     let activeSex = "All", activeType = "All", activeSize = "All";
-    let activeInvType = "All";
+    let activeInvSex = "All", activeInvType = "All";
     let activeAnalyticsPeriod = "today";
 
     const KEY_GAS_URL = "gas_endpoint_url";
@@ -946,6 +954,27 @@
       if (el) el.classList.add("active");
       renderPosCatalog();
     }
+ 
+    function setInvSex(sex, el) {
+      activeInvSex = sex;
+      document.querySelectorAll("#invSexChips .chip").forEach(c => c.classList.remove("active"));
+      if (el) el.classList.add("active");
+      renderInventoryTable();
+    }
+
+    function setPosType(type, el) {
+      activeType = type;
+      document.querySelectorAll("#posTypeChips .chip").forEach(c => c.classList.remove("active"));
+      if (el) el.classList.add("active");
+      renderPosCatalog();
+    }
+
+    function setPosSize(size, el) {
+      activeSize = size;
+      document.querySelectorAll("#posSizeChips .chip").forEach(c => c.classList.remove("active"));
+      if (el) el.classList.add("active");
+      renderPosCatalog();
+    }
 
     function resetPosFilters() {
       const searchInput = document.getElementById("posSearch");
@@ -962,30 +991,64 @@
       renderPosCatalog();
     }
 
+    async function fetchFullTablePaged(tableName) {
+      const PAGE_SIZE = 1000;
+      let allRows = [];
+      let from = 0;
+      let hasMore = true;
+
+      while (hasMore) {
+        const to = from + PAGE_SIZE - 1;
+        const { data, error } = await supabaseClient
+          .from(tableName)
+          .select("*")
+          .range(from, to);
+
+        if (error) throw new Error(`${tableName} fetch error: ${error.message}`);
+        if (!data || data.length === 0) {
+          hasMore = false;
+        } else {
+          allRows = allRows.concat(data);
+          if (data.length < PAGE_SIZE) {
+            hasMore = false;
+          } else {
+            from += PAGE_SIZE;
+          }
+        }
+      }
+      return allRows;
+    }
+
     async function forceFullSupabaseHydration() {
       if (!supabaseClient || !navigator.onLine) return alert("⚠️ Supabase is offline.");
       if (!confirm("Download entire database from Supabase to phone?")) return;
 
       try {
-        const [pRes, oRes, cRes, sRes] = await Promise.all([
-          supabaseClient.from("products").select("*"),
-          supabaseClient.from("orders").select("*"),
-          supabaseClient.from("customers").select("*"),
-          supabaseClient.from("store_settings").select("*")
+        const statusBadge = document.getElementById("sbBadge");
+        if (statusBadge) statusBadge.innerText = "⏳ Downloading...";
+
+        const [pData, oData, cData, sData] = await Promise.all([
+          fetchFullTablePaged("products"),
+          fetchFullTablePaged("orders"),
+          fetchFullTablePaged("customers"),
+          fetchFullTablePaged("store_settings")
         ]);
 
-        if (sRes.data) {
+        if (sData && sData.length > 0) {
           const txS = db.transaction("settings", "readwrite");
           const storeS = txS.objectStore("settings");
-          sRes.data.forEach(r => { appSettings[r.key] = r.value; storeS.put({ key: r.key, value: r.value, _syncStatus: "synced" }); });
+          sData.forEach(r => { 
+            appSettings[r.key] = r.value; 
+            storeS.put({ key: r.key, value: r.value, _syncStatus: "synced" }); 
+          });
           await new Promise(r => { txS.oncomplete = r; });
           applySettingsUI();
         }
 
-        if (pRes.data) {
+        if (pData && pData.length > 0) {
           const txP = db.transaction("products", "readwrite");
           const storeP = txP.objectStore("products");
-          pRes.data.forEach(p => storeP.put({
+          pData.forEach(p => storeP.put({
             ProductID: p.product_id, ItemCode: p.item_code, Name_MM: p.name_mm,
             Sex: p.sex, Type: p.type, Length: p.length, Size: p.size,
             ColorPattern: p.color_pattern, Remark: p.remark, Stock: p.stock,
@@ -995,10 +1058,10 @@
           await new Promise(r => { txP.oncomplete = r; });
         }
 
-        if (oRes.data) {
+        if (oData && oData.length > 0) {
           const txO = db.transaction("orders", "readwrite");
           const storeO = txO.objectStore("orders");
-          oRes.data.forEach(o => storeO.put({
+          oData.forEach(o => storeO.put({
             SalesID: o.sales_id, Date: o.date, CustomerID: o.customer_id, CustomerName: o.customer_name,
             Phone: o.phone, DeliveryName: o.delivery_name, DeliveryAddress: o.delivery_address,
             TownshipCity: o.township_city, ItemList: o.item_list, Subtotal: o.subtotal,
@@ -1009,10 +1072,10 @@
           await new Promise(r => { txO.oncomplete = r; });
         }
 
-        if (cRes.data) {
+        if (cData && cData.length > 0) {
           const txC = db.transaction("customers", "readwrite");
           const storeC = txC.objectStore("customers");
-          cRes.data.forEach(c => storeC.put({
+          cData.forEach(c => storeC.put({
             CustomerID: c.customer_id, FullName: c.full_name, Phone: c.phone,
             DefaultAddress: c.default_address, TownshipCity: c.township_city,
             Remark: c.remark, TotalSpend: c.total_spend, LastOrderDate: c.last_order_date, _syncStatus: "synced"
@@ -1028,7 +1091,12 @@
         renderAnalytics();
         updateBadge();
 
-        alert("🎉 Full Supabase Hydration Complete!");
+        if (statusBadge) {
+          statusBadge.className = "status-badge badge-synced";
+          statusBadge.innerText = "⚡ Deltabase: Online";
+        }
+
+        alert(`🎉 Full Hydration Complete!\n\nDownloaded:\n• Products: ${pData.length}\n• Orders: ${oData.length}\n• Customers: ${cData.length}`);
       } catch (err) {
         alert("Hydration failed: " + err.message);
       }
@@ -1372,15 +1440,16 @@
       if (!tbody) return;
 
       const filtered = products.filter(p => {
+        const matchSex = activeInvSex === "All" || p.Sex === activeInvSex;
         const matchType = activeInvType === "All" || p.Type === activeInvType;
-        const matchQuery = !query || `${p.ProductID} ${p.Name_MM} ${p.ColorPattern}`.toLowerCase().includes(query);
+        const matchQuery = !query || `${p.ProductID} ${p.Name_MM} ${p.ColorPattern} ${p.Sex || ''}`.toLowerCase().includes(query);
         const matchStock = showOut ? true : (Number(p.Stock) > 0);
-        return matchType && matchQuery && matchStock;
+        return matchSex && matchType && matchQuery && matchStock;
       });
 
       tbody.innerHTML = filtered.map(p => `
         <tr>
-          <td><b>${p.ProductID}</b><br>${p.Name_MM} (${p.Size}|${p.ColorPattern})</td>
+          <td><b>${p.ProductID}</b><br>${p.Name_MM} (${p.Size}|${p.ColorPattern}) [${p.Sex || 'Unisex'}]</td>
           <td><b>${Number(p.SellingPrice).toLocaleString()}</b></td>
           <td style="text-align:center; white-space:nowrap;">
             <button class="cart-qty-btn" onclick="adjustStock('${p.ProductID}', -1)">-</button>
@@ -1832,13 +1901,23 @@
       const types = ["All", ...(appSettings.ProductTypes || [])];
       const sizes = ["All", ...(appSettings.ProductSizes || [])];
 
-      document.getElementById("posTypeChips").innerHTML = types.map(t => `
-        <div class="chip ${t === activeType ? 'active' : ''}" onclick="activeType='${t}'; renderPosCatalog();">${t}</div>
+      const posTypeChips = document.getElementById("posTypeChips");
+    if (posTypeChips) {
+      posTypeChips.innerHTML = types.map(t => `
+        <div class="chip ${t === activeType ? 'active' : ''}" onclick="setPosType('${t}', this)">
+          ${t === 'All' ? 'All Types' : t}
+        </div>
       `).join('');
+    }
 
-      document.getElementById("posSizeChips").innerHTML = sizes.map(s => `
-        <div class="chip ${s === activeSize ? 'active' : ''}" onclick="activeSize='${s}'; renderPosCatalog();">${s}</div>
+    const posSizeChips = document.getElementById("posSizeChips");
+    if (posSizeChips) {
+      posSizeChips.innerHTML = sizes.map(s => `
+        <div class="chip ${s === activeSize ? 'active' : ''}" onclick="setPosSize('${s}', this)">
+          ${s === 'All' ? 'All Sizes' : s}
+        </div>
       `).join('');
+    }
 
       document.getElementById("cDeliverySelect").innerHTML = (appSettings.DeliveryServices || []).map(d => `<option value="${d}">${d}</option>`).join('');
       document.getElementById("cPaymentSelect").innerHTML = (appSettings.PaymentMethods || []).map(p => `<option value="${p}">${p}</option>`).join('');
