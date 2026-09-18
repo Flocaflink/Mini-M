@@ -1893,8 +1893,7 @@
         SellingPrice: sellingPrice,
         WholesalePrice: wholesalePrice,
         LastModified: new Date().toISOString(),
-        _syncStatus: "pending_upload"submitBulkMatrixMobile(
-
+        _syncStatus: "pending_upload"
       };
 
       await dbPut("products", productRecord);
