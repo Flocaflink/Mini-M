@@ -614,6 +614,65 @@
   </div>
 
   <!-- Printable Receipt Slip (Hidden Offscreen) -->
+  <!-- Order Voucher Modal (Desktop Port) -->
+  <div id="voucherModal" class="modal-overlay">
+    <div class="modal-card" style="max-height: 94vh;">
+      <div class="modal-header">
+        <h3>📸 Order Voucher</h3>
+        <button class="close-btn" onclick="closeModal('voucherModal')">&times;</button>
+      </div>
+
+      <div style="display: flex; justify-content: center; background: #eef2f5; padding: 8px; border-radius: 6px;">
+        <div id="voucherCardToCapture" class="voucher-card" style="width: 100%; max-width: 340px; background: #fff; padding: 14px; border-radius: 10px; border: 1px solid #e1e4e8; font-size: 11px;">
+          <div style="text-align: center; border-bottom: 2px dashed var(--primary); padding-bottom: 8px; margin-bottom: 8px;">
+            <img src="logo.png" alt="Logo" style="max-height: 40px; width: auto; display: block; margin: 0 auto 4px auto;" onerror="this.style.display='none'">
+            <div style="font-size: 16px; font-weight: bold; color: var(--primary);">Mini-M Baby Store</div>
+            <div style="font-size: 10px; color: #666;">Official Sales Order Receipt</div>
+          </div>
+
+          <div style="display: flex; justify-content: space-between; margin-bottom: 4px;"><span><b>Order ID:</b></span><span id="vSalesId" style="font-family:monospace; font-weight:bold;"></span></div>
+          <div style="display: flex; justify-content: space-between; margin-bottom: 4px;"><span><b>Date:</b></span><span id="vDate"></span></div>
+          <div style="display: flex; justify-content: space-between; margin-bottom: 4px;"><span><b>Customer:</b></span><span id="vCustName" style="font-weight:bold;"></span></div>
+          <div style="display: flex; justify-content: space-between; margin-bottom: 4px;"><span><b>Phone:</b></span><span id="vPhone"></span></div>
+          <div style="display: flex; justify-content: space-between; margin-bottom: 4px;"><span><b>Courier:</b></span><span id="vDeliveryName" style="font-weight:bold; color:var(--primary);"></span></div>
+          <div style="display: flex; flex-direction: column; gap: 2px; margin-bottom: 4px;"><span><b>Address:</b></span><span id="vAddress" style="color:#444;"></span></div>
+
+          <table style="width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 11px;">
+            <thead>
+              <tr style="border-bottom: 1px solid #ddd; color: #555;">
+                <th style="text-align: left; padding: 4px 0;">Item</th>
+                <th style="text-align: center; width: 35px; padding: 4px 0;">Qty</th>
+                <th style="text-align: right; width: 70px; padding: 4px 0;">Amount</th>
+              </tr>
+            </thead>
+            <tbody id="vItemsBody"></tbody>
+          </table>
+
+          <div style="border-top: 2px dashed #333; padding-top: 8px; margin-top: 6px;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 3px;"><span>Subtotal:</span><span id="vSubtotal"></span></div>
+            <div id="vDiscountRow" style="display: none; justify-content: space-between; margin-bottom: 3px; color: var(--success);"><span id="vDiscountLabel">Discount:</span><span id="vDiscountAmount"></span></div>
+            <div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: bold; margin-top: 4px; border-top: 1px dashed #ddd; padding-top: 4px;"><span>Total Payable:</span><span id="vTotalAmount" style="color: var(--primary);"></span></div>
+            <div style="display: flex; justify-content: space-between; font-size: 10px; color: #555; margin-top: 4px;"><span>Payment:</span><span id="vPaymentType" style="font-weight:bold;"></span></div>
+            <div style="display: flex; justify-content: space-between; font-size: 10px; color: #555;"><span>Paid Status:</span><span id="vPaidStatus" style="font-weight:bold;"></span></div>
+            <div style="display: flex; justify-content: space-between; font-size: 10px; color: #555;"><span>Remark:</span><span id="vRemark"></span></div>
+          </div>
+
+          <div style="text-align: center; font-size: 10px; color: #777; margin-top: 10px; border-top: 1px solid #f0f0f0; padding-top: 6px;">
+            Thank you for shopping with us! 💕
+          </div>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 6px; margin-top: 12px; flex-wrap: wrap;">
+        <button class="btn btn-primary btn-sm" style="flex: 1;" onclick="downloadVoucherImage()">📥 Save</button>
+        <button class="btn btn-success btn-sm" style="flex: 1;" onclick="shareVoucherImage()">📲 Share</button>
+        <button class="btn btn-secondary btn-sm" onclick="copyVoucherToClipboard()">📋 Copy</button>
+        <button class="btn btn-sm" style="background:#ccc;" onclick="closeModal('voucherModal')">Close</button>
+      </div>
+      <div id="voucherStatusLabel" style="font-size: 10px; text-align: center; color: #666; margin-top: 4px;"></div>
+    </div>
+  </div>
+
   <div id="printReceiptSlip">
     <div style="text-align:center; font-weight:bold; font-size:14px;">BABY STORE</div>
     <div style="text-align:center; font-size:10px;">Sales Order Slip</div>
@@ -1487,6 +1546,7 @@
                 <option value="Paid" ${curStatus === 'Paid' ? 'selected' : ''}>Paid</option>
                 <option value="Unpaid" ${curStatus === 'Unpaid' ? 'selected' : ''}>Unpaid</option>
               </select>
+              <button class="btn btn-success btn-sm" onclick='openOrderVoucherModal("${o.SalesID}")'>📸 Voucher</button>
               <button class="btn btn-secondary btn-sm" onclick="printReceiptMobile('${o.SalesID}')">🖨️ Slip</button>
             </div>
           </div>
@@ -1504,6 +1564,116 @@
         await dbPut("orders", o);
         renderOrdersTable();
         pushPendingToSupabase();
+      }
+    }
+
+    async function openOrderVoucherModal(salesId) {
+      const orders = await dbGetAll("orders");
+      const order = orders.find(x => x.SalesID === salesId);
+      if (!order) return alert("Order not found!");
+      openVoucherModal(order);
+    }
+
+    function openVoucherModal(order) {
+      if (!order) return alert("Order data not found.");
+      let items = order.ItemList || [];
+      if (typeof items === "string") {
+        try { items = JSON.parse(items); } catch(e) { items = []; }
+      }
+
+      const subtotal = order.Subtotal || items.reduce((sum, i) => sum + (i.Subtotal || 0), 0);
+      const discountAmount = Number(order.DiscountAmount) || 0;
+
+      document.getElementById('vSalesId').innerText = order.SalesID;
+      document.getElementById('vDate').innerText = new Date(order.Date).toLocaleDateString();
+      document.getElementById('vCustName').innerText = order.CustomerName;
+      document.getElementById('vPhone').innerText = order.Phone || 'None';
+      document.getElementById('vDeliveryName').innerText = order.DeliveryName || 'Not assigned';
+      document.getElementById('vAddress').innerText = `${order.DeliveryAddress || ''}${order.TownshipCity ? ', ' + order.TownshipCity : ''}` || 'Not specified';
+      document.getElementById('vPaymentType').innerText = order.PaymentType || '-';
+      document.getElementById('vPaidStatus').innerText = (order.PaidStatus || 'Unpaid').toUpperCase();
+      document.getElementById('vSubtotal').innerText = `${Number(subtotal).toLocaleString()} MMK`;
+      
+      const vDiscRow = document.getElementById('vDiscountRow');
+      if (discountAmount > 0) {
+        vDiscRow.style.display = 'flex';
+        document.getElementById('vDiscountLabel').innerText = order.DiscountLabel || 'Discount:';
+        document.getElementById('vDiscountAmount').innerText = `-${discountAmount.toLocaleString()} MMK`;
+      } else {
+        vDiscRow.style.display = 'none';
+      }
+
+      document.getElementById('vTotalAmount').innerText = `${Number(order.TotalAmount).toLocaleString()} MMK`;
+      document.getElementById('vRemark').innerText = order.Remark || 'None';
+
+      const tbody = document.getElementById('vItemsBody');
+      tbody.innerHTML = items.map(i => `
+        <tr>
+          <td style="padding: 3px 0;"><b>${i.Name_MM}</b><br><span style="font-size:9px; color:#666;">Size: ${i.Size} | Color: ${i.ColorPattern}</span></td>
+          <td style="text-align:center; font-weight:bold; padding: 3px 0;">${i.Quantity}</td>
+          <td style="text-align:right; font-weight:bold; padding: 3px 0;">${Number(i.Subtotal).toLocaleString()}</td>
+        </tr>
+      `).join('');
+
+      document.getElementById('voucherStatusLabel').innerText = '';
+      document.getElementById('voucherModal').style.display = 'flex';
+    }
+
+    async function downloadVoucherImage() {
+      const card = document.getElementById('voucherCardToCapture');
+      const status = document.getElementById('voucherStatusLabel');
+      status.innerText = "📸 Generating image...";
+      try {
+        const canvas = await html2canvas(card, { scale: 2, backgroundColor: "#ffffff", useCORS: true });
+        const salesId = document.getElementById('vSalesId').innerText || 'Order';
+        const link = document.createElement('a');
+        link.download = `Voucher_${salesId}.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+        status.innerText = "✅ Saved image!";
+      } catch (err) {
+        status.innerText = "❌ Image generation failed.";
+      }
+    }
+
+    async function shareVoucherImage() {
+      const card = document.getElementById('voucherCardToCapture');
+      const status = document.getElementById('voucherStatusLabel');
+      status.innerText = "📸 Preparing share...";
+      try {
+        const canvas = await html2canvas(card, { scale: 2, backgroundColor: "#ffffff", useCORS: true });
+        const salesId = document.getElementById('vSalesId').innerText || 'Order';
+        canvas.toBlob(async (blob) => {
+          if (!blob) return status.innerText = "❌ Image creation failed.";
+          const file = new File([blob], `Voucher_${salesId}.png`, { type: 'image/png' });
+          if (navigator.canShare && navigator.canShare({ files: [file] })) {
+            await navigator.share({ files: [file], title: `Voucher #${salesId}` });
+            status.innerText = "✅ Shared!";
+          } else {
+            downloadVoucherImage();
+          }
+        }, 'image/png');
+      } catch (err) {
+        status.innerText = "❌ Share cancelled or unsupported.";
+      }
+    }
+
+    async function copyVoucherToClipboard() {
+      const card = document.getElementById('voucherCardToCapture');
+      const status = document.getElementById('voucherStatusLabel');
+      status.innerText = "📸 Copying...";
+      try {
+        const canvas = await html2canvas(card, { scale: 2, backgroundColor: "#ffffff", useCORS: true });
+        canvas.toBlob(async (blob) => {
+          if (navigator.clipboard && navigator.clipboard.write) {
+            await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+            status.innerText = "✅ Copied to clipboard!";
+          } else {
+            status.innerText = "⚠️ Copy not supported. Use 'Save'.";
+          }
+        }, 'image/png');
+      } catch(err) {
+        status.innerText = "⚠️ Failed to copy.";
       }
     }
 
@@ -1525,23 +1695,41 @@
     // -------------------------------------------------------------------------
     // CUSTOMERS DIRECTORY
     // -------------------------------------------------------------------------
-    async function renderCustomersTable() {
-      const customers = await dbGetAll("customers");
+   async function renderCustomersTable() {
+      const [customers, orders] = await Promise.all([
+        dbGetAll("customers"),
+        dbGetAll("orders")
+      ]);
       const query = (document.getElementById("custSearch")?.value || "").toLowerCase().trim();
       const container = document.getElementById("customersContainer");
+      if (!container) return;
 
-      const filtered = customers.filter(c => !query || `${c.FullName} ${c.Phone} ${c.TownshipCity}`.toLowerCase().includes(query));
+      const filtered = customers.filter(c => !query || `${c.FullName} ${c.Phone || ''} ${c.TownshipCity || ''}`.toLowerCase().includes(query));
 
-      container.innerHTML = filtered.map(c => `
-        <div class="card-panel">
-          <div style="display:flex; justify-content:space-between;">
-            <b>${c.FullName}</b>
-            <span style="font-weight:bold; color:var(--primary); font-size:11px;">${Number(c.TotalSpend || 0).toLocaleString()} K</span>
+      if (filtered.length === 0) {
+        container.innerHTML = `<div style="text-align:center; color:#888; padding:20px;">No customers found.</div>`;
+        return;
+      }
+
+      container.innerHTML = filtered.map(c => {
+        // Calculate spend dynamically across all non-cancelled orders matching customer
+        const custOrders = orders.filter(o => o.CustomerID === c.CustomerID && o.Status !== "Cancelled");
+        const orderCount = custOrders.length;
+        const totalSpend = custOrders.reduce((sum, o) => sum + (Number(o.TotalAmount) || 0), Number(c.TotalSpend) || 0);
+
+        return `
+          <div class="card-panel">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <b>${c.FullName}</b>
+              <span style="font-weight:bold; color:var(--primary); font-size:12px;">${totalSpend.toLocaleString()} MMK</span>
+            </div>
+            <div style="font-size:11px; color:#555; margin-top:2px;">
+              📞 ${c.Phone || 'No phone'} | 📍 ${c.TownshipCity || 'N/A'} | 📦 <b>${orderCount} orders</b>
+            </div>
+            <button class="btn btn-primary btn-sm" style="margin-top:8px; width: 100%;" onclick="startOrderForCust('${c.CustomerID}')">🛒 Create POS Order</button>
           </div>
-          <div style="font-size:11px; color:#555;">📞 ${c.Phone || 'No phone'} | 📍 ${c.TownshipCity || 'N/A'}</div>
-          <button class="btn btn-primary btn-sm" style="margin-top:6px;" onclick="startOrderForCust('${c.CustomerID}')">🛒 Create Order</button>
-        </div>
-      `).join('');
+        `;
+      }).join('');
     }
 
     function startOrderForCust(id) {
@@ -1561,15 +1749,40 @@
     // -------------------------------------------------------------------------
     // ANALYTICS ENGINE
     // -------------------------------------------------------------------------
+
+    function setAnalyticsPeriod(period, el) {
+      activeAnalyticsPeriod = period;
+      document.querySelectorAll("#anPeriodChips .chip").forEach(c => c.classList.remove("active"));
+      if (el) el.classList.add("active");
+      renderAnalytics();
+    }
+
     async function renderAnalytics() {
       const orders = await dbGetAll("orders");
       const products = await dbGetAll("products");
       const pMap = new Map(products.map(p => [p.ProductID, p]));
 
+      const now = new Date();
+      const todayStr = now.toISOString().slice(0, 10);
+
+      // Filter orders by active period
+      const filteredOrders = orders.filter(o => {
+        if (o.Status === "Cancelled") return false;
+        const orderDate = new Date(o.Date);
+        const orderDateStr = orderDate.toISOString().slice(0, 10);
+
+        if (activeAnalyticsPeriod === 'today') {
+          return orderDateStr === todayStr;
+        } else if (activeAnalyticsPeriod === 'this_month') {
+          return orderDate.getFullYear() === now.getFullYear() && orderDate.getMonth() === now.getMonth();
+        }
+        return true; // 'all_time'
+      });
+
       let rev = 0, cost = 0, units = 0;
       const catMap = new Map();
 
-      orders.filter(o => o.Status !== "Cancelled").forEach(o => {
+      filteredOrders.forEach(o => {
         rev += Number(o.TotalAmount) || 0;
         (o.ItemList || []).forEach(i => {
           const q = Number(i.Quantity) || 0;
@@ -1585,11 +1798,16 @@
       document.getElementById("anProfit").innerText = `Gross Profit: ${(rev - cost).toLocaleString()} MMK`;
       document.getElementById("anUnits").innerText = `${units} items sold`;
 
-      document.getElementById("anCategoryBars").innerHTML = [...catMap.entries()].map(([cat, q]) => `
-        <div style="display:flex; justify-content:space-between; font-size:11px; margin-bottom:2px;">
-          <span>${cat}</span><b>${q} units</b>
-        </div>
-      `).join('') || "No sales yet";
+      const barsContainer = document.getElementById("anCategoryBars");
+      if (catMap.size === 0) {
+        barsContainer.innerHTML = `<div style="color:#888; font-size:11px; padding:6px 0;">No sales in this period.</div>`;
+      } else {
+        barsContainer.innerHTML = [...catMap.entries()].map(([cat, q]) => `
+          <div style="display:flex; justify-content:space-between; font-size:11px; margin-bottom:4px;">
+            <span>${cat}</span><b>${q} units</b>
+          </div>
+        `).join('');
+      }
     }
 
     // -------------------------------------------------------------------------
