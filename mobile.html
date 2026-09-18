@@ -525,41 +525,106 @@
 
   <!-- Single SKU Intake Modal -->
   <div id="productModal" class="modal-overlay">
-    <div class="modal-card">
+    <div class="modal-card" style="max-height: 92vh;">
       <div class="modal-header">
-        <h3 id="pModalTitle">➕ Product Variant</h3>
+        <h3 id="pModalTitle">➕ Single Product Variant</h3>
         <button class="close-btn" onclick="closeModal('productModal')">&times;</button>
       </div>
 
-      <label>SKU:</label>
-      <input type="text" id="mSku" readonly style="background:#eee; font-weight:bold;">
-
-      <label>Name (MM) *:</label>
-      <input type="text" id="mName" placeholder="Product Title">
-
       <div style="display: flex; gap: 6px;">
         <div style="flex: 1;">
-          <label>Type:</label>
-          <select id="mTypeSelect"></select>
+          <label>Base Code:</label>
+          <input type="text" id="mProdItemCode" readonly style="background:#eee; font-weight:bold;">
         </div>
-        <div style="flex: 1;">
-          <label>Size:</label>
-          <select id="mSizeSelect"></select>
-        </div>
-        <div style="flex: 1;">
-          <label>Color:</label>
-          <select id="mColorSelect"></select>
+        <div style="flex: 1.5;">
+          <label>Name (MM) *:</label>
+          <input type="text" id="mProdName" placeholder="Product Title">
         </div>
       </div>
 
       <div style="display: flex; gap: 6px;">
         <div style="flex: 1;">
-          <label>Selling Price (MMK) *:</label>
-          <input type="number" id="mSellingPrice">
+          <label>Sex:</label>
+          <select id="mProdSex">
+            <option value="Unisex">Unisex</option>
+            <option value="Female">Female</option>
+            <option value="Male">Male</option>
+          </select>
         </div>
         <div style="flex: 1;">
+          <label>Type:</label>
+          <select id="mProdTypeSelect"></select>
+        </div>
+        <div style="flex: 1;">
+          <label>Length:</label>
+          <select id="mProdLength">
+            <option value="တို">တို (Short)</option>
+            <option value="ရှည်">ရှည် (Long)</option>
+            <option value="None">None</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 6px;">
+        <div style="flex: 1;">
+          <label>Size:</label>
+          <select id="mProdSizeSelect"></select>
+        </div>
+        <div style="flex: 1;">
+          <label>Color:</label>
+          <select id="mProdColorSelect"></select>
+        </div>
+      </div>
+
+      <label>SKU (Auto):</label>
+      <input type="text" id="mProdSku" readonly style="background:#eee; font-weight:bold; color:var(--primary);">
+
+      <!-- Cost & Pricing Engine -->
+      <div style="background:#f8f9fa; border:1px solid var(--border); padding:8px; border-radius:6px; margin-top:8px;">
+        <b style="font-size:11px; color:#0d5c75;">💰 Cost & Pricing Engine</b>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top:4px;">
+          <div>
+            <label style="margin:0; font-size:10px;">Buying (¥):</label>
+            <input type="number" id="mProdBuyingYuan" step="0.01" placeholder="35.00" oninput="calculateSinglePricingEngine()">
+          </div>
+          <div>
+            <label style="margin:0; font-size:10px;">Supplier %:</label>
+            <input type="number" id="mProdSupplierPct" step="0.1" oninput="calculateSinglePricingEngine()">
+          </div>
+          <div>
+            <label style="margin:0; font-size:10px;">Yuan Rate (MMK):</label>
+            <input type="number" id="mProdYuanRate" oninput="calculateSinglePricingEngine()">
+          </div>
+          <div>
+            <label style="margin:0; font-size:10px;">Cargo Fee (MMK):</label>
+            <input type="number" id="mProdCargoFee" oninput="calculateSinglePricingEngine()">
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top:4px;">
+          <div>
+            <label style="margin:0; font-size:10px;">Total Capital (Auto):</label>
+            <input type="number" id="mProdTotalCapital" readonly style="background:#edf2f7; font-weight:bold;">
+          </div>
+          <div>
+            <label style="margin:0; font-size:10px;">Normal Price (Auto):</label>
+            <input type="number" id="mProdNormalPrice" readonly style="background:#edf2f7; font-weight:bold; color:#008055;">
+          </div>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 6px; margin-top:6px;">
+        <div style="flex: 1;">
+          <label>Selling Price (MMK) *:</label>
+          <input type="number" id="mProdSellingPrice">
+        </div>
+        <div style="flex: 1;">
+          <label>Wholesale (MMK):</label>
+          <input type="number" id="mProdWholesalePrice">
+        </div>
+        <div style="flex: 0.8;">
           <label>Stock Qty:</label>
-          <input type="number" id="mStock" value="5">
+          <input type="number" id="mProdStock" value="5" min="0">
         </div>
       </div>
 
@@ -572,33 +637,91 @@
 
   <!-- Bulk Shipment Matrix Intake Modal -->
   <div id="bulkMatrixModal" class="modal-overlay">
-    <div class="modal-card" style="max-height: 92vh;">
+    <div class="modal-card" style="max-height: 94vh;">
       <div class="modal-header">
-        <h3>📦 Bulk Shipment Matrix</h3>
+        <h3>📦 Bulk Shipment Matrix Intake</h3>
         <button class="close-btn" onclick="closeModal('bulkMatrixModal')">&times;</button>
       </div>
-
-      <label>Product Name (MM) *:</label>
-      <input type="text" id="bmName" placeholder="Item Name">
 
       <div style="display: flex; gap: 6px;">
         <div style="flex: 1;">
           <label>Base Code:</label>
           <input type="text" id="bmItemCode" readonly style="background:#eee; font-weight:bold;">
         </div>
-        <div style="flex: 1;">
-          <label>Type:</label>
-          <select id="bmType"></select>
+        <div style="flex: 1.5;">
+          <label>Product Name (MM) *:</label>
+          <input type="text" id="bmName" placeholder="Item Name">
         </div>
       </div>
 
       <div style="display: flex; gap: 6px;">
         <div style="flex: 1;">
-          <label>Selling Price *:</label>
-          <input type="number" id="bmSellingPrice" placeholder="MMK">
+          <label>Sex:</label>
+          <select id="bmSex">
+            <option value="Unisex">Unisex</option>
+            <option value="Female">Female</option>
+            <option value="Male">Male</option>
+          </select>
         </div>
         <div style="flex: 1;">
-          <label>Quick Fill Qty:</label>
+          <label>Type:</label>
+          <select id="bmType"></select>
+        </div>
+        <div style="flex: 1;">
+          <label>Length:</label>
+          <select id="bmLength">
+            <option value="တို">တို (Short)</option>
+            <option value="ရှည်">ရှည် (Long)</option>
+            <option value="None">None</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Bulk Cost & Pricing Engine -->
+      <div style="background:#f8f9fa; border:1px solid var(--border); padding:8px; border-radius:6px; margin-top:8px;">
+        <b style="font-size:11px; color:#0d5c75;">💰 Shared Cost & Pricing Engine</b>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top:4px;">
+          <div>
+            <label style="margin:0; font-size:10px;">Buying (¥):</label>
+            <input type="number" id="bmBuyingYuan" step="0.01" placeholder="35.00" oninput="calculateBulkPricingEngineMobile()">
+          </div>
+          <div>
+            <label style="margin:0; font-size:10px;">Supplier %:</label>
+            <input type="number" id="bmSupplierPct" step="0.1" oninput="calculateBulkPricingEngineMobile()">
+          </div>
+          <div>
+            <label style="margin:0; font-size:10px;">Yuan Rate (MMK):</label>
+            <input type="number" id="bmYuanRate" oninput="calculateBulkPricingEngineMobile()">
+          </div>
+          <div>
+            <label style="margin:0; font-size:10px;">Cargo Fee (MMK):</label>
+            <input type="number" id="bmCargoFee" oninput="calculateBulkPricingEngineMobile()">
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top:4px;">
+          <div>
+            <label style="margin:0; font-size:10px;">Total Capital (Auto):</label>
+            <input type="number" id="bmTotalCapital" readonly style="background:#edf2f7; font-weight:bold;">
+          </div>
+          <div>
+            <label style="margin:0; font-size:10px;">Normal Price (Auto):</label>
+            <input type="number" id="bmNormalPrice" readonly style="background:#edf2f7; font-weight:bold; color:#008055;">
+          </div>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 6px; margin-top:6px;">
+        <div style="flex: 1;">
+          <label>Selling Price *:</label>
+          <input type="number" id="bmSellingPrice" placeholder="Selling Price">
+        </div>
+        <div style="flex: 1;">
+          <label>Wholesale Price:</label>
+          <input type="number" id="bmWholesalePrice" placeholder="Wholesale Price">
+        </div>
+        <div style="flex: 0.8;">
+          <label>Quick Fill:</label>
           <input type="number" id="bmQuickFill" value="5">
         </div>
       </div>
@@ -610,7 +733,7 @@
         <div id="bmColorChecks" class="chip-group"></div>
       </div>
 
-      <div style="overflow-x: auto; max-height: 200px; margin-top: 8px; border: 1px solid #ddd;">
+      <div style="overflow-x: auto; max-height: 180px; margin-top: 8px; border: 1px solid #ddd;">
         <table class="data-table" id="bmTable"></table>
       </div>
 
@@ -1625,12 +1748,191 @@
     }
 
     // -------------------------------------------------------------------------
-    // BULK SHIPMENT MATRIX
+    // MATH & SKU HELPERS (Desktop Parity)
     // -------------------------------------------------------------------------
-    function openBulkMatrixModal() {
-      document.getElementById("bmItemCode").value = "I" + Date.now().toString().slice(-6);
+    function roundUpToThousand(num) {
+      if (!num || num <= 0) return 0;
+      return Math.ceil(num / 1000) * 1000;
+    }
+
+    async function generateNextItemCodeMobile() {
+      const products = await dbGetAll("products");
+      let maxNum = 0;
+      products.forEach(p => {
+        if (p.ItemCode) {
+          const match = String(p.ItemCode).match(/\d+/);
+          if (match) {
+            const num = parseInt(match[0], 10);
+            if (num > maxNum) maxNum = num;
+          }
+        }
+      });
+      return "I" + String(maxNum + 1).padStart(6, "0");
+    }
+
+    function cleanColorCode(colorText) {
+      const map = {
+        "ပန်း": "PNK", "pink": "PNK",
+        "ဝါ": "YEL", "yellow": "YEL",
+        "ပြာ": "BLU", "blue": "BLU",
+        "ခဲ": "GRY", "grey": "GRY", "gray": "GRY",
+        "ဖြူ": "WHT", "white": "WHT",
+        "နီ": "RED", "red": "RED",
+        "စိမ်း": "GRN", "green": "GRN",
+        "နက်": "BLK", "black": "BLK",
+        "လိမ္မော်": "ORG", "orange": "ORG",
+        "ခရမ်း": "PUR", "purple": "PUR",
+        "ကြား": "STR", "striped": "STR",
+        "ပွင့်": "FLR", "floral": "FLR"
+      };
+      const normalized = String(colorText).toLowerCase().trim();
+      return map[normalized] || String(colorText).toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 3) || 'DEF';
+    }
+
+    function autoGenerateSingleSku() {
+      const code = document.getElementById("mProdItemCode").value.trim() || "I000000";
+      const size = String(document.getElementById("mProdSizeSelect").value || "").replace(/[^a-zA-Z0-9]/g, "");
+      const color = cleanColorCode(document.getElementById("mProdColorSelect").value || "");
+      document.getElementById("mProdSku").value = `${code}-${size}-${color}`;
+    }
+
+    // -------------------------------------------------------------------------
+    // SINGLE VARIANT MODAL CONTROLLER
+    // -------------------------------------------------------------------------
+    async function openNewProductModal() {
+      const nextCode = await generateNextItemCodeMobile();
+      document.getElementById("mProdItemCode").value = nextCode;
+      document.getElementById("mProdName").value = "";
+      document.getElementById("mProdSex").value = "Unisex";
+      document.getElementById("mProdLength").value = "တို";
+      document.getElementById("mProdStock").value = "5";
+
+      // Hydrate select options from appSettings
+      document.getElementById("mProdTypeSelect").innerHTML = (appSettings.ProductTypes || []).map(t => `<option value="${t}">${t}</option>`).join('');
+      document.getElementById("mProdSizeSelect").innerHTML = (appSettings.ProductSizes || []).map(s => `<option value="${s}">${s}</option>`).join('');
+      document.getElementById("mProdColorSelect").innerHTML = (appSettings.ProductColors || []).map(c => `<option value="${c}">${c}</option>`).join('');
+
+      document.getElementById("mProdSizeSelect").onchange = autoGenerateSingleSku;
+      document.getElementById("mProdColorSelect").onchange = autoGenerateSingleSku;
+
+      // Auto-place defaults from appSettings
+      document.getElementById("mProdBuyingYuan").value = "";
+      document.getElementById("mProdSupplierPct").value = appSettings.DefaultSupplierPct ?? 3;
+      document.getElementById("mProdYuanRate").value = appSettings.DefaultYuanRate || 620;
+      document.getElementById("mProdCargoFee").value = appSettings.DefaultCargoFee || 2500;
+      document.getElementById("mProdTotalCapital").value = "";
+      document.getElementById("mProdNormalPrice").value = "";
+      document.getElementById("mProdSellingPrice").value = "";
+      document.getElementById("mProdWholesalePrice").value = "";
+
+      autoGenerateSingleSku();
+      document.getElementById("productModal").style.display = "flex";
+    }
+
+    function calculateSinglePricingEngine() {
+      const buyingYuan = parseFloat(document.getElementById("mProdBuyingYuan").value) || 0;
+      const supplierPct = parseFloat(document.getElementById("mProdSupplierPct").value) || 0;
+      const yuanRate = parseFloat(document.getElementById("mProdYuanRate").value) || (appSettings.DefaultYuanRate || 620);
+      const cargoFee = parseFloat(document.getElementById("mProdCargoFee").value) || (appSettings.DefaultCargoFee || 2500);
+
+      const capital = ((buyingYuan * (1 + (supplierPct / 100))) * yuanRate) + cargoFee;
+      const totalCapital = Math.round(capital);
+
+      const regMarginPct = Number(appSettings.RegularProfitMargin || 33) / 100;
+      const wsMarginPct = Number(appSettings.WholesaleProfitMargin || 15) / 100;
+
+      const normalPrice = Math.round(totalCapital * (1 + regMarginPct));
+      const rawWholesale = totalCapital * (1 + wsMarginPct);
+
+      document.getElementById("mProdTotalCapital").value = totalCapital;
+      document.getElementById("mProdNormalPrice").value = normalPrice;
+      document.getElementById("mProdSellingPrice").value = roundUpToThousand(normalPrice);
+      document.getElementById("mProdWholesalePrice").value = roundUpToThousand(rawWholesale);
+    }
+
+    async function saveMobileProduct() {
+      const sku = document.getElementById("mProdSku").value.trim();
+      const code = document.getElementById("mProdItemCode").value.trim();
+      const name = document.getElementById("mProdName").value.trim();
+      const sex = document.getElementById("mProdSex").value;
+      const type = document.getElementById("mProdTypeSelect").value;
+      const length = document.getElementById("mProdLength").value;
+      const size = document.getElementById("mProdSizeSelect").value;
+      const color = document.getElementById("mProdColorSelect").value;
+      const stock = Number(document.getElementById("mProdStock").value) || 0;
+
+      const buyingYuan = parseFloat(document.getElementById("mProdBuyingYuan").value) || 0;
+      const supplierPct = parseFloat(document.getElementById("mProdSupplierPct").value) || 0;
+      const yuanRate = parseFloat(document.getElementById("mProdYuanRate").value) || (appSettings.DefaultYuanRate || 620);
+      const cargoFee = parseFloat(document.getElementById("mProdCargoFee").value) || (appSettings.DefaultCargoFee || 2500);
+      const totalCapital = Number(document.getElementById("mProdTotalCapital").value) || 0;
+      const normalPrice = Number(document.getElementById("mProdNormalPrice").value) || 0;
+      const sellingPrice = Number(document.getElementById("mProdSellingPrice").value) || normalPrice;
+      const wholesalePrice = Number(document.getElementById("mProdWholesalePrice").value) || totalCapital;
+
+      if (!name) return alert("Product Name is required.");
+      if (!sku) return alert("Product SKU is required.");
+
+      const productRecord = {
+        ProductID: sku,
+        ItemCode: code,
+        Name_MM: name,
+        Sex: sex,
+        Type: type,
+        Length: length,
+        Size: size,
+        ColorPattern: color,
+        Remark: "Mobile single intake",
+        Stock: stock,
+        BuyingYuan: buyingYuan,
+        SupplierPct: supplierPct,
+        YuanRate: yuanRate,
+        CargoFee: cargoFee,
+        TotalCapital: totalCapital,
+        NormalPrice: normalPrice,
+        SellingPrice: sellingPrice,
+        WholesalePrice: wholesalePrice,
+        LastModified: new Date().toISOString(),
+        _syncStatus: "pending_upload"submitBulkMatrixMobile(
+
+      };
+
+      await dbPut("products", productRecord);
+
+      // Auto-update store setting baselines with latest entered rates
+      await persistUpdatedSettings({
+        DefaultSupplierPct: supplierPct,
+        DefaultYuanRate: yuanRate,
+        DefaultCargoFee: cargoFee
+      });
+
+      closeModal("productModal");
+      renderInventoryTable();
+      renderPosCatalog();
+      pushPendingToSupabase();
+      alert(`✅ Saved ${sku}!`);
+    }
+
+    // -------------------------------------------------------------------------
+    // BULK MATRIX CONTROLLER
+    // -------------------------------------------------------------------------
+    async function openBulkMatrixModal() {
+      const nextCode = await generateNextItemCodeMobile();
+      document.getElementById("bmItemCode").value = nextCode;
       document.getElementById("bmName").value = "";
+      document.getElementById("bmSex").value = "Unisex";
+      document.getElementById("bmLength").value = "တို";
+      document.getElementById("bmQuickFill").value = "5";
+
+      // Auto-place defaults from appSettings
+      document.getElementById("bmBuyingYuan").value = "";
+      document.getElementById("bmSupplierPct").value = appSettings.DefaultSupplierPct ?? 3;
+      document.getElementById("bmYuanRate").value = appSettings.DefaultYuanRate || 620;
+      document.getElementById("bmCargoFee").value = appSettings.DefaultCargoFee || 2500;
+      document.getElementById("bmTotalCapital").value = "";
+      document.getElementById("bmNormalPrice").value = "";
       document.getElementById("bmSellingPrice").value = "";
+      document.getElementById("bmWholesalePrice").value = "";
 
       const sizes = appSettings.ProductSizes || [];
       const colors = appSettings.ProductColors || [];
@@ -1653,9 +1955,31 @@
       document.getElementById("bulkMatrixModal").style.display = "flex";
     }
 
+    function calculateBulkPricingEngineMobile() {
+      const buyingYuan = parseFloat(document.getElementById("bmBuyingYuan").value) || 0;
+      const supplierPct = parseFloat(document.getElementById("bmSupplierPct").value) || 0;
+      const yuanRate = parseFloat(document.getElementById("bmYuanRate").value) || (appSettings.DefaultYuanRate || 620);
+      const cargoFee = parseFloat(document.getElementById("bmCargoFee").value) || (appSettings.DefaultCargoFee || 2500);
+
+      const capital = ((buyingYuan * (1 + (supplierPct / 100))) * yuanRate) + cargoFee;
+      const totalCapital = Math.round(capital);
+
+      const regMarginPct = Number(appSettings.RegularProfitMargin || 33) / 100;
+      const wsMarginPct = Number(appSettings.WholesaleProfitMargin || 15) / 100;
+
+      const normalPrice = Math.round(totalCapital * (1 + regMarginPct));
+      const rawWholesale = totalCapital * (1 + wsMarginPct);
+
+      document.getElementById("bmTotalCapital").value = totalCapital;
+      document.getElementById("bmNormalPrice").value = normalPrice;
+      document.getElementById("bmSellingPrice").value = roundUpToThousand(normalPrice);
+      document.getElementById("bmWholesalePrice").value = roundUpToThousand(rawWholesale);
+    }
+
     function renderBmGrid() {
       const sizes = Array.from(document.querySelectorAll("#bmSizeChecks input:checked")).map(x => x.value);
       const colors = Array.from(document.querySelectorAll("#bmColorChecks input:checked")).map(x => x.value);
+      const fillVal = document.getElementById("bmQuickFill")?.value || "5";
       const table = document.getElementById("bmTable");
 
       if (sizes.length === 0 || colors.length === 0) {
@@ -1674,7 +1998,7 @@
           ${colors.map(c => `
             <tr>
               <td><b>${c}</b></td>${sizes.map(s => `
-                <td><input type="number" class="matrix-input-cell" data-color="${c}" data-size="${s}" value="5" min="0"></td>
+                <td><input type="number" class="matrix-input-cell" data-color="${c}" data-size="${s}" value="${fillVal}" min="0"></td>
               `).join('')}
             </tr>
           `).join('')}
@@ -1685,38 +2009,77 @@
     async function submitBulkMatrixMobile() {
       const code = document.getElementById("bmItemCode").value;
       const name = document.getElementById("bmName").value.trim();
-      const price = Number(document.getElementById("bmSellingPrice").value) || 0;
+      const sex = document.getElementById("bmSex").value;
       const type = document.getElementById("bmType").value;
+      const length = document.getElementById("bmLength").value;
 
-      if (!name || price <= 0) return alert("Product name and selling price are required.");
+      const buyingYuan = parseFloat(document.getElementById("bmBuyingYuan").value) || 0;
+      const supplierPct = parseFloat(document.getElementById("bmSupplierPct").value) || 0;
+      const yuanRate = parseFloat(document.getElementById("bmYuanRate").value) || (appSettings.DefaultYuanRate || 620);
+      const cargoFee = parseFloat(document.getElementById("bmCargoFee").value) || (appSettings.DefaultCargoFee || 2500);
+      const totalCapital = Number(document.getElementById("bmTotalCapital").value) || 0;
+      const normalPrice = Number(document.getElementById("bmNormalPrice").value) || 0;
+      const sellingPrice = Number(document.getElementById("bmSellingPrice").value) || normalPrice;
+      const wholesalePrice = Number(document.getElementById("bmWholesalePrice").value) || totalCapital;
+
+      if (!name) return alert("Product name is required.");
+      if (sellingPrice <= 0) return alert("Selling price is required.");
 
       const cells = document.querySelectorAll(".matrix-input-cell");
       const records = [];
       const timestamp = new Date().toISOString();
 
       cells.forEach(cell => {
-        const qty = parseInt(cell.value, 10) || 0;
+        const qty = parseInt(cell.value, 10);
+        if (isNaN(qty) || qty < 0) return;
+
         const color = cell.dataset.color;
         const size = cell.dataset.size;
-        const sku = `${code}-${size}-${color.slice(0, 3).toUpperCase()}`;
+        const cleanColor = cleanColorCode(color);
+        const cleanSize = String(size).replace(/[^a-zA-Z0-9]/g, '');
+        const sku = `${code}-${cleanSize}-${cleanColor}`;
 
         records.push({
-          ProductID: sku, ItemCode: code, Name_MM: name, Type: type,
-          Sex: "Unisex", Length: "တို", Size: size, ColorPattern: color,
-          Remark: "Bulk mobile intake", Stock: qty, SellingPrice: price,
-          WholesalePrice: price, TotalCapital: Math.round(price * 0.6),
-          LastModified: timestamp, _syncStatus: "pending_upload"
+          ProductID: sku,
+          ItemCode: code,
+          Name_MM: name,
+          Sex: sex,
+          Type: type,
+          Length: length,
+          Size: size,
+          ColorPattern: color,
+          Remark: "Bulk mobile intake",
+          Stock: qty,
+          BuyingYuan: buyingYuan,
+          SupplierPct: supplierPct,
+          YuanRate: yuanRate,
+          CargoFee: cargoFee,
+          TotalCapital: totalCapital,
+          NormalPrice: normalPrice,
+          SellingPrice: sellingPrice,
+          WholesalePrice: wholesalePrice,
+          LastModified: timestamp,
+          _syncStatus: "pending_upload"
         });
       });
 
+      if (records.length === 0) return alert("No valid variant quantities entered.");
+
       const tx = db.transaction("products", "readwrite");
       records.forEach(r => tx.objectStore("products").put(r));
-      tx.oncomplete = () => {
+      tx.oncomplete = async () => {
+        // Auto-update store setting baselines with latest entered rates
+        await persistUpdatedSettings({
+          DefaultSupplierPct: supplierPct,
+          DefaultYuanRate: yuanRate,
+          DefaultCargoFee: cargoFee
+        });
+
         closeModal("bulkMatrixModal");
         renderInventoryTable();
         renderPosCatalog();
         pushPendingToSupabase();
-        alert(`✅ Created ${records.length} matrix variants!`);
+        alert(`✅ Created ${records.length} matrix variants for "${name}"!`);
       };
     }
 
@@ -2034,6 +2397,52 @@
     }
 
     function closeModal(id) { document.getElementById(id).style.display = "none"; }
+
+    async function persistUpdatedSettings(newRates = {}) {
+      let hasChanges = false;
+      for (const [k, v] of Object.entries(newRates)) {
+        if (v !== undefined && v !== null && appSettings[k] !== v) {
+          appSettings[k] = v;
+          hasChanges = true;
+        }
+      }
+
+      if (hasChanges && db) {
+        const tx = db.transaction("settings", "readwrite");
+        const store = tx.objectStore("settings");
+        for (const [k, v] of Object.entries(appSettings)) {
+          store.put({ key: k, value: v, _syncStatus: "pending_upload" });
+        }
+        await new Promise(r => { tx.oncomplete = r; });
+        applySettingsUI();
+        updateBadge();
+        pushSettingsToSupabase();
+      }
+    }
+
+    async function pushSettingsToSupabase() {
+      if (!supabaseClient || !navigator.onLine) return;
+      try {
+        const payload = Object.entries(appSettings).map(([k, v]) => ({
+          key: k,
+          value: v,
+          updated_at: new Date().toISOString()
+        }));
+
+        const { error } = await supabaseClient.from("store_settings").upsert(payload);
+        if (!error && db) {
+          const tx = db.transaction("settings", "readwrite");
+          const store = tx.objectStore("settings");
+          for (let [k, v] of Object.entries(appSettings)) {
+            store.put({ key: k, value: v, _syncStatus: "synced" });
+          }
+          await new Promise(r => { tx.oncomplete = r; });
+          updateBadge();
+        }
+      } catch (err) {
+        console.warn("Could not push settings to Supabase:", err);
+      }
+    }
 
     async function loadLocalSettings() {
       const s = await dbGetAll("settings");
