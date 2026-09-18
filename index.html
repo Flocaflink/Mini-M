@@ -11,6 +11,9 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
+  <!-- Supabase JS Client SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
   <style>
     :root {
       --primary: #e65c00;
@@ -474,13 +477,12 @@
   <img src="logo.png" alt="Logo" style="height: 32px; width: auto; vertical-align: middle; border-radius: 4px;">
   Mini-M Baby Clothing Store Owner Portal
 </h2>
+    <!-- WITH THIS: -->
     <div class="sync-controls" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-  <span id="syncStatus" class="status-badge badge-synced">⚡ All Synced</span>
-  <button id="btnDownloadSheets" class="btn btn-secondary btn-sm" onclick="downloadFromGoogleSheets()">📥 Download Sheets</button>
-  <button id="btnUploadSheets" class="btn btn-success btn-sm" onclick="uploadToGoogleSheets()">☁️ Upload Sheets</button>
-  <button class="btn btn-sm" style="background: #2b6cb0; color: white;" onclick="openStoreSettingsModal()" title="Store Defaults & Catalog Lists">⚙️ Settings</button>
-  <button class="btn btn-sm" style="background: #4a5568; color: white;" onclick="openGasConfigModal()" title="Configure Apps Script Web App URL">⚙️ Cloud URL</button>
-</div>
+      <span id="supabaseStatusBadge" class="status-badge" style="background: #e2e8f0; color: #475569;">⚡ Deltabase: Connecting...</span>
+      <span id="syncStatus" class="status-badge badge-synced">⚡ All Synced</span>
+      <button class="btn btn-sm" style="background: #2b6cb0; color: white;" onclick="openStoreSettingsModal()" title="Store Defaults, Backup & Sync">⚙️ Settings</button>
+    </div>
   </div>
 
   <div class="tab-nav">
@@ -642,8 +644,8 @@
           <div>
             <label>Paid Status:</label>
             <select id="orderPaidStatus">
-              <option value="paid">paid</option>
-              <option value="not received yet">not received yet</option>
+              <option value="Paid">paid</option>
+              <option value="Unpaid" selected>Unpaid</option>
             </select>
           </div>
           <div>
@@ -1251,8 +1253,8 @@
       <div>
         <label>Paid Status:</label>
         <select id="eoPaidStatus">
-          <option value="paid">paid</option>
-          <option value="not received yet">not received yet</option>
+          <option value="Paid">paid</option>
+          <option value="Unpaid">Unpaid</option>
         </select>
       </div>
     </div>
@@ -1345,34 +1347,10 @@
   </div>
 </div>
 
-<div id="gasConfigModal" class="modal-overlay">
-  <div class="modal-card" style="max-width: 550px;">
-    <div class="modal-header">
-      <h3>⚙️ Google Apps Script Endpoint Config</h3>
-      <button class="close-btn" onclick="closeModal('gasConfigModal')">&times;</button>
-    </div>
-    
-    <div style="font-size: 12px; color: #555; margin-bottom: 12px;">
-      Enter your private Google Apps Script Web App URL. It is stored securely in your local browser storage (<code>localStorage</code>) and will not be leaked to public repositories.
-    </div>
-
-    <label>Google Apps Script Web App URL (/exec):</label>
-    <input type="url" id="gasEndpointInput" placeholder="https://script.google.com/macros/s/.../exec" style="margin-bottom: 10px;">
-
-    <div id="gasConfigStatus" style="font-size: 11px; margin-bottom: 10px; font-weight: bold;"></div>
-
-    <div style="display: flex; gap: 8px;">
-      <button class="btn btn-primary" style="flex: 1;" onclick="saveGasEndpointUrl()">💾 Save Endpoint</button>
-      <button class="btn btn-secondary" onclick="testGasEndpointConnection()">🧪 Test Connection</button>
-      <button class="btn" style="background:#ccc;" onclick="closeModal('gasConfigModal')">Close</button>
-    </div>
-  </div>
-</div>
-
 <div id="storeSettingsModal" class="modal-overlay">
   <div class="modal-card" style="max-width: 680px;">
     <div class="modal-header">
-      <h3 style="display: flex; align-items: center; gap: 6px;">⚙️ Store Defaults & Catalog Configuration</h3>
+      <h3 style="display: flex; align-items: center; gap: 6px;">⚙️ Store Defaults & Operations Configuration</h3>
       <button class="close-btn" onclick="closeModal('storeSettingsModal')">&times;</button>
     </div>
 
@@ -1429,9 +1407,57 @@
       </div>
     </div>
 
-    <div style="display: flex; gap: 8px; margin-top: 16px;">
-      <button class="btn btn-primary" style="flex: 1;" onclick="saveStoreSettingsModal()">💾 Save Store Settings</button>
-      <button class="btn" style="background: #ccc;" onclick="closeModal('storeSettingsModal')">Cancel</button>
+    <!-- Section 3: Google Sheets & Supabase Cloud Endpoints -->
+    <div style="margin-top: 14px; border-top: 1px dashed #cbd5e0; padding-top: 10px;">
+      <div style="font-weight: bold; font-size: 12px; color: #4a5568; margin-bottom: 6px;">3. Cloud Endpoints & Live Delta Sync</div>
+      
+      <!-- Google Apps Script Web App URL -->
+      <label style="font-size: 11px;">Google Apps Script Web App URL (/exec) [Cold Backup]:</label>
+      <div style="display: flex; gap: 6px; align-items: center;">
+        <input type="url" id="cfgGasUrlInput" placeholder="https://script.google.com/macros/s/.../exec" style="margin-top: 0;">
+        <button type="button" class="btn btn-secondary btn-sm" onclick="testGasEndpointConnection()" style="white-space: nowrap;">🧪 Test Sheets</button>
+      </div>
+
+      <div style="display: flex; gap: 8px; margin-top: 8px;">
+        <button id="btnDownloadSheets" class="btn btn-secondary btn-sm" style="flex: 1;" onclick="downloadFromGoogleSheets()">📥 Download Sheets</button>
+        <button id="btnUploadSheets" class="btn btn-success btn-sm" style="flex: 1;" onclick="uploadToGoogleSheets()">☁️ Upload Sheets</button>
+      </div>
+
+      <!-- Supabase Live Deltabase Connection -->
+      <div style="margin-top: 12px; padding-top: 8px; border-top: 1px solid #edf2f7;">
+        <label style="font-size: 11px;">Supabase Project URL (e.g. https://xyz.supabase.co):</label>
+        <input type="password" id="cfgSupabaseUrl" placeholder="https://your-project.supabase.co" autocomplete="off" style="margin-top: 2px;">
+
+        <label style="font-size: 11px; margin-top: 6px;">Supabase Anon Public API Key:</label>
+        <input type="password" id="cfgSupabaseKey" placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." autocomplete="off" style="margin-top: 2px;">
+
+        <div style="display: flex; gap: 8px; margin-top: 8px;">
+          <button type="button" class="btn btn-secondary btn-sm" style="flex: 1;" onclick="testSupabaseConnection()">🧪 Test Supabase</button>
+          <button type="button" class="btn btn-primary btn-sm" style="flex: 1; background: #008055;" onclick="pullSupabaseDeltas(true)">⚡ Pull Supabase Deltas</button>
+        </div>
+
+        <!-- 🚀 Full Migration Tool -->
+        <div style="margin-top: 10px; padding: 8px; background: #fff8f2; border: 1px solid var(--primary-border); border-radius: 6px;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-size: 11px; font-weight: bold; color: var(--primary);">🚀 One-Time Cloud Migration:</span>
+            <button type="button" id="btnMigrateToSupabase" class="btn btn-warning btn-sm" onclick="migrateLocalMasterToSupabase()">
+              Seed All to Supabase
+            </button>
+          </div>
+          <div id="migrationProgressBar" style="display: none; margin-top: 6px;">
+            <div style="font-size: 10px; font-weight: bold; margin-bottom: 2px; color: #444;" id="migrationProgressLabel">Preparing...</div>
+            <div style="background: #e2e8f0; height: 8px; border-radius: 4px; overflow: hidden;">
+              <div id="migrationProgressFill" style="background: var(--primary); height: 100%; width: 0%; transition: width 0.2s ease;"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div id="cfgGasStatusMsg" style="font-size: 11px; margin-top: 6px; font-weight: bold;"></div>
+    </div>
+   <div style="display: flex; gap: 8px; margin-top: 15px;">
+      <button class="btn btn-primary" style="flex: 1;" onclick="saveStoreSettingsModal()">💾 Save Settings</button>
+      <button class="btn" style="background: #ccc;" onclick="closeModal('storeSettingsModal')">Close</button>
     </div>
   </div>
 </div>
@@ -1590,7 +1616,7 @@
     ProductColors: ["ပန်း", "ဝါ", "ပြာ", "ခဲ", "ဖြူ", "နီ", "စိမ်း", "နက်", "လိမ္မော်", "ခရမ်း", "ကြား", "ပွင့်"],
     PaymentMethods: ["KPay", "WavePay", "COD", "AYA Pay"],
     DeliveryServices: ["Royal", "Wepots", "Ninja Van", "Safe", "self"],
-    PaidStatuses: ["Paid", "Unpaid"]
+    PaidStatuses: ["paid", "Unpaid"]
   };
 
   let currentCart = [];
@@ -1612,6 +1638,11 @@
   let editingOrderItems = [];
   let currentModalCustomer = null;
   let activeAnalyticsPeriod = "today";
+
+  let isAutoBackupSkipped = false;
+  let autoBackupSkipReason = "";
+  const KEY_LAST_DAILY_BACKUP = "babystore_last_daily_backup_date";
+  const KEY_KNOWN_CLOUD_COUNTS = "babystore_known_cloud_counts";
 
   // Clean record helper defined early to prevent hoisting errors
   function cleanRecordForSync(record) {
@@ -1660,6 +1691,652 @@
       };
       request.onerror = (e) => reject("IndexedDB Error: " + e.target.error);
     });
+  }
+
+  // ===========================================================================
+  // SUPABASE REALTIME & DELTA ENGINE
+  // ===========================================================================
+  let supabaseClient = null;
+  let isSyncingToSupabase = false;
+
+  const KEY_SB_URL = "babystore_supabase_url";
+  const KEY_SB_KEY = "babystore_supabase_key";
+  const KEY_SB_LAST_SYNC = "babystore_last_sb_sync";
+
+  function initSupabaseClient() {
+    const rawUrl = localStorage.getItem(KEY_SB_URL);
+    const rawKey = localStorage.getItem(KEY_SB_KEY);
+    const badge = document.getElementById("supabaseStatusBadge");
+
+    const sbUrl = (rawUrl || "").trim().replace(/^["']|["']$/g, "").trim();
+    const sbKey = (rawKey || "").trim().replace(/^["']|["']$/g, "").trim();
+
+    if (!sbUrl || !sbKey || typeof supabase === 'undefined') {
+      if (badge) {
+        badge.style.background = "#e2e8f0";
+        badge.style.color = "#475569";
+        badge.innerText = "⚡ Deltabase: Not Configured";
+      }
+      return;
+    }
+
+    try {
+      supabaseClient = supabase.createClient(sbUrl, sbKey, {
+  auth: {
+    persistSession: false,
+    autoRefreshToken: false,
+    detectSessionInUrl: false
+  },
+  global: {
+    headers: {
+      apikey: sbKey,
+      Authorization: `Bearer ${sbKey}`
+    }
+  }
+});
+
+      if (badge) {
+        badge.style.background = "#d4edda";
+        badge.style.color = "#155724";
+        badge.innerText = "⚡ Deltabase: Online";
+      }
+
+      setupSupabaseRealtime();
+      pullSupabaseDeltas(false);
+      pushPendingToSupabase();
+
+      window.addEventListener("online", () => {
+        if (badge) {
+          badge.style.background = "#d4edda";
+          badge.style.color = "#155724";
+          badge.innerText = "⚡ Deltabase: Online";
+        }
+        pushPendingToSupabase();
+        pullSupabaseDeltas(false);
+      });
+
+      window.addEventListener("offline", () => {
+        if (badge) {
+          badge.style.background = "#fff3cd";
+          badge.style.color = "#856404";
+          badge.innerText = "⚡ Deltabase: Working Offline";
+        }
+      });
+
+      window.addEventListener("focus", () => {
+        if (navigator.onLine) pullSupabaseDeltas(false);
+      });
+
+      // 30-second heartbeat delta sync
+      setInterval(() => {
+        if (navigator.onLine) {
+          pushPendingToSupabase();
+          pullSupabaseDeltas(false);
+        }
+      }, 30000);
+
+    } catch (err) {
+      console.error("Supabase init error:", err);
+      if (badge) {
+        badge.style.background = "#f8d7da";
+        badge.style.color = "#721c24";
+        badge.innerText = "⚡ Deltabase: Error";
+      }
+    }
+  }
+
+  async function testSupabaseConnection() {
+    const url = document.getElementById("cfgSupabaseUrl")?.value.trim() || localStorage.getItem(KEY_SB_URL);
+    const key = document.getElementById("cfgSupabaseKey")?.value.trim() || localStorage.getItem(KEY_SB_KEY);
+    const statusMsg = document.getElementById("cfgGasStatusMsg");
+
+    if (!url || !key) {
+      if (statusMsg) statusMsg.innerHTML = `<span style="color:red;">⚠️ Please enter both Supabase URL and Key first.</span>`;
+      return;
+    }
+
+    if (statusMsg) statusMsg.innerHTML = "⏳ Testing Supabase connection...";
+    try {
+      const client = supabase.createClient(url, key);
+      const { data, error } = await client.from("products").select("product_id").limit(1);
+      if (error) throw error;
+      if (statusMsg) statusMsg.innerHTML = `<span style="color:green;">✅ Supabase connection successful!</span>`;
+    } catch (err) {
+      if (statusMsg) statusMsg.innerHTML = `<span style="color:red;">❌ Supabase failed: ${err.message}</span>`;
+    }
+  }
+
+  function setupSupabaseRealtime() {
+    if (!supabaseClient) return;
+
+    supabaseClient
+      .channel("babystore-realtime-changes")
+      .on("postgres_changes", { event: "*", schema: "public", table: "products" }, payload => {
+        if (payload.new && db) {
+          const p = payload.new;
+          const localRecord = {
+            ProductID: p.product_id,
+            ItemCode: p.item_code,
+            Name_MM: p.name_mm,
+            Sex: p.sex,
+            Type: p.type,
+            Length: p.length,
+            Size: p.size,
+            ColorPattern: p.color_pattern,
+            Remark: p.remark,
+            Stock: p.stock,
+            BuyingYuan: p.buying_yuan,
+            SupplierPct: p.supplier_pct,
+            YuanRate: p.yuan_rate,
+            CargoFee: p.cargo_fee,
+            TotalCapital: p.total_capital,
+            NormalPrice: p.normal_price,
+            SellingPrice: p.selling_price,
+            WholesalePrice: p.wholesale_price,
+            LastModified: p.last_modified,
+            _syncStatus: "synced"
+          };
+          const tx = db.transaction("products", "readwrite");
+          tx.objectStore("products").put(localRecord);
+          tx.oncomplete = () => {
+            renderPosCatalog();
+            renderInventoryTable();
+            renderAnalyticsDashboard();
+          };
+        }
+      })
+
+      .on("postgres_changes", { event: "*", schema: "public", table: "store_settings" }, payload => {
+        if (payload.new && db) {
+          const { key, value } = payload.new;
+          appSettings[key] = value;
+
+          const tx = db.transaction("settings", "readwrite");
+          tx.objectStore("settings").put({ key, value, _syncStatus: "synced" });
+          tx.oncomplete = () => {
+            applyDynamicSettingsToUI();
+            renderPosCatalog();
+          };
+        }
+      })
+
+      .on("postgres_changes", { event: "*", schema: "public", table: "orders" }, payload => {
+        if (payload.new && db) {
+          const o = payload.new;
+          const localOrder = {
+            SalesID: o.sales_id,
+            Date: o.date,
+            CustomerID: o.customer_id,
+            CustomerName: o.customer_name,
+            Phone: o.phone,
+            DeliveryName: o.delivery_name,
+            DeliveryAddress: o.delivery_address,
+            TownshipCity: o.township_city,
+            ItemList: o.item_list,
+            Subtotal: o.subtotal,
+            DiscountType: o.discount_type,
+            DiscountAmount: o.discount_amount,
+            DiscountLabel: o.discount_label,
+            TotalAmount: o.total_amount,
+            PaymentType: o.payment_type,
+            PaidStatus: o.paid_status,
+            Status: o.status,
+            Remark: o.remark,
+            LastModified: o.last_modified,
+            _syncStatus: "synced"
+          };
+          const tx = db.transaction("orders", "readwrite");
+          tx.objectStore("orders").put(localOrder);
+          tx.oncomplete = () => {
+            renderOrdersTable();
+            renderAnalyticsDashboard();
+          };
+        }
+      })
+      .subscribe();
+  }
+
+  async function pushPendingToSupabase() {
+    if (!supabaseClient || !db || isSyncingToSupabase || !navigator.onLine) return;
+    isSyncingToSupabase = true;
+
+    try {
+      const [products, orders, customers] = await Promise.all([
+        dbGetAll("products"),
+        dbGetAll("orders"),
+        dbGetAll("customers")
+      ]);
+
+      const unsavedProds = products.filter(p => p._syncStatus === "pending_upload");
+      const unsavedOrders = orders.filter(o => o._syncStatus === "pending_upload");
+      const unsavedCusts = customers.filter(c => c._syncStatus === "pending_upload");
+
+      // 1. Push Products
+      if (unsavedProds.length > 0) {
+        const payload = unsavedProds.map(p => ({
+          product_id: p.ProductID,
+          item_code: p.ItemCode || "",
+          name_mm: p.Name_MM,
+          sex: p.Sex || "Unisex",
+          type: p.Type || "",
+          length: p.Length || "တို",
+          size: String(p.Size || ""),
+          color_pattern: p.ColorPattern || "",
+          remark: p.Remark || "",
+          stock: Number(p.Stock) || 0,
+          buying_yuan: Number(p.BuyingYuan) || 0,
+          supplier_pct: Number(p.SupplierPct) || 0,
+          yuan_rate: Number(p.YuanRate) || 620,
+          cargo_fee: Number(p.CargoFee) || 2500,
+          total_capital: Number(p.TotalCapital) || 0,
+          normal_price: Number(p.NormalPrice) || 0,
+          selling_price: Number(p.SellingPrice) || 0,
+          wholesale_price: Number(p.WholesalePrice) || 0,
+          last_modified: p.LastModified || new Date().toISOString()
+        }));
+
+        const { error } = await supabaseClient.from("products").upsert(payload);
+        if (!error) await markAllAsSynced("products", unsavedProds);
+      }
+
+      // 2. Push Orders
+      if (unsavedOrders.length > 0) {
+        const payload = unsavedOrders.map(o => ({
+          sales_id: o.SalesID,
+          date: o.Date,
+          customer_id: o.CustomerID,
+          customer_name: o.CustomerName,
+          phone: o.Phone || "",
+          delivery_name: o.DeliveryName || "",
+          delivery_address: o.DeliveryAddress || "",
+          township_city: o.TownshipCity || "",
+          item_list: o.ItemList || [],
+          subtotal: Number(o.Subtotal) || 0,
+          discount_type: o.DiscountType || "none",
+          discount_amount: Number(o.DiscountAmount) || 0,
+          discount_label: o.DiscountLabel || "",
+          total_amount: Number(o.TotalAmount) || 0,
+          payment_type: o.PaymentType || "",
+          paid_status: o.PaidStatus || "not received yet",
+          status: o.Status || "Confirmed",
+          remark: o.Remark || "",
+          last_modified: o.LastModified || new Date().toISOString()
+        }));
+
+        const { error } = await supabaseClient.from("orders").upsert(payload);
+        if (!error) await markAllAsSynced("orders", unsavedOrders);
+      }
+
+      // 3. Push Customers
+      if (unsavedCusts.length > 0) {
+        const payload = unsavedCusts.map(c => ({
+          customer_id: c.CustomerID,
+          full_name: c.FullName,
+          phone: c.Phone || "",
+          default_address: c.DefaultAddress || "",
+          township_city: c.TownshipCity || "",
+          remark: c.Remark || "",
+          total_spend: Number(c.TotalSpend) || 0,
+          last_order_date: c.LastOrderDate || new Date().toISOString()
+        }));
+
+        const { error } = await supabaseClient.from("customers").upsert(payload);
+        if (!error) await markAllAsSynced("customers", unsavedCusts);
+      }
+
+      updateUnsavedChangesBadge();
+    } catch (err) {
+      console.warn("Supabase outbound push paused:", err);
+    } finally {
+      isSyncingToSupabase = false;
+    }
+  }
+
+async function pushSettingsToSupabase() {
+    if (!supabaseClient || !navigator.onLine) return;
+    try {
+      const payload = Object.entries(appSettings).map(([k, v]) => ({
+        key: k,
+        value: v,
+        updated_at: new Date().toISOString()
+      }));
+
+      const { error } = await supabaseClient.from("store_settings").upsert(payload);
+      if (!error && db) {
+        const tx = db.transaction("settings", "readwrite");
+        const store = tx.objectStore("settings");
+        for (let [k, v] of Object.entries(appSettings)) {
+          store.put({ key: k, value: v, _syncStatus: "synced" });
+        }
+        await new Promise(r => { tx.oncomplete = r; });
+        updateUnsavedChangesBadge();
+      }
+    } catch (err) {
+      console.warn("Could not push settings to Supabase:", err);
+    }
+  }
+
+  async function migrateLocalMasterToSupabase() {
+    if (!supabaseClient || !navigator.onLine) {
+      return alert("⚠️ Supabase client is not connected or device is offline. Verify your credentials in Settings first.");
+    }
+
+    const [products, orders, customers, settings] = await Promise.all([
+      dbGetAll("products"),
+      dbGetAll("orders"),
+      dbGetAll("customers"),
+      dbGetAll("settings")
+    ]);
+
+    const totalRecords = products.length + orders.length + customers.length + Object.keys(appSettings).length;
+    if (totalRecords === 0) {
+      return alert("⚠️ Local database is completely empty. Please click '📥 Download Sheets' first to populate local data from Google Sheets.");
+    }
+
+    const confirmed = confirm(
+      `🚀 Start Cloud Migration to Supabase?\n\n` +
+      `This will upsert:\n` +
+      `• ${Object.keys(appSettings).length} Store Settings\n` +
+      `• ${products.length} Products & Variants\n` +
+      `• ${customers.length} Customer Profiles\n` +
+      `• ${orders.length} Historical Sales Orders\n\n` +
+      `Existing records in Supabase with matching keys will be updated safely.`
+    );
+    if (!confirmed) return;
+
+    const btn = document.getElementById("btnMigrateToSupabase");
+    const pBar = document.getElementById("migrationProgressBar");
+    const pLabel = document.getElementById("migrationProgressLabel");
+    const pFill = document.getElementById("migrationProgressFill");
+
+    if (btn) btn.disabled = true;
+    if (pBar) pBar.style.display = "block";
+
+    const updateProgress = (done, total, stageName) => {
+      const pct = Math.min(100, Math.round((done / total) * 100));
+      if (pFill) pFill.style.width = `${pct}%`;
+      if (pLabel) pLabel.innerText = `${stageName} (${done}/${total}) — ${pct}%`;
+    };
+
+    let processedCount = 0;
+
+    try {
+      // -----------------------------------------------------------------------
+      // Stage 1: Store Settings
+      // -----------------------------------------------------------------------
+      updateProgress(processedCount, totalRecords, "1/4 Syncing Store Settings...");
+      const settingsPayload = Object.entries(appSettings).map(([k, v]) => ({
+        key: k,
+        value: v,
+        updated_at: new Date().toISOString()
+      }));
+      const { error: sErr } = await supabaseClient.from("store_settings").upsert(settingsPayload);
+      if (sErr) throw new Error(`Settings migration failed: ${sErr.message}`);
+      processedCount += settingsPayload.length;
+
+      // -----------------------------------------------------------------------
+      // Stage 2: Products (Batches of 50)
+      // -----------------------------------------------------------------------
+      const BATCH_SIZE = 50;
+      for (let i = 0; i < products.length; i += BATCH_SIZE) {
+        const chunk = products.slice(i, i + BATCH_SIZE);
+        const payload = chunk.map(p => ({
+          product_id: p.ProductID,
+          item_code: p.ItemCode || "",
+          name_mm: p.Name_MM,
+          sex: p.Sex || "Unisex",
+          type: p.Type || "",
+          length: p.Length || "တို",
+          size: String(p.Size || ""),
+          color_pattern: p.ColorPattern || "",
+          remark: p.Remark || "",
+          stock: Number(p.Stock) || 0,
+          buying_yuan: Number(p.BuyingYuan) || 0,
+          supplier_pct: Number(p.SupplierPct) || 0,
+          yuan_rate: Number(p.YuanRate) || 620,
+          cargo_fee: Number(p.CargoFee) || 2500,
+          total_capital: Number(p.TotalCapital) || 0,
+          normal_price: Number(p.NormalPrice) || 0,
+          selling_price: Number(p.SellingPrice) || 0,
+          wholesale_price: Number(p.WholesalePrice) || 0,
+          last_modified: p.LastModified || new Date().toISOString()
+        }));
+
+        const { error: pErr } = await supabaseClient.from("products").upsert(payload);
+        if (pErr) throw new Error(`Products batch failed at SKU ${chunk[0].ProductID}: ${pErr.message}`);
+        
+        processedCount += chunk.length;
+        updateProgress(processedCount, totalRecords, "2/4 Syncing Products...");
+      }
+
+      // -----------------------------------------------------------------------
+      // Stage 3: Customers (Batches of 50)
+      // -----------------------------------------------------------------------
+      for (let i = 0; i < customers.length; i += BATCH_SIZE) {
+        const chunk = customers.slice(i, i + BATCH_SIZE);
+        const payload = chunk.map(c => ({
+          customer_id: c.CustomerID,
+          full_name: c.FullName,
+          phone: c.Phone || "",
+          default_address: c.DefaultAddress || "",
+          township_city: c.TownshipCity || "",
+          remark: c.Remark || "",
+          total_spend: Number(c.TotalSpend) || 0,
+          last_order_date: c.LastOrderDate || new Date().toISOString()
+        }));
+
+        const { error: cErr } = await supabaseClient.from("customers").upsert(payload);
+        if (cErr) throw new Error(`Customers batch failed at ID ${chunk[0].CustomerID}: ${cErr.message}`);
+
+        processedCount += chunk.length;
+        updateProgress(processedCount, totalRecords, "3/4 Syncing Customers...");
+      }
+
+      // -----------------------------------------------------------------------
+      // Stage 4: Orders (Batches of 50)
+      // -----------------------------------------------------------------------
+      for (let i = 0; i < orders.length; i += BATCH_SIZE) {
+        const chunk = orders.slice(i, i + BATCH_SIZE);
+        const payload = chunk.map(o => {
+          let items = o.ItemList;
+          if (typeof items === "string") {
+            try { items = JSON.parse(items); } catch (e) { items = []; }
+          }
+          return {
+            sales_id: o.SalesID,
+            date: o.Date,
+            customer_id: o.CustomerID,
+            customer_name: o.CustomerName,
+            phone: o.Phone || "",
+            delivery_name: o.DeliveryName || "",
+            delivery_address: o.DeliveryAddress || "",
+            township_city: o.TownshipCity || "",
+            item_list: items || [],
+            subtotal: Number(o.Subtotal) || 0,
+            discount_type: o.DiscountType || "none",
+            discount_amount: Number(o.DiscountAmount) || 0,
+            discount_label: o.DiscountLabel || "",
+            total_amount: Number(o.TotalAmount) || 0,
+            payment_type: o.PaymentType || "",
+            paid_status: (o.PaidStatus !== undefined && o.PaidStatus !== null) ? String(o.PaidStatus).trim() : "",
+            status: o.Status || "Confirmed",
+            remark: o.Remark || "",
+            last_modified: o.LastModified || new Date().toISOString()
+          };
+        });
+
+        const { error: oErr } = await supabaseClient.from("orders").upsert(payload);
+        if (oErr) throw new Error(`Orders batch failed at SalesID ${chunk[0].SalesID}: ${oErr.message}`);
+
+        processedCount += chunk.length;
+        updateProgress(processedCount, totalRecords, "4/4 Syncing Orders...");
+      }
+
+      // -----------------------------------------------------------------------
+      // Finalize: Flag all local records as synced
+      // -----------------------------------------------------------------------
+      await Promise.all([
+        markAllAsSynced("products", products),
+        markAllAsSynced("orders", orders),
+        markAllAsSynced("customers", customers)
+      ]);
+
+      const sTx = db.transaction("settings", "readwrite");
+      const sStore = sTx.objectStore("settings");
+      for (let [k, v] of Object.entries(appSettings)) {
+        sStore.put({ key: k, value: v, _syncStatus: "synced" });
+      }
+      await new Promise(r => { sTx.oncomplete = r; });
+
+      localStorage.setItem(KEY_SB_LAST_SYNC, new Date().toISOString());
+      await updateUnsavedChangesBadge();
+
+      if (pLabel) pLabel.innerText = "✅ Migration Completed Successfully!";
+      alert(`🎉 Database Migration Successful!\n\nAll historical records are now seeded into Supabase.\nRealtime and delta synchronization are fully active.`);
+    } catch (err) {
+      console.error("Migration Error:", err);
+      if (pLabel) pLabel.innerText = `❌ Error: ${err.message}`;
+      alert(`❌ Migration halted: ${err.message}`);
+    } finally {
+      if (btn) btn.disabled = false;
+    }
+  }
+
+  async function pullSupabaseDeltas(userInitiated = false) {
+    if (!supabaseClient || !db || !navigator.onLine) return;
+
+    try {
+      let lastSync = localStorage.getItem(KEY_SB_LAST_SYNC) || "1970-01-01T00:00:00Z";
+
+      // 1. Pull Products
+      const { data: pData, error: pErr } = await supabaseClient
+        .from("products")
+        .select("*")
+        .gt("updated_at", lastSync);
+
+      if (!pErr && pData && pData.length > 0) {
+        const txP = db.transaction("products", "readwrite");
+        const pStore = txP.objectStore("products");
+        pData.forEach(p => {
+          pStore.put({
+            ProductID: p.product_id,
+            ItemCode: p.item_code,
+            Name_MM: p.name_mm,
+            Sex: p.sex,
+            Type: p.type,
+            Length: p.length,
+            Size: p.size,
+            ColorPattern: p.color_pattern,
+            Remark: p.remark,
+            Stock: p.stock,
+            BuyingYuan: p.buying_yuan,
+            SupplierPct: p.supplier_pct,
+            YuanRate: p.yuan_rate,
+            CargoFee: p.cargo_fee,
+            TotalCapital: p.total_capital,
+            NormalPrice: p.normal_price,
+            SellingPrice: p.selling_price,
+            WholesalePrice: p.wholesale_price,
+            LastModified: p.last_modified,
+            _syncStatus: "synced"
+          });
+        });
+        await new Promise(r => { txP.oncomplete = r; });
+        renderPosCatalog();
+        renderInventoryTable();
+      }
+
+      // 2. Pull Orders
+      const { data: oData, error: oErr } = await supabaseClient
+        .from("orders")
+        .select("*")
+        .gt("updated_at", lastSync);
+
+      if (!oErr && oData && oData.length > 0) {
+        const txO = db.transaction("orders", "readwrite");
+        const oStore = txO.objectStore("orders");
+        oData.forEach(o => {
+          oStore.put({
+            SalesID: o.sales_id,
+            Date: o.date,
+            CustomerID: o.customer_id,
+            CustomerName: o.customer_name,
+            Phone: o.phone,
+            DeliveryName: o.delivery_name,
+            DeliveryAddress: o.delivery_address,
+            TownshipCity: o.township_city,
+            ItemList: o.item_list,
+            Subtotal: o.subtotal,
+            DiscountType: o.discount_type,
+            DiscountAmount: o.discount_amount,
+            DiscountLabel: o.discount_label,
+            TotalAmount: o.total_amount,
+            PaymentType: o.payment_type,
+            PaidStatus: o.paid_status,
+            Status: o.status,
+            Remark: o.remark,
+            LastModified: o.last_modified,
+            _syncStatus: "synced"
+          });
+        });
+        await new Promise(r => { txO.oncomplete = r; });
+        renderOrdersTable();
+      }
+
+      // 3. Pull Store Settings
+      const { data: sData, error: sErr } = await supabaseClient
+        .from("store_settings")
+        .select("*")
+        .gt("updated_at", lastSync);
+
+      if (!sErr && sData && sData.length > 0) {
+        const txS = db.transaction("settings", "readwrite");
+        const sStore = txS.objectStore("settings");
+        sData.forEach(row => {
+          appSettings[row.key] = row.value;
+          sStore.put({ key: row.key, value: row.value, _syncStatus: "synced" });
+        });
+        await new Promise(r => { txS.oncomplete = r; });
+        applyDynamicSettingsToUI();
+      }
+
+      // 4. Pull Customers
+      const { data: cData, error: cErr } = await supabaseClient
+        .from("customers")
+        .select("*")
+        .gt("updated_at", lastSync);
+
+      if (!cErr && cData && cData.length > 0) {
+        const txC = db.transaction("customers", "readwrite");
+        const cStore = txC.objectStore("customers");
+        cData.forEach(c => {
+          cStore.put({
+            CustomerID: c.customer_id,
+            FullName: c.full_name,
+            Phone: c.phone || "",
+            DefaultAddress: c.default_address || "",
+            TownshipCity: c.township_city || "",
+            Remark: c.remark || "",
+            TotalSpend: Number(c.total_spend) || 0,
+            LastOrderDate: c.last_order_date || new Date().toISOString(),
+            _syncStatus: "synced"
+          });
+        });
+        await new Promise(r => { txC.oncomplete = r; });
+        renderCustomersTable();
+      }
+
+      // 5. Update Sync Timestamp
+      localStorage.setItem(KEY_SB_LAST_SYNC, new Date().toISOString());
+      renderAnalyticsDashboard();
+
+      if (userInitiated) {
+        alert(`⚡ Supabase Delta Sync Complete!\n• Updated Products: ${pData ? pData.length : 0}\n• Updated Orders: ${oData ? oData.length : 0}`);
+      }
+    } catch (err) {
+      console.error("Delta pull failed:", err);
+      if (userInitiated) alert(`❌ Delta Sync Error: ${err.message}`);
+    }
   }
 
   function dbGetAll(storeName) {
@@ -1887,6 +2564,7 @@
       await new Promise(r => { tx.oncomplete = r; });
       applyDynamicSettingsToUI();
       updateUnsavedChangesBadge();
+      pushSettingsToSupabase(); // <-- Immediate sync to Supabase
     }
   }
 
@@ -1903,11 +2581,37 @@
     document.getElementById('cfgDeliveryServices').value = (appSettings.DeliveryServices || []).join(', ');
     document.getElementById('cfgPaymentMethods').value = (appSettings.PaymentMethods || []).join(', ');
 
+    // Read stored Apps Script and Supabase credentials
+    document.getElementById('cfgGasUrlInput').value = localStorage.getItem("gas_endpoint_url") || '';
+    document.getElementById('cfgSupabaseUrl').value = localStorage.getItem(KEY_SB_URL) || appSettings.SupabaseUrl || '';
+    document.getElementById('cfgSupabaseKey').value = localStorage.getItem(KEY_SB_KEY) || appSettings.SupabaseAnonKey || '';
+
+    const statusMsg = document.getElementById('cfgGasStatusMsg');
+    if (statusMsg) {
+      if (isAutoBackupSkipped) {
+        statusMsg.innerHTML = `<span style="color:orange;">⚠️ Auto-backup was skipped: ${autoBackupSkipReason}</span>`;
+      } else {
+        statusMsg.innerHTML = '';
+      }
+    }
+
     document.getElementById('storeSettingsModal').style.display = 'flex';
   }
 
   async function saveStoreSettingsModal() {
     const parseList = (val) => val.split(',').map(s => s.trim()).filter(Boolean);
+
+    // Clean and persist URLs & Keys
+    const gasUrl = document.getElementById('cfgGasUrlInput')?.value.trim() || '';
+    if (gasUrl) localStorage.setItem("gas_endpoint_url", gasUrl);
+
+    const rawSbUrl = document.getElementById('cfgSupabaseUrl')?.value || '';
+    const rawSbKey = document.getElementById('cfgSupabaseKey')?.value || '';
+    const sbUrl = rawSbUrl.trim().replace(/^["']|["']$/g, "").trim();
+    const sbKey = rawSbKey.trim().replace(/^["']|["']$/g, "").trim();
+
+    if (sbUrl) localStorage.setItem(KEY_SB_URL, sbUrl);
+    if (sbKey) localStorage.setItem(KEY_SB_KEY, sbKey);
 
     const updated = {
       DefaultYuanRate: parseFloat(document.getElementById('cfgYuanRate').value) || 620,
@@ -1919,50 +2623,62 @@
       ProductSizes: parseList(document.getElementById('cfgProductSizes').value),
       ProductColors: parseList(document.getElementById('cfgProductColors').value),
       DeliveryServices: parseList(document.getElementById('cfgDeliveryServices').value),
-      PaymentMethods: parseList(document.getElementById('cfgPaymentMethods').value)
+      PaymentMethods: parseList(document.getElementById('cfgPaymentMethods').value),
+      SupabaseUrl: sbUrl || appSettings.SupabaseUrl || "",
+      SupabaseAnonKey: sbKey || appSettings.SupabaseAnonKey || ""
     };
 
     await persistUpdatedSettings(updated);
+    initSupabaseClient();
     closeModal('storeSettingsModal');
-    alert("✅ Store settings saved!");
+    alert("✅ Store defaults & Supabase settings saved!");
   }
 
   async function updateUnsavedChangesBadge() {
-  try {
-    const [products, orders, customers, settings] = await Promise.all([
-      dbGetAll("products"),
-      dbGetAll("orders"),
-      dbGetAll("customers"),
-      dbGetAll("settings")
-    ]);
+    try {
+      const [products, orders, customers, settings] = await Promise.all([
+        dbGetAll("products"),
+        dbGetAll("orders"),
+        dbGetAll("customers"),
+        dbGetAll("settings")
+      ]);
 
-    const unsavedProds = products.filter(p => p._syncStatus === "pending_upload").length;
-    const unsavedOrders = orders.filter(o => o._syncStatus === "pending_upload").length;
-    const unsavedCusts = customers.filter(c => c._syncStatus === "pending_upload").length;
-    const unsavedSettings = settings.filter(s => s._syncStatus === "pending_upload").length;
+      const unsavedProds = products.filter(p => p._syncStatus === "pending_upload").length;
+      const unsavedOrders = orders.filter(o => o._syncStatus === "pending_upload").length;
+      const unsavedCusts = customers.filter(c => c._syncStatus === "pending_upload").length;
+      const unsavedSettings = settings.filter(s => s._syncStatus === "pending_upload").length;
 
-    const totalUnsaved = unsavedProds + unsavedOrders + unsavedCusts + (unsavedSettings > 0 ? 1 : 0);
+      const totalUnsaved = unsavedProds + unsavedOrders + unsavedCusts + (unsavedSettings > 0 ? 1 : 0);
 
-    const badge = document.getElementById("syncStatus");
-    const btnUpload = document.getElementById("btnUploadSheets");
+      const badge = document.getElementById("syncStatus");
+      const btnUpload = document.getElementById("btnUploadSheets");
 
-    if (totalUnsaved > 0) {
-      if (badge) {
-        badge.className = "status-badge badge-unsaved";
-        badge.innerText = `⏳ ${totalUnsaved} Unsaved Changes`;
+      if (isAutoBackupSkipped) {
+        if (badge) {
+          badge.className = "status-badge badge-stock-out";
+          badge.innerText = "⚠️ Auto-backup Skipped";
+          badge.title = `Auto-backup was skipped: ${autoBackupSkipReason}. Do a manual upload in Settings.`;
+        }
+        if (btnUpload) btnUpload.innerText = totalUnsaved > 0 ? `☁️ Upload Sheets (${totalUnsaved})` : "☁️ Upload Sheets";
+      } else if (totalUnsaved > 0) {
+        if (badge) {
+          badge.className = "status-badge badge-unsaved";
+          badge.innerText = `⏳ ${totalUnsaved} Unsaved Changes`;
+          badge.title = "";
+        }
+        if (btnUpload) btnUpload.innerText = `☁️ Upload Sheets (${totalUnsaved})`;
+      } else {
+        if (badge) {
+          badge.className = "status-badge badge-synced";
+          badge.innerText = "⚡ All Synced";
+          badge.title = "";
+        }
+        if (btnUpload) btnUpload.innerText = "☁️ Upload Sheets";
       }
-      if (btnUpload) btnUpload.innerText = `☁️ Upload Sheets (${totalUnsaved})`;
-    } else {
-      if (badge) {
-        badge.className = "status-badge badge-synced";
-        badge.innerText = "⚡ All Synced";
-      }
-      if (btnUpload) btnUpload.innerText = "☁️ Upload Sheets";
+    } catch (e) {
+      console.warn("Could not update unsaved badge:", e);
     }
-  } catch (e) {
-    console.warn("Could not update unsaved badge:", e);
   }
-}
 
   async function generateNextSalesId() {
     const orders = await dbGetAll("orders");
@@ -2015,19 +2731,23 @@
   }
 
   window.addEventListener("DOMContentLoaded", async () => {
-  try {
-    await initDatabase();
-    await loadSettings();
-    renderPosCatalog();
-    renderInventoryTable();
-    renderOrdersTable();
-    renderCustomersTable();
-    renderAnalyticsDashboard();
-    updateUnsavedChangesBadge();
-  } catch (err) {
-    console.error("Boot failure:", err);
-  }
-});
+    try {
+      await initDatabase();
+      await loadSettings();
+      initSupabaseClient(); // <-- Initialize Supabase client
+      renderPosCatalog();
+      renderInventoryTable();
+      renderOrdersTable();
+      renderCustomersTable();
+      renderAnalyticsDashboard();
+      updateUnsavedChangesBadge();
+
+      // Schedule daily background check 30 seconds after boot
+      setTimeout(runDailyAutoBackupCheck, 30000);
+    } catch (err) {
+      console.error("Boot failure:", err);
+    }
+  });
 
 document.addEventListener("click", (e) => {
   if (!e.target.closest(".customer-suggestion-dropdown")) {
@@ -2460,6 +3180,7 @@ document.addEventListener("click", (e) => {
       renderPosCatalog();
       renderAnalyticsDashboard();
       updateUnsavedChangesBadge();
+      pushPendingToSupabase();
     };
 
     tx.onerror = (e) => alert("Bulk generation failed: " + e.target.error);
@@ -3054,6 +3775,7 @@ document.addEventListener("click", (e) => {
       renderAnalyticsDashboard();
       updateUnsavedChangesBadge();
       openVoucherModal(orderPayload);
+      pushPendingToSupabase();
     };
 
     tx.onerror = (e) => alert("Transaction failed: " + e.target.error);
@@ -3138,6 +3860,7 @@ document.addEventListener("click", (e) => {
       renderPosCatalog();
       renderAnalyticsDashboard();
       updateUnsavedChangesBadge();
+      pushPendingToSupabase();
     };
   }
 
@@ -3160,7 +3883,7 @@ document.addEventListener("click", (e) => {
     }
 
     const deliveryServices = appSettings.DeliveryServices || ["Royal", "Wepots", "Ninja Van", "Safe", "Self"];
-    const standardPaidStatuses = appSettings.PaidStatuses || ["Paid", "Unpaid"];
+    const standardPaidStatuses = appSettings.PaidStatuses || ["paid", "not received yet"];
 
     tbody.innerHTML = filtered.map(o => {
       const items = Array.isArray(o.ItemList) ? o.ItemList : [];
@@ -3177,14 +3900,20 @@ document.addEventListener("click", (e) => {
         `<option value="${d}" ${d === currentCourier ? 'selected' : ''}>${d}</option>`
       ).join('');
 
-      const currentPaidStatus = o.PaidStatus || 'Unpaid';
-      let paidStatusList = [...standardPaidStatuses];
-      if (currentPaidStatus && !paidStatusList.includes(currentPaidStatus)) {
-        paidStatusList.push(currentPaidStatus);
-      }
-      const paidStatusOptions = paidStatusList.map(s => 
-        `<option value="${s}" ${s === currentPaidStatus ? 'selected' : ''}>${s}</option>`
-      ).join('');
+      const currentPaidStatus = o.PaidStatus ? String(o.PaidStatus).trim() : "";
+      
+      // Determine badge color styling
+      let statusColor = "#718096"; // Neutral gray for blank
+      if (currentPaidStatus.toLowerCase() === "paid") statusColor = "#155724";
+      else if (currentPaidStatus.toLowerCase() === "unpaid") statusColor = "#721c24";
+
+      // If existing record is blank, provide a blank placeholder option in the dropdown
+      const hasBlank = !currentPaidStatus;
+      const paidStatusOptions = `
+        ${hasBlank ? `<option value="" selected>-- Not Set --</option>` : ''}
+        <option value="Paid" ${currentPaidStatus === "Paid" ? "selected" : ""}>Paid</option>
+        <option value="Unpaid" ${currentPaidStatus === "Unpaid" ? "selected" : ""}>Unpaid</option>
+      `;
 
       const isPaid = currentPaidStatus.toLowerCase() === 'paid';
 
@@ -3239,6 +3968,7 @@ document.addEventListener("click", (e) => {
     o._syncStatus = "pending_upload";
     await dbPut("orders", o);
     renderOrdersTable();
+    pushPendingToSupabase();
   }
 
   async function quickUpdateOrderCourier(salesId, newCourier) {
@@ -3251,6 +3981,7 @@ document.addEventListener("click", (e) => {
     o._syncStatus = "pending_upload";
     await dbPut("orders", o);
     renderOrdersTable();
+    pushPendingToSupabase();
   }
 
   async function quickUpdateOrderStatus(salesId, newStatus) {
@@ -3283,6 +4014,7 @@ document.addEventListener("click", (e) => {
     renderPosCatalog();
     renderCustomersTable();
     renderAnalyticsDashboard();
+    pushPendingToSupabase();
   }
 
   async function renderCustomersTable() {
@@ -3409,8 +4141,21 @@ document.addEventListener("click", (e) => {
 
     if (!name) return alert("Customer Name is required.");
 
-    const customers = await dbGetAll("customers");
+    const [customers, orders] = await Promise.all([
+      dbGetAll("customers"),
+      dbGetAll("orders")
+    ]);
+    
     const existing = customers.find(c => c.CustomerID === customerId);
+
+    // Recalculate spend from order history
+    const custOrders = orders.filter(o => o.CustomerID === customerId && o.Status !== "Cancelled");
+    const computedTotalSpend = custOrders.reduce((sum, o) => sum + (Number(o.TotalAmount) || 0), 0);
+
+    custOrders.sort((a, b) => new Date(b.Date) - new Date(a.Date));
+    const lastOrderDate = custOrders.length > 0 
+      ? custOrders[0].Date 
+      : (existing ? (existing.LastOrderDate || new Date().toISOString()) : new Date().toISOString());
 
     const payload = {
       CustomerID: customerId,
@@ -3419,8 +4164,8 @@ document.addEventListener("click", (e) => {
       TownshipCity: township,
       Remark: remark,
       DefaultAddress: address,
-      TotalSpend: existing ? (existing.TotalSpend || 0) : 0,
-      LastOrderDate: existing ? (existing.LastOrderDate || new Date().toISOString()) : new Date().toISOString(),
+      TotalSpend: computedTotalSpend,
+      LastOrderDate: lastOrderDate,
       _syncStatus: "pending_upload"
     };
 
@@ -3428,6 +4173,7 @@ document.addEventListener("click", (e) => {
     alert("✅ Customer profile saved successfully!");
     closeModal('customerModal');
     renderCustomersTable();
+    pushPendingToSupabase();
   }
 
   function startPosFromCustomerModal() {
@@ -3467,11 +4213,14 @@ document.addEventListener("click", (e) => {
     document.getElementById('eoPaymentType').value = o.PaymentType || 'KPay';
 
     const eoPaid = document.getElementById('eoPaidStatus');
-    const defaultPaidStatus = (appSettings.PaidStatuses && appSettings.PaidStatuses.length > 0) ? appSettings.PaidStatuses[0] : 'paid';
-    const paidVal = o.PaidStatus || defaultPaidStatus;
-    if (![...eoPaid.options].some(opt => opt.value === paidVal)) {
-      eoPaid.add(new Option(paidVal, paidVal));
-    }
+    const paidVal = o.PaidStatus ? String(o.PaidStatus).trim() : "";
+    
+    // Ensure existing value is selectable even if blank
+    eoPaid.innerHTML = `
+      ${!paidVal ? `<option value="" selected>-- Not Set --</option>` : ''}
+      <option value="Paid" ${paidVal === "Paid" ? "selected" : ""}>Paid</option>
+      <option value="Unpaid" ${paidVal === "Unpaid" ? "selected" : ""}>Unpaid</option>
+    `;
     eoPaid.value = paidVal;
 
     document.getElementById('eoStatus').value = o.Status || 'Confirmed';
@@ -3822,43 +4571,58 @@ document.addEventListener("click", (e) => {
       renderAnalyticsDashboard();
       updateUnsavedChangesBadge();
       alert("✅ Order updated successfully!");
+      pushPendingToSupabase();
     };
 
     tx.onerror = (e) => alert("Transaction failed: " + e.target.error);
   }
 
-  async function refundOrderStock(items) {
-    const tx = db.transaction("products", "readwrite");
-    const store = tx.objectStore("products");
-    for (let item of (items || [])) {
-      const req = store.get(item.ProductID);
-      req.onsuccess = () => {
-        const prod = req.result;
-        if (prod) {
-          prod.Stock = (Number(prod.Stock) || 0) + Number(item.Quantity);
-          prod.LastModified = new Date().toISOString();
-          prod._syncStatus = "pending_upload";
-          store.put(prod);
-        }
-      };
-    }
+  function refundOrderStock(items) {
+    return new Promise((resolve, reject) => {
+      if (!items || items.length === 0) return resolve(true);
+      const tx = db.transaction("products", "readwrite");
+      const store = tx.objectStore("products");
+
+      for (let item of items) {
+        const req = store.get(item.ProductID);
+        req.onsuccess = () => {
+          const prod = req.result;
+          if (prod) {
+            prod.Stock = (Number(prod.Stock) || 0) + Number(item.Quantity);
+            prod.LastModified = new Date().toISOString();
+            prod._syncStatus = "pending_upload";
+            store.put(prod);
+          }
+        };
+      }
+
+      tx.oncomplete = () => resolve(true);
+      tx.onerror = (e) => reject(e.target.error);
+    });
   }
 
-  async function deductOrderStock(items) {
-    const tx = db.transaction("products", "readwrite");
-    const store = tx.objectStore("products");
-    for (let item of (items || [])) {
-      const req = store.get(item.ProductID);
-      req.onsuccess = () => {
-        const prod = req.result;
-        if (prod) {
-          prod.Stock = Math.max(0, (Number(prod.Stock) || 0) - Number(item.Quantity));
-          prod.LastModified = new Date().toISOString();
-          prod._syncStatus = "pending_upload";
-          store.put(prod);
-        }
-      };
-    }
+  function deductOrderStock(items) {
+    return new Promise((resolve, reject) => {
+      if (!items || items.length === 0) return resolve(true);
+      const tx = db.transaction("products", "readwrite");
+      const store = tx.objectStore("products");
+
+      for (let item of items) {
+        const req = store.get(item.ProductID);
+        req.onsuccess = () => {
+          const prod = req.result;
+          if (prod) {
+            prod.Stock = Math.max(0, (Number(prod.Stock) || 0) - Number(item.Quantity));
+            prod.LastModified = new Date().toISOString();
+            prod._syncStatus = "pending_upload";
+            store.put(prod);
+          }
+        };
+      }
+
+      tx.oncomplete = () => resolve(true);
+      tx.onerror = (e) => reject(e.target.error);
+    });
   }
 
   async function openNewProductModal() {
@@ -4042,6 +4806,7 @@ document.addEventListener("click", (e) => {
     renderPosCatalog();
     renderAnalyticsDashboard();
     updateUnsavedChangesBadge();
+    pushPendingToSupabase();
   }
 
   function openVoucherModal(order) {
@@ -4226,42 +4991,143 @@ document.addEventListener("click", (e) => {
     window.print();
     document.body.className = '';
   }
-
-  function openGasConfigModal() {
-    const url = localStorage.getItem("gas_endpoint_url") || "";
-    document.getElementById("gasEndpointInput").value = url;
-    document.getElementById("gasConfigStatus").innerText = "";
-    document.getElementById("gasConfigModal").style.display = "flex";
-  }
-
+  
   function getGasEndpointUrl() {
     return localStorage.getItem("gas_endpoint_url") || "";
   }
 
-  function saveGasEndpointUrl() {
-    const url = document.getElementById("gasEndpointInput").value.trim();
-    localStorage.setItem("gas_endpoint_url", url);
-    document.getElementById("gasConfigStatus").innerHTML = "<span style='color:green;'>✅ Saved to local storage!</span>";
-  }
-
   async function testGasEndpointConnection() {
-    const url = document.getElementById("gasEndpointInput").value.trim();
-    const status = document.getElementById("gasConfigStatus");
+    const url = (document.getElementById("cfgGasUrlInput")?.value || getGasEndpointUrl()).trim();
+    const status = document.getElementById("cfgGasStatusMsg") || document.getElementById("gasConfigStatus");
     if (!url) {
-      status.innerHTML = "<span style='color:red;'>⚠️ Please enter a URL first.</span>";
+      if (status) status.innerHTML = "<span style='color:red;'>⚠️ Please enter a Web App URL first.</span>";
       return;
     }
-    status.innerHTML = "⏳ Testing connection...";
+    if (status) status.innerHTML = "⏳ Testing connection...";
     try {
       const res = await fetch(url);
       const data = await res.json();
       if (data.status === "success") {
-        status.innerHTML = "<span style='color:green;'>✅ Connection successful!</span>";
+        if (status) status.innerHTML = "<span style='color:green;'>✅ Connection successful!</span>";
       } else {
-        status.innerHTML = `<span style='color:orange;'>⚠️ Response: ${data.message || 'Unknown response'}</span>`;
+        if (status) status.innerHTML = `<span style='color:orange;'>⚠️ Response: ${data.message || 'Unknown response'}</span>`;
       }
     } catch (err) {
-      status.innerHTML = `<span style='color:red;'>❌ Connection failed: ${err.message}</span>`;
+      if (status) status.innerHTML = `<span style='color:red;'>❌ Connection failed: ${err.message}</span>`;
+    }
+  }
+
+  async function runDailyAutoBackupCheck() {
+    const todayStr = new Date().toISOString().slice(0, 10);
+    const lastBackupDate = localStorage.getItem(KEY_LAST_DAILY_BACKUP);
+
+    // 1. Already completed today -> skip silently
+    if (lastBackupDate === todayStr) {
+      return;
+    }
+
+    const gasUrl = getGasEndpointUrl();
+    if (!gasUrl) {
+      isAutoBackupSkipped = true;
+      autoBackupSkipReason = "Google Apps Script Web App URL is not configured in Settings";
+      updateUnsavedChangesBadge();
+      return;
+    }
+
+    if (!navigator.onLine) {
+      isAutoBackupSkipped = true;
+      autoBackupSkipReason = "Device is currently offline";
+      updateUnsavedChangesBadge();
+      return;
+    }
+
+    try {
+      const [products, orders, customers] = await Promise.all([
+        dbGetAll("products"),
+        dbGetAll("orders"),
+        dbGetAll("customers")
+      ]);
+
+      // 2. Safeguard: Prevent wiping if local database is completely empty
+      if (products.length === 0 && orders.length === 0) {
+        isAutoBackupSkipped = true;
+        autoBackupSkipReason = "Local catalog has 0 records (empty database protection)";
+        updateUnsavedChangesBadge();
+        return;
+      }
+
+      // 3. Safeguard: Compare against last known cloud counts if available
+      const rawCached = localStorage.getItem(KEY_KNOWN_CLOUD_COUNTS);
+      if (rawCached) {
+        try {
+          const cached = JSON.parse(rawCached);
+          if (cached.products && products.length < cached.products) {
+            isAutoBackupSkipped = true;
+            autoBackupSkipReason = `Local products count (${products.length}) is less than cloud records (${cached.products})`;
+            updateUnsavedChangesBadge();
+            return;
+          }
+          if (cached.orders && orders.length < cached.orders) {
+            isAutoBackupSkipped = true;
+            autoBackupSkipReason = `Local orders count (${orders.length}) is less than cloud records (${cached.orders})`;
+            updateUnsavedChangesBadge();
+            return;
+          }
+        } catch (parseErr) {
+          console.warn("Could not parse cached cloud counts", parseErr);
+        }
+      }
+
+      // 4. Dispatch non-blocking silent backup POST
+      console.log("30-Second timer: Dispatching daily auto-backup to Google Sheets...");
+      const payload = {
+        products: products.map(cleanRecordForSync),
+        orders: orders.map(cleanRecordForSync),
+        customers: customers.map(cleanRecordForSync),
+        settings: appSettings
+      };
+
+      const response = await fetch(gasUrl, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify(payload)
+      });
+
+      const res = await response.json();
+      if (res.status === "success") {
+        localStorage.setItem(KEY_LAST_DAILY_BACKUP, todayStr);
+        localStorage.setItem(KEY_KNOWN_CLOUD_COUNTS, JSON.stringify({
+          products: products.length,
+          orders: orders.length,
+          customers: customers.length
+        }));
+
+        await markAllAsSynced("products", products);
+        await markAllAsSynced("orders", orders);
+        await markAllAsSynced("customers", customers);
+
+        // Mark settings store as synced to resolve lingering unsaved count
+        const sTx = db.transaction("settings", "readwrite");
+        const sStore = sTx.objectStore("settings");
+        for (let [k, v] of Object.entries(appSettings)) {
+          sStore.put({ key: k, value: v, _syncStatus: "synced" });
+        }
+        await new Promise(r => { sTx.oncomplete = r; });
+
+        isAutoBackupSkipped = false;
+        autoBackupSkipReason = "";
+        await updateUnsavedChangesBadge();
+        console.log("✅ Daily auto-backup completed successfully.");
+      } else {
+        isAutoBackupSkipped = true;
+        autoBackupSkipReason = res.message || "Google Apps Script returned an error";
+        updateUnsavedChangesBadge();
+      }
+    } catch (err) {
+      console.warn("Daily auto-backup failed:", err);
+      isAutoBackupSkipped = true;
+      autoBackupSkipReason = err.message || "Network error";
+      updateUnsavedChangesBadge();
     }
   }
 
@@ -4306,6 +5172,12 @@ document.addEventListener("click", (e) => {
       const { products, orders, customers, settings } = res.data;
 
       await smartMergeCollection("products", "ProductID", products || []);
+
+      localStorage.setItem(KEY_KNOWN_CLOUD_COUNTS, JSON.stringify({
+        products: (products || []).length,
+        orders: (orders || []).length,
+        customers: (customers || []).length
+      }));
 
       const normalizedOrders = (orders || []).map(o => {
         if (typeof o.ItemList === "string") {
@@ -4428,11 +5300,25 @@ document.addEventListener("click", (e) => {
       await markAllAsSynced("orders", orders);
       await markAllAsSynced("customers", customers);
 
+      // Persist settings with _syncStatus: "synced"
       const sTx = db.transaction("settings", "readwrite");
       const sStore = sTx.objectStore("settings");
       for (let [k, v] of Object.entries(appSettings)) {
-        sStore.put({ key: k, value: v });
+        sStore.put({ key: k, value: v, _syncStatus: "synced" });
       }
+      await new Promise(r => { sTx.oncomplete = r; });
+
+      const todayStr = new Date().toISOString().slice(0, 10);
+      localStorage.setItem(KEY_LAST_DAILY_BACKUP, todayStr);
+      localStorage.setItem(KEY_KNOWN_CLOUD_COUNTS, JSON.stringify({
+        products: products.length,
+        orders: orders.length,
+        customers: customers.length
+      }));
+
+      // Resolve the skipped state upon manual upload
+      isAutoBackupSkipped = false;
+      autoBackupSkipReason = "";
 
       await updateUnsavedChangesBadge();
       alert("✅ Google Sheets backup updated successfully!");
