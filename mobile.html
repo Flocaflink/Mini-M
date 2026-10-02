@@ -1,4 +1,2435 @@
-async function openNewCustomerModal() {
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>BabyStore Mobile Operations</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Padauk:wght@400;700&family=Segoe+UI:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <style>
+    :root {
+      --primary: #e65c00;
+      --primary-hover: #cf5300;
+      --primary-light: #fff3eb;
+      --primary-border: #ffd8be;
+      --success: #2e7d32;
+      --warning: #b78103;
+      --danger: #c62828;
+      --text: #2c3e50;
+      --bg: #f8f9fa;
+      --card-bg: #ffffff;
+      --border: #dcdfe6;
+    }
+
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    body {
+      font-family: 'Segoe UI', 'Padauk', Arial, sans-serif;
+      margin: 0;
+      padding: 0 0 130px 0; /* Increased to make room for the floating cart */
+      background-color: var(--bg);
+      color: var(--text);
+    }
+
+    /* Top App Header */
+    .mobile-header {
+      position: sticky;
+      top: 0;
+      z-index: 900;
+      background: #ffffff;
+      padding: 10px 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid var(--primary);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    }
+    .brand-title {
+      font-size: 16px;
+      font-weight: bold;
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin: 0;
+    }
+    .status-badge {
+      font-size: 10px;
+      font-weight: bold;
+      padding: 2px 6px;
+      border-radius: 10px;
+      white-space: nowrap;
+    }
+    .badge-synced { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+    .badge-unsaved { background: #fff3cd; color: #856404; border: 1px solid #ffeeba; }
+    .badge-alert { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+
+    /* Bottom Navigation Bar */
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 56px;
+      background: #ffffff;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      z-index: 900;
+      box-shadow: 0 -2px 8px rgba(0,0,0,0.05);
+    }
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: 600;
+      color: #666;
+      background: none;
+      border: none;
+      width: 20%;
+      height: 100%;
+      cursor: pointer;
+    }
+    .nav-item span { font-size: 17px; margin-bottom: 2px; }
+    .nav-item.active { color: var(--primary); }
+
+    /* Customer Suggestion Dropdown for Mobile */
+    .cust-suggest-item {
+      padding: 8px 10px;
+      border-bottom: 1px solid #eee;
+      cursor: pointer;
+      background: #fff;
+    }
+    .cust-suggest-item:active {
+      background: var(--primary-light);
+    }
+    .cust-suggest-name {
+      font-weight: bold;
+      font-size: 12px;
+      display: flex;
+      justify-content: space-between;
+      color: var(--text);
+    }
+    .cust-suggest-sub {
+      font-size: 10px;
+      color: #666;
+      margin-top: 2px;
+    }
+
+    /* Views */
+    .view-content { display: none; padding: 12px; }
+    .view-content.active { display: block; }
+
+    /* Reusable UI Components */
+    .card-panel {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 12px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.03);
+    }
+    label { font-weight: bold; font-size: 11px; display: block; margin-top: 6px; color: #555; }
+    input, textarea, select {
+      width: 100%;
+      padding: 8px 10px;
+      margin-top: 4px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      font-size: 13px;
+      font-family: inherit;
+    }
+    input:focus, select:focus, textarea:focus { outline: none; border-color: var(--primary); }
+
+    .btn {
+      padding: 8px 12px;
+      font-weight: bold;
+      font-size: 12px;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      transition: 0.15s ease;
+    }
+    .btn-primary { background: var(--primary); color: white; }
+    .btn-secondary { background: #0d5c75; color: white; }
+    .btn-success { background: var(--success); color: white; }
+    .btn-warning { background: var(--warning); color: white; }
+    .btn-sm { padding: 4px 8px; font-size: 11px; }
+
+    .chip-group {
+      display: flex;
+      gap: 5px;
+      overflow-x: auto;
+      padding: 4px 0 6px 0;
+      scrollbar-width: none;
+    }
+    .chip-group::-webkit-scrollbar { display: none; }
+    .chip {
+      padding: 4px 10px;
+      border-radius: 14px;
+      border: 1px solid #ccc;
+      background: white;
+      font-size: 11px;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .chip.active { background: var(--primary); color: white; border-color: var(--primary); }
+
+    /* Product Grid */
+    .product-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(145px, 1fr));
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .product-card {
+      background: white;
+      border: 1px solid #e0e0e0;
+      border-radius: 6px;
+      padding: 8px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .product-title { font-size: 12px; font-weight: bold; line-height: 1.2; margin-bottom: 2px; }
+    .product-meta { font-size: 10px; color: #666; margin-bottom: 2px; }
+    .product-price { font-size: 12px; font-weight: bold; color: var(--primary); }
+
+    /* Cart Floating Bar */
+    .cart-float-bar {
+      background: #2c3e50;
+      color: white;
+      padding: 12px 16px;
+      border-radius: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      
+      /* New Float Properties */
+      position: fixed;
+      bottom: 70px; /* Sits right above the 56px bottom-nav */
+      left: 12px;
+      right: 12px;
+      z-index: 850;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+    }
+
+    /* Modals */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 1000;
+      justify-content: center;
+      align-items: flex-end;
+    }
+    .modal-card {
+      background: white;
+      width: 100%;
+      max-height: 88vh;
+      border-radius: 12px 12px 0 0;
+      padding: 16px;
+      overflow-y: auto;
+      box-shadow: 0 -4px 16px rgba(0,0,0,0.15);
+    }
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid var(--primary);
+      padding-bottom: 6px;
+      margin-bottom: 10px;
+    }
+    .modal-header h3 { margin: 0; font-size: 15px; color: var(--primary); }
+    .close-btn { background: none; border: none; font-size: 20px; cursor: pointer; }
+
+    /* Tables */
+    table.data-table { width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 8px; }
+    table.data-table th, table.data-table td { border: 1px solid #ddd; padding: 6px 4px; text-align: left; }
+    table.data-table th { background: #f1f3f5; white-space: nowrap; }
+
+    .cart-table { width: 100%; border-collapse: collapse; font-size: 11px; margin-top: 6px; }
+    .cart-table td { padding: 6px 2px; border-bottom: 1px solid #eee; }
+    .cart-qty-btn { width: 22px; height: 22px; font-weight: bold; border: 1px solid #ccc; background: #eee; border-radius: 4px; }
+
+    .matrix-input-cell { width: 45px; padding: 4px; text-align: center; font-size: 11px; }
+
+    /* Voucher & Receipt */
+    .voucher-card { background: white; padding: 14px; border-radius: 8px; border: 1px solid #ddd; font-size: 11px; }
+    #printReceiptSlip { display: none; }
+    @media print {
+      body * { visibility: hidden; }
+      #printReceiptSlip, #printReceiptSlip * { visibility: visible; }
+      #printReceiptSlip { position: absolute; left: 0; top: 0; width: 100%; display: block !important; font-size: 11px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Top App Header -->
+  <header class="mobile-header">
+    <h1 class="brand-title">
+      <img src="logo.png" alt="Logo" style="height: 24px; border-radius: 3px;" onerror="this.style.display='none'">
+      Mini-M Mobile
+    </h1>
+    <div style="display: flex; gap: 6px; align-items: center;">
+      <span id="sbBadge" class="status-badge badge-alert">⚡ Supabase: Off</span>
+      <span id="syncBadge" class="status-badge badge-synced">⚡ Synced</span>
+      <button class="btn btn-sm" style="background:#2b6cb0; color:white; padding: 2px 6px;" onclick="openSettingsModal()">⚙️</button>
+    </div>
+  </header>
+
+  <!-- Navigation Views -->
+  <main>
+    <!-- View 1: POS & Sale -->
+    <div id="posView" class="view-content active">
+      <div style="display: flex; gap: 6px;">
+        <input type="text" id="posSearch" placeholder="🔍 Search catalog..." oninput="renderPosCatalog()">
+        <button class="btn btn-secondary btn-sm" onclick="resetPosFilters()">Reset</button>
+      </div>
+
+      <div class="chip-group" id="posSexChips">
+        <div class="chip active" onclick="setPosSex('All', this)">All</div>
+        <div class="chip" onclick="setPosSex('Unisex', this)">Unisex</div>
+        <div class="chip" onclick="setPosSex('Male', this)">Male</div>
+        <div class="chip" onclick="setPosSex('Female', this)">Female</div>
+      </div>
+      <div class="chip-group" id="posTypeChips"></div>
+      <div class="chip-group" id="posSizeChips"></div>
+
+      <div class="product-grid" id="posGrid"></div>
+
+      <!-- Floating Cart Summary Bar -->
+      <div class="cart-float-bar" onclick="openCheckoutModal()">
+        <div>
+          <b>🛒 <span id="cartFloatCount">0</span> items</b>
+          <span style="font-size: 11px; opacity: 0.8; margin-left: 6px;">(Tap to view / checkout)</span>
+        </div>
+        <div style="font-size: 14px; font-weight: bold;" id="cartFloatTotal">0 K</div>
+      </div>
+    </div>
+
+    <!-- View 2: Inventory -->
+    <div id="invView" class="view-content">
+      <div style="display: flex; justify-content: space-between; gap: 6px; align-items: center; margin-bottom: 6px;">
+        <input type="text" id="invSearch" placeholder="🔍 Search stock..." oninput="renderInventoryTable()">
+        <button class="btn btn-success btn-sm" onclick="openBulkMatrixModal()">📦 Bulk Intake</button>
+      </div>
+      <div style="display: flex; justify-content: space-between; align-items: center; font-size: 11px; margin-bottom: 6px;">
+        <label style="display: flex; align-items: center; gap: 4px; margin: 0;">
+          <input type="checkbox" id="invShowOutOfStock" onchange="renderInventoryTable()" style="width:auto; margin:0;">
+          Show Out of Stock
+        </label>
+        <button class="btn btn-primary btn-sm" onclick="openNewProductModal()">➕ Single SKU</button>
+      </div>
+
+      <!-- Sex Filter Chips -->
+      <div class="chip-group" id="invSexChips">
+        <div class="chip active" onclick="setInvSex('All', this)">All</div>
+        <div class="chip" onclick="setInvSex('Unisex', this)">Unisex</div>
+        <div class="chip" onclick="setInvSex('Male', this)">Male</div>
+        <div class="chip" onclick="setInvSex('Female', this)">Female</div>
+      </div>
+
+      <div class="chip-group" id="invTypeChips"></div>
+
+      <div style="overflow-x: auto;">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>SKU / Name</th>
+              <th>Price</th>
+              <th style="text-align:center;">Stock</th>
+            </tr>
+          </thead>
+          <tbody id="invTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- View 3: Orders -->
+    <div id="ordersView" class="view-content">
+      <input type="text" id="orderSearch" placeholder="🔍 Search ID, customer, phone..." oninput="renderOrdersTable()">
+      <div id="ordersCardsContainer" style="margin-top: 10px;"></div>
+    </div>
+
+    <!-- View 4: Customers -->
+    <div id="customersView" class="view-content">
+      <div style="display: flex; justify-content: space-between; gap: 6px; margin-bottom: 8px;">
+        <input type="text" id="custSearch" placeholder="🔍 Search customer name, phone..." oninput="renderCustomersTable()">
+        <button class="btn btn-primary btn-sm" onclick="openNewCustomerModal()">➕ New</button>
+      </div>
+      <div id="customersContainer"></div>
+    </div>
+
+    <!-- View 5: Analytics -->
+    <div id="analyticsView" class="view-content">
+      <div class="chip-group" id="anPeriodChips">
+        <div class="chip active" onclick="setAnalyticsPeriod('today', this)">Today</div>
+        <div class="chip" onclick="setAnalyticsPeriod('this_month', this)">This Month</div>
+        <div class="chip" onclick="setAnalyticsPeriod('all_time', this)">All Time</div>
+      </div>
+
+      <div class="card-panel" style="margin-top: 8px;">
+        <div style="font-size: 11px; color:#666;">TOTAL REVENUE</div>
+        <div style="font-size: 20px; font-weight: bold; color: var(--primary);" id="anRev">0 MMK</div>
+        <div style="font-size: 11px; color: var(--success); margin-top: 2px;" id="anProfit">Gross Profit: 0 MMK</div>
+        <div style="font-size: 11px; color: #555; margin-top: 2px;" id="anUnits">0 items sold</div>
+      </div>
+
+      <div class="card-panel">
+        <b style="font-size: 12px; color: var(--primary);">Top Selling Categories</b>
+        <div id="anCategoryBars" style="margin-top: 6px;"></div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Bottom Navigation Bar -->
+  <nav class="bottom-nav">
+    <button class="nav-item active" onclick="switchTab('posView', this)"><span>🛒</span>POS</button>
+    <button class="nav-item" onclick="switchTab('invView', this)"><span>📦</span>Stock</button>
+    <button class="nav-item" onclick="switchTab('ordersView', this)"><span>📋</span>Orders</button>
+    <button class="nav-item" onclick="switchTab('customersView', this)"><span>👥</span>Clients</button>
+    <button class="nav-item" onclick="switchTab('analyticsView', this)"><span>📊</span>Stats</button>
+  </nav>
+
+  <!-- ========================================================================= -->
+  <!-- MODALS -->
+  <!-- ========================================================================= -->
+
+  <!-- Settings & Sync Modal -->
+  <div id="settingsModal" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>⚙️ Mobile Settings & Sync</h3>
+        <button class="close-btn" onclick="closeModal('settingsModal')">&times;</button>
+      </div>
+
+      <label>Google Apps Script Web App URL (/exec):</label>
+      <input type="url" id="cfgGasUrl" placeholder="https://script.google.com/macros/s/.../exec">
+      
+      <div style="display: flex; gap: 6px; margin-top: 8px;">
+        <button class="btn btn-secondary btn-sm" style="flex: 1;" onclick="testGasEndpoint()">🧪 Test URL</button>
+        <button class="btn btn-primary btn-sm" style="flex: 1.5; background: #008055;" onclick="connectAndHydrateStore()">🔗 Connect & Hydrate</button>
+      </div>
+
+      <div id="gasStatusText" style="font-size: 11px; margin-top: 6px; font-weight: bold;"></div>
+
+      <hr style="border: none; border-top: 1px dashed #ddd; margin: 12px 0;">
+
+      <div style="font-size: 11px; font-weight: bold; color: #555; margin-bottom: 4px;">Direct Supabase Synchronization:</div>
+      <div style="display: flex; gap: 6px;">
+        <button class="btn btn-primary btn-sm" style="flex: 1; background: #e65c00;" onclick="pullSupabaseDeltas(true)">⚡ Pull Deltas</button>
+        <button class="btn btn-warning btn-sm" style="flex: 1;" onclick="forceFullSupabaseHydration()">📥 Pull All from Supabase</button>
+      </div>
+
+      <div style="display: flex; gap: 6px; margin-top: 14px;">
+        <button class="btn btn-primary" style="flex: 1;" onclick="saveMobileSettings()">💾 Save Settings</button>
+        <button class="btn" style="background:#ccc;" onclick="closeModal('settingsModal')">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Checkout & Cart Modal -->
+  <div id="checkoutModal" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>🛒 Order Checkout</h3>
+        <button class="close-btn" onclick="closeModal('checkoutModal')">&times;</button>
+      </div>
+
+      <input type="hidden" id="cBoundId">
+
+      <div style="display: flex; gap: 6px;">
+        <div style="flex: 1; position: relative;">
+          <label>Customer Name *:</label>
+          <input type="text" id="cCustName" placeholder="Name" autocomplete="off" oninput="handleMobileCustSuggest()">
+          <div id="cSuggestBox" style="display: none; position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid var(--primary-border); border-radius: 6px; max-height: 180px; overflow-y: auto; z-index: 1050; box-shadow: 0 4px 12px rgba(0,0,0,0.15);"></div>
+        </div>
+        <div style="flex: 1;">
+          <label>Phone:</label>
+          <input type="tel" id="cCustPhone" placeholder="09xxxxxxxxx">
+        </div>
+      </div>
+
+      <!-- Mobile Selected Profile Badge -->
+      <div id="cLookupBadge" style="display: none; font-size: 10px; margin: 4px 0 6px 0; color: var(--success); font-weight: bold;">
+        ✅ Linked: <span id="cFoundTitle"></span>
+        <button type="button" style="border: none; background: none; color: red; font-size: 10px; cursor: pointer; padding: 0 4px;" onclick="unbindMobileCustomer()">✕ Unlink</button>
+      </div>
+
+      <div style="display: flex; gap: 6px; margin-top: 4px;">
+        <div style="flex: 1;">
+          <label>Courier:</label>
+          <select id="cDeliverySelect"></select>
+        </div>
+        <div style="flex: 1;">
+          <label>Township / City:</label>
+          <input type="text" id="cTownship" placeholder="e.g. Kamayut">
+        </div>
+      </div>
+
+      <label>Address:</label>
+      <input type="text" id="cAddress" placeholder="Street / House Number">
+
+      <label>Ordered Items:</label>
+      <table class="cart-table">
+        <tbody id="cCartTableBody"></tbody>
+      </table>
+
+      <!-- Discount Section -->
+      <div style="background:#fff3eb; padding:8px; border-radius:6px; margin-top:8px; border:1px solid var(--primary-border);">
+        <label style="margin-top:0;">Discount:</label>
+        <div style="display:flex; gap:6px;">
+          <select id="cDiscountType" onchange="renderCheckoutTotals()" style="flex:1;">
+            <option value="none">None</option>
+            <option value="flat">Flat Cash (MMK)</option>
+            <option value="percentage">Percentage (%)</option>
+          </select>
+          <input type="number" id="cDiscountVal" placeholder="Amount / %" style="flex:1;" oninput="renderCheckoutTotals()">
+        </div>
+      </div>
+
+      <div style="margin-top: 8px; font-size: 13px; font-weight: bold; display: flex; justify-content: space-between;">
+        <span>Net Total:</span>
+        <span style="color: var(--primary);" id="cNetTotalDisplay">0 MMK</span>
+      </div>
+
+      <div style="display: flex; gap: 6px; margin-top: 8px;">
+        <div style="flex: 1;">
+          <label>Payment:</label>
+          <select id="cPaymentSelect"></select>
+        </div>
+        <div style="flex: 1;">
+          <label>Paid Status:</label>
+          <select id="cPaidStatus">
+            <option value="paid">paid</option>
+            <option value="Unpaid" selected>Unpaid</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 6px; margin-top: 14px;">
+        <button class="btn btn-primary" style="flex: 1;" onclick="submitMobileOrder()">💾 Complete Sale</button>
+        <button class="btn" style="background:#ccc;" onclick="closeModal('checkoutModal')">Back</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Single SKU Intake Modal -->
+  <div id="productModal" class="modal-overlay">
+    <div class="modal-card" style="max-height: 92vh;">
+      <input type="hidden" id="mProdEditMode" value="false">
+      <div class="modal-header">
+        <h3 id="pModalTitle">➕ Single Product Variant</h3>
+        <button class="close-btn" onclick="closeModal('productModal')">&times;</button>
+      </div>
+
+      <div style="display: flex; gap: 6px;">
+        <div style="flex: 1;">
+          <label>Base Code:</label>
+          <input type="text" id="mProdItemCode" readonly style="background:#eee; font-weight:bold;" oninput="autoGenerateSingleSku()">
+        </div>
+        <div style="flex: 1.5;">
+          <label>Name (MM) *:</label>
+          <input type="text" id="mProdName" placeholder="Product Title">
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 6px;">
+        <div style="flex: 1;">
+          <label>Sex:</label>
+          <select id="mProdSex">
+            <option value="Unisex">Unisex</option>
+            <option value="Female">Female</option>
+            <option value="Male">Male</option>
+          </select>
+        </div>
+        <div style="flex: 1;">
+          <label>Type:</label>
+          <select id="mProdTypeSelect"></select>
+        </div>
+        <div style="flex: 1;">
+          <label>Length:</label>
+          <select id="mProdLength">
+            <option value="တို">တို (Short)</option>
+            <option value="ရှည်">ရှည် (Long)</option>
+            <option value="None">None</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 6px;">
+        <div style="flex: 1;">
+          <label>Size:</label>
+          <select id="mProdSizeSelect"></select>
+        </div>
+        <div style="flex: 1;">
+          <label>Color:</label>
+          <select id="mProdColorSelect"></select>
+        </div>
+      </div>
+
+      <label>SKU (Auto):</label>
+      <input type="text" id="mProdSku" readonly style="background:#eee; font-weight:bold; color:var(--primary);">
+
+      <!-- Cost & Pricing Engine -->
+      <div style="background:#f8f9fa; border:1px solid var(--border); padding:8px; border-radius:6px; margin-top:8px;">
+        <b style="font-size:11px; color:#0d5c75;">💰 Cost & Pricing Engine</b>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top:4px;">
+          <div>
+            <label style="margin:0; font-size:10px;">Buying (¥):</label>
+            <input type="number" id="mProdBuyingYuan" step="0.01" placeholder="35.00" oninput="calculateSinglePricingEngine()">
+          </div>
+          <div>
+            <label style="margin:0; font-size:10px;">Supplier %:</label>
+            <input type="number" id="mProdSupplierPct" step="0.1" oninput="calculateSinglePricingEngine()">
+          </div>
+          <div>
+            <label style="margin:0; font-size:10px;">Yuan Rate (MMK):</label>
+            <input type="number" id="mProdYuanRate" oninput="calculateSinglePricingEngine()">
+          </div>
+          <div>
+            <label style="margin:0; font-size:10px;">Cargo Fee (MMK):</label>
+            <input type="number" id="mProdCargoFee" oninput="calculateSinglePricingEngine()">
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top:4px;">
+          <div>
+            <label style="margin:0; font-size:10px;">Total Capital (Auto):</label>
+            <input type="number" id="mProdTotalCapital" readonly style="background:#edf2f7; font-weight:bold;">
+          </div>
+          <div>
+            <label style="margin:0; font-size:10px;">Normal Price (Auto):</label>
+            <input type="number" id="mProdNormalPrice" readonly style="background:#edf2f7; font-weight:bold; color:#008055;">
+          </div>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 6px; margin-top:6px;">
+        <div style="flex: 1;">
+          <label>Selling Price (MMK) *:</label>
+          <input type="number" id="mProdSellingPrice">
+        </div>
+        <div style="flex: 1;">
+          <label>Wholesale (MMK):</label>
+          <input type="number" id="mProdWholesalePrice">
+        </div>
+        <div style="flex: 0.8;">
+          <label>Stock Qty:</label>
+          <input type="number" id="mProdStock" value="5" min="0">
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 6px; margin-top: 14px;">
+        <button class="btn btn-primary" style="flex: 1;" onclick="saveMobileProduct()">💾 Save Item</button>
+        <button class="btn" style="background:#ccc;" onclick="closeModal('productModal')">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bulk Shipment Matrix Intake Modal -->
+  <div id="bulkMatrixModal" class="modal-overlay">
+    <div class="modal-card" style="max-height: 94vh;">
+      <div class="modal-header">
+        <h3>📦 Bulk Shipment Matrix Intake</h3>
+        <button class="close-btn" onclick="closeModal('bulkMatrixModal')">&times;</button>
+      </div>
+
+      <div style="display: flex; gap: 6px;">
+        <div style="flex: 1;">
+          <label>Base Code:</label>
+          <input type="text" id="bmItemCode" readonly style="background:#eee; font-weight:bold;">
+        </div>
+        <div style="flex: 1.5;">
+          <label>Product Name (MM) *:</label>
+          <input type="text" id="bmName" placeholder="Item Name">
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 6px;">
+        <div style="flex: 1;">
+          <label>Sex:</label>
+          <select id="bmSex">
+            <option value="Unisex">Unisex</option>
+            <option value="Female">Female</option>
+            <option value="Male">Male</option>
+          </select>
+        </div>
+        <div style="flex: 1;">
+          <label>Type:</label>
+          <select id="bmType"></select>
+        </div>
+        <div style="flex: 1;">
+          <label>Length:</label>
+          <select id="bmLength">
+            <option value="တို">တို (Short)</option>
+            <option value="ရှည်">ရှည် (Long)</option>
+            <option value="None">None</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Bulk Cost & Pricing Engine -->
+      <div style="background:#f8f9fa; border:1px solid var(--border); padding:8px; border-radius:6px; margin-top:8px;">
+        <b style="font-size:11px; color:#0d5c75;">💰 Shared Cost & Pricing Engine</b>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top:4px;">
+          <div>
+            <label style="margin:0; font-size:10px;">Buying (¥):</label>
+            <input type="number" id="bmBuyingYuan" step="0.01" placeholder="35.00" oninput="calculateBulkPricingEngineMobile()">
+          </div>
+          <div>
+            <label style="margin:0; font-size:10px;">Supplier %:</label>
+            <input type="number" id="bmSupplierPct" step="0.1" oninput="calculateBulkPricingEngineMobile()">
+          </div>
+          <div>
+            <label style="margin:0; font-size:10px;">Yuan Rate (MMK):</label>
+            <input type="number" id="bmYuanRate" oninput="calculateBulkPricingEngineMobile()">
+          </div>
+          <div>
+            <label style="margin:0; font-size:10px;">Cargo Fee (MMK):</label>
+            <input type="number" id="bmCargoFee" oninput="calculateBulkPricingEngineMobile()">
+          </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top:4px;">
+          <div>
+            <label style="margin:0; font-size:10px;">Total Capital (Auto):</label>
+            <input type="number" id="bmTotalCapital" readonly style="background:#edf2f7; font-weight:bold;">
+          </div>
+          <div>
+            <label style="margin:0; font-size:10px;">Normal Price (Auto):</label>
+            <input type="number" id="bmNormalPrice" readonly style="background:#edf2f7; font-weight:bold; color:#008055;">
+          </div>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 6px; margin-top:6px;">
+        <div style="flex: 1;">
+          <label>Selling Price *:</label>
+          <input type="number" id="bmSellingPrice" placeholder="Selling Price">
+        </div>
+        <div style="flex: 1;">
+          <label>Wholesale Price:</label>
+          <input type="number" id="bmWholesalePrice" placeholder="Wholesale Price">
+        </div>
+        <div style="flex: 0.8;">
+          <label>Quick Fill:</label>
+          <input type="number" id="bmQuickFill" value="5">
+        </div>
+      </div>
+
+      <div style="margin-top: 8px;">
+        <label>Selected Sizes:</label>
+        <div id="bmSizeChecks" class="chip-group"></div>
+        <label>Selected Colors:</label>
+        <div id="bmColorChecks" class="chip-group"></div>
+      </div>
+
+      <div style="overflow-x: auto; max-height: 180px; margin-top: 8px; border: 1px solid #ddd;">
+        <table class="data-table" id="bmTable"></table>
+      </div>
+
+      <div style="display: flex; gap: 6px; margin-top: 14px;">
+        <button class="btn btn-primary" style="flex: 1;" onclick="submitBulkMatrixMobile()">💾 Save Bulk SKUs</button>
+        <button class="btn" style="background:#ccc;" onclick="closeModal('bulkMatrixModal')">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Customer Profile & History Modal -->
+  <div id="customerModal" class="modal-overlay">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3>👤 Customer Profile</h3>
+        <button class="close-btn" onclick="closeModal('customerModal')">&times;</button>
+      </div>
+      <input type="hidden" id="mcId">
+      <label>Name *:</label>
+      <input type="text" id="mcName">
+      <label>Phone:</label>
+      <input type="tel" id="mcPhone">
+      <label>Township / City:</label>
+      <input type="text" id="mcTownship">
+      <label>Default Address:</label>
+      <textarea id="mcAddress" style="height: 40px;"></textarea>
+      
+      <div style="margin-top: 10px; border-top: 1px dashed #ddd; padding-top: 8px;">
+        <b>Order History:</b>
+        <div id="mcHistoryList" style="max-height: 120px; overflow-y: auto; font-size: 11px; margin-top: 4px;"></div>
+      </div>
+
+      <div style="display: flex; gap: 6px; margin-top: 14px;">
+        <button class="btn btn-primary" style="flex: 1;" onclick="saveMobileCustomer()">💾 Save Profile</button>
+        <button class="btn" style="background:#ccc;" onclick="closeModal('customerModal')">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Printable Receipt Slip (Hidden Offscreen) -->
+  <!-- Order Voucher Modal (Desktop Port) -->
+  <div id="voucherModal" class="modal-overlay">
+    <div class="modal-card" style="max-height: 94vh;">
+      <div class="modal-header">
+        <h3>📸 Order Voucher</h3>
+        <button class="close-btn" onclick="closeModal('voucherModal')">&times;</button>
+      </div>
+
+      <div style="display: flex; justify-content: center; background: #eef2f5; padding: 8px; border-radius: 6px;">
+        <div id="voucherCardToCapture" class="voucher-card" style="width: 100%; max-width: 340px; background: #fff; padding: 14px; border-radius: 10px; border: 1px solid #e1e4e8; font-size: 11px;">
+          <div style="text-align: center; border-bottom: 2px dashed var(--primary); padding-bottom: 8px; margin-bottom: 8px;">
+            <img src="logo.png" alt="Logo" style="max-height: 40px; width: auto; display: block; margin: 0 auto 4px auto;" onerror="this.style.display='none'">
+            <div style="font-size: 16px; font-weight: bold; color: var(--primary);">Mini-M Baby Store</div>
+            <div style="font-size: 10px; color: #666;">Official Sales Order Receipt</div>
+          </div>
+
+          <div style="display: flex; justify-content: space-between; margin-bottom: 4px;"><span><b>Order ID:</b></span><span id="vSalesId" style="font-family:monospace; font-weight:bold;"></span></div>
+          <div style="display: flex; justify-content: space-between; margin-bottom: 4px;"><span><b>Date:</b></span><span id="vDate"></span></div>
+          <div style="display: flex; justify-content: space-between; margin-bottom: 4px;"><span><b>Customer:</b></span><span id="vCustName" style="font-weight:bold;"></span></div>
+          <div style="display: flex; justify-content: space-between; margin-bottom: 4px;"><span><b>Phone:</b></span><span id="vPhone"></span></div>
+          <div style="display: flex; justify-content: space-between; margin-bottom: 4px;"><span><b>Courier:</b></span><span id="vDeliveryName" style="font-weight:bold; color:var(--primary);"></span></div>
+          <div style="display: flex; flex-direction: column; gap: 2px; margin-bottom: 4px;"><span><b>Address:</b></span><span id="vAddress" style="color:#444;"></span></div>
+
+          <table style="width: 100%; border-collapse: collapse; margin: 8px 0; font-size: 11px;">
+            <thead>
+              <tr style="border-bottom: 1px solid #ddd; color: #555;">
+                <th style="text-align: left; padding: 4px 0;">Item</th>
+                <th style="text-align: center; width: 35px; padding: 4px 0;">Qty</th>
+                <th style="text-align: right; width: 70px; padding: 4px 0;">Amount</th>
+              </tr>
+            </thead>
+            <tbody id="vItemsBody"></tbody>
+          </table>
+
+          <div style="border-top: 2px dashed #333; padding-top: 8px; margin-top: 6px;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 3px;"><span>Subtotal:</span><span id="vSubtotal"></span></div>
+            <div id="vDiscountRow" style="display: none; justify-content: space-between; margin-bottom: 3px; color: var(--success);"><span id="vDiscountLabel">Discount:</span><span id="vDiscountAmount"></span></div>
+            <div style="display: flex; justify-content: space-between; font-size: 13px; font-weight: bold; margin-top: 4px; border-top: 1px dashed #ddd; padding-top: 4px;"><span>Total Payable:</span><span id="vTotalAmount" style="color: var(--primary);"></span></div>
+            <div style="display: flex; justify-content: space-between; font-size: 10px; color: #555; margin-top: 4px;"><span>Payment:</span><span id="vPaymentType" style="font-weight:bold;"></span></div>
+            <div style="display: flex; justify-content: space-between; font-size: 10px; color: #555;"><span>Paid Status:</span><span id="vPaidStatus" style="font-weight:bold;"></span></div>
+            <div style="display: flex; justify-content: space-between; font-size: 10px; color: #555;"><span>Remark:</span><span id="vRemark"></span></div>
+          </div>
+
+          <div style="text-align: center; font-size: 10px; color: #777; margin-top: 10px; border-top: 1px solid #f0f0f0; padding-top: 6px;">
+            Thank you for shopping with us! 💕
+          </div>
+        </div>
+      </div>
+
+      <div style="display: flex; gap: 6px; margin-top: 12px; flex-wrap: wrap;">
+        <button class="btn btn-primary btn-sm" style="flex: 1;" onclick="downloadVoucherImage()">📥 Save</button>
+        <button class="btn btn-success btn-sm" style="flex: 1;" onclick="shareVoucherImage()">📲 Share</button>
+        <button class="btn btn-secondary btn-sm" onclick="copyVoucherToClipboard()">📋 Copy</button>
+        <button class="btn btn-sm" style="background:#ccc;" onclick="closeModal('voucherModal')">Close</button>
+      </div>
+      <div id="voucherStatusLabel" style="font-size: 10px; text-align: center; color: #666; margin-top: 4px;"></div>
+    </div>
+  </div>
+
+  <div id="printReceiptSlip">
+    <div style="text-align:center; font-weight:bold; font-size:14px;">BABY STORE</div>
+    <div style="text-align:center; font-size:10px;">Sales Order Slip</div>
+    <hr style="border-top:1px dashed #000;">
+    <div><b>ID:</b> <span id="slipId"></span></div>
+    <div><b>Customer:</b> <span id="slipCust"></span></div>
+    <div id="slipItems"></div>
+    <hr style="border-top:1px dashed #000;">
+    <div><b>Total:</b> <span id="slipTotal"></span></div>
+  </div>
+
+  <!-- ========================================================================= -->
+  <!-- JAVASCRIPT ENGINE -->
+  <!-- ========================================================================= -->
+  <script>
+    let db;
+    const DB_NAME = "BabyStoreOwnerDB";
+    const DB_VERSION = 5;
+
+    let appSettings = {
+      RegularProfitMargin: 33,
+      WholesaleProfitMargin: 15,
+      DefaultYuanRate: 620,
+      DefaultCargoFee: 2500,
+      DefaultSupplierPct: 3,
+      ProductTypes: ["Dress", "Pant", "Top", "T shirt", "Shirt", "Cap", "Set", "Boiler", "Romper", "Accessories"],
+      ProductSizes: ["73", "80", "90", "100", "110", "120", "130", "140", "150"],
+      ProductColors: ["ပန်း", "ဝါ", "ပြာ", "ခဲ", "ဖြူ", "နီ", "စိမ်း", "နက်", "လိမ္မော်", "ခရမ်း", "ကြား", "ပွင့်"],
+      PaymentMethods: ["KPay", "WavePay", "COD", "AYA Pay"],
+      DeliveryServices: ["Royal", "Wepots", "Ninja Van", "Safe", "self"],
+      PaidStatuses: ["paid", "Unpaid"]
+    };
+
+    let supabaseClient = null;
+    let currentCart = [];
+    let activeSex = "All", activeType = "All", activeSize = "All";
+    let activeInvSex = "All", activeInvType = "All";
+    let activeAnalyticsPeriod = "today";
+
+    const KEY_GAS_URL = "gas_endpoint_url";
+    const KEY_SB_URL = "babystore_supabase_url";
+    const KEY_SB_KEY = "babystore_supabase_key";
+    const KEY_SB_LAST_SYNC = "babystore_last_sb_sync";
+
+    // -------------------------------------------------------------------------
+    // DATABASE CORE (IndexedDB)
+    // -------------------------------------------------------------------------
+    function initDatabase() {
+      return new Promise((resolve, reject) => {
+        const request = indexedDB.open(DB_NAME, DB_VERSION);
+        request.onupgradeneeded = (e) => {
+          const d = e.target.result;
+          if (!d.objectStoreNames.contains("products")) d.createObjectStore("products", { keyPath: "ProductID" });
+          if (!d.objectStoreNames.contains("orders")) d.createObjectStore("orders", { keyPath: "SalesID" });
+          if (!d.objectStoreNames.contains("customers")) d.createObjectStore("customers", { keyPath: "CustomerID" });
+          if (!d.objectStoreNames.contains("settings")) d.createObjectStore("settings", { keyPath: "key" });
+        };
+        request.onsuccess = (e) => { db = e.target.result; resolve(db); };
+        request.onerror = (e) => reject(e.target.error);
+      });
+    }
+
+    function dbGetAll(storeName) {
+      return new Promise((resolve) => {
+        if (!db) return resolve([]);
+        const tx = db.transaction(storeName, "readonly");
+        tx.objectStore(storeName).getAll().onsuccess = (e) => resolve(e.target.result || []);
+      });
+    }
+
+    function dbPut(storeName, record) {
+      return new Promise((resolve, reject) => {
+        if (!db) return reject(new Error("Database offline"));
+        const tx = db.transaction(storeName, "readwrite");
+        tx.objectStore(storeName).put(record).onsuccess = () => {
+          updateBadge();
+          resolve(true);
+        };
+        tx.onerror = (e) => reject(e.target.error);
+      });
+    }
+
+    // -------------------------------------------------------------------------
+    // BOOTSTRAP & LIFECYCLE
+    // -------------------------------------------------------------------------
+    window.addEventListener("DOMContentLoaded", async () => {
+      try {
+        await initDatabase();
+        await loadLocalSettings();
+        initSupabase();
+
+        // Check for cold-start empty DB
+        const prods = await dbGetAll("products");
+        if (prods.length === 0 && supabaseClient && navigator.onLine) {
+          await forceFullSupabaseHydration();
+        }
+
+        renderPosCatalog();
+        renderInventoryTable();
+        renderOrdersTable();
+        renderCustomersTable();
+        renderAnalytics();
+        updateBadge();
+
+        // 30s background heartbeat
+        setInterval(() => {
+          if (navigator.onLine) {
+            pushPendingToSupabase();
+            pullSupabaseDeltas(false);
+          }
+        }, 30000);
+
+      } catch (err) {
+        console.error("Boot error:", err);
+      }
+    });
+
+    // iPadOS / iOS background wake listener
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible" && navigator.onLine) {
+        pullSupabaseDeltas(false);
+      }
+    });
+    window.addEventListener("focus", () => {
+      if (navigator.onLine) pullSupabaseDeltas(false);
+    });
+
+    // -------------------------------------------------------------------------
+    // SUPABASE CLIENT & REALTIME
+    // -------------------------------------------------------------------------
+    function initSupabase() {
+      const url = localStorage.getItem(KEY_SB_URL);
+      const key = localStorage.getItem(KEY_SB_KEY);
+      const badge = document.getElementById("sbBadge");
+
+      if (!url || !key || typeof supabase === 'undefined') {
+        if (badge) { badge.className = "status-badge badge-alert"; badge.innerText = "⚡ Supabase: Not Configured"; }
+        return;
+      }
+
+      try {
+        supabaseClient = supabase.createClient(url, key, {
+          auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
+          global: { headers: { apikey: key, Authorization: `Bearer ${key}` } }
+        });
+
+        if (badge) { badge.className = "status-badge badge-synced"; badge.innerText = "⚡ Deltabase: Online"; }
+
+        setupRealtime();
+        pullSupabaseDeltas(false);
+        pushPendingToSupabase();
+
+      } catch (err) {
+        if (badge) { badge.className = "status-badge badge-alert"; badge.innerText = "⚡ Supabase: Error"; }
+      }
+    }
+
+    function setupRealtime() {
+      if (!supabaseClient) return;
+
+      supabaseClient
+        .channel("mobile-realtime")
+        .on("postgres_changes", { event: "*", schema: "public", table: "products" }, payload => {
+          if (payload.new && db) {
+            const p = payload.new;
+            const rec = {
+              ProductID: p.product_id, ItemCode: p.item_code, Name_MM: p.name_mm,
+              Sex: p.sex, Type: p.type, Length: p.length, Size: p.size,
+              ColorPattern: p.color_pattern, Remark: p.remark, Stock: p.stock,
+              SellingPrice: p.selling_price, WholesalePrice: p.wholesale_price,
+              TotalCapital: p.total_capital, LastModified: p.last_modified, _syncStatus: "synced"
+            };
+            const tx = db.transaction("products", "readwrite");
+            tx.objectStore("products").put(rec);
+            tx.oncomplete = () => { renderPosCatalog(); renderInventoryTable(); renderAnalytics(); };
+          }
+        })
+        .on("postgres_changes", { event: "*", schema: "public", table: "orders" }, payload => {
+          if (payload.new && db) {
+            const o = payload.new;
+            const rec = {
+              SalesID: o.sales_id, Date: o.date, CustomerID: o.customer_id, CustomerName: o.customer_name,
+              Phone: o.phone, DeliveryName: o.delivery_name, DeliveryAddress: o.delivery_address,
+              TownshipCity: o.township_city, ItemList: o.item_list, Subtotal: o.subtotal,
+              DiscountType: o.discount_type, DiscountAmount: o.discount_amount, TotalAmount: o.total_amount,
+              PaymentType: o.payment_type, PaidStatus: o.paid_status, Status: o.status,
+              Remark: o.remark, LastModified: o.last_modified, _syncStatus: "synced"
+            };
+            const tx = db.transaction("orders", "readwrite");
+            tx.objectStore("orders").put(rec);
+            tx.oncomplete = () => { renderOrdersTable(); renderAnalytics(); };
+          }
+        })
+        .on("postgres_changes", { event: "*", schema: "public", table: "store_settings" }, payload => {
+          if (payload.new && db) {
+            appSettings[payload.new.key] = payload.new.value;
+            const tx = db.transaction("settings", "readwrite");
+            tx.objectStore("settings").put({ key: payload.new.key, value: payload.new.value, _syncStatus: "synced" });
+            tx.oncomplete = () => applySettingsUI();
+          }
+        })
+        .subscribe();
+    }
+
+    // -------------------------------------------------------------------------
+    // HYDRATION & DELTAS
+    // -------------------------------------------------------------------------
+    async function pullSupabaseDeltas(userAlert = false) {
+      if (!supabaseClient || !db || !navigator.onLine) return;
+      try {
+        const lastSync = localStorage.getItem(KEY_SB_LAST_SYNC) || "1970-01-01T00:00:00Z";
+
+        const [pRes, oRes, sRes] = await Promise.all([
+          supabaseClient.from("products").select("*").gt("updated_at", lastSync),
+          supabaseClient.from("orders").select("*").gt("updated_at", lastSync),
+          supabaseClient.from("store_settings").select("*").gt("updated_at", lastSync)
+        ]);
+
+        if (pRes.data && pRes.data.length > 0) {
+          const tx = db.transaction("products", "readwrite");
+          const s = tx.objectStore("products");
+          pRes.data.forEach(p => s.put({
+            ProductID: p.product_id, ItemCode: p.item_code, Name_MM: p.name_mm,
+            Sex: p.sex, Type: p.type, Length: p.length, Size: p.size,
+            ColorPattern: p.color_pattern, Remark: p.remark, Stock: p.stock,
+            SellingPrice: p.selling_price, WholesalePrice: p.wholesale_price,
+            TotalCapital: p.total_capital, LastModified: p.last_modified, _syncStatus: "synced",
+            BuyingYuan: p.buying_yuan,
+            SupplierPct: p.supplier_pct,
+            YuanRate: p.yuan_rate,
+            CargoFee: p.cargo_fee,
+            TotalCapital: p.total_capital,
+            NormalPrice: p.normal_price
+          }));
+          await new Promise(r => { tx.oncomplete = r; });
+          renderPosCatalog();
+          renderInventoryTable();
+        }
+
+        if (oRes.data && oRes.data.length > 0) {
+          const tx = db.transaction("orders", "readwrite");
+          const s = tx.objectStore("orders");
+          oRes.data.forEach(o => s.put({
+            SalesID: o.sales_id, Date: o.date, CustomerID: o.customer_id, CustomerName: o.customer_name,
+            Phone: o.phone, DeliveryName: o.delivery_name, DeliveryAddress: o.delivery_address,
+            TownshipCity: o.township_city, ItemList: o.item_list, Subtotal: o.subtotal,
+            DiscountType: o.discount_type, DiscountAmount: o.discount_amount, TotalAmount: o.total_amount,
+            PaymentType: o.payment_type, PaidStatus: o.paid_status, Status: o.status,
+            Remark: o.remark, LastModified: o.last_modified, _syncStatus: "synced"
+          }));
+          await new Promise(r => { tx.oncomplete = r; });
+          renderOrdersTable();
+        }
+
+        if (sRes.data && sRes.data.length > 0) {
+          const tx = db.transaction("settings", "readwrite");
+          const s = tx.objectStore("settings");
+          sRes.data.forEach(row => {
+            appSettings[row.key] = row.value;
+            s.put({ key: row.key, value: row.value, _syncStatus: "synced" });
+          });
+          await new Promise(r => { tx.oncomplete = r; });
+          applySettingsUI();
+        }
+
+        localStorage.setItem(KEY_SB_LAST_SYNC, new Date().toISOString());
+        renderAnalytics();
+        if (userAlert) alert("✅ Supabase Deltas Synced!");
+      } catch (err) {
+        console.warn("Delta pull failed:", err);
+      }
+    }
+
+    function setPosSex(sex, el) {
+      activeSex = sex;
+      document.querySelectorAll("#posSexChips .chip").forEach(c => c.classList.remove("active"));
+      if (el) el.classList.add("active");
+      renderPosCatalog();
+    }
+ 
+    function setInvSex(sex, el) {
+      activeInvSex = sex;
+      document.querySelectorAll("#invSexChips .chip").forEach(c => c.classList.remove("active"));
+      if (el) el.classList.add("active");
+      renderInventoryTable();
+    }
+
+    function setPosType(type, el) {
+      activeType = type;
+      document.querySelectorAll("#posTypeChips .chip").forEach(c => c.classList.remove("active"));
+      if (el) el.classList.add("active");
+      renderPosCatalog();
+    }
+
+    function setPosSize(size, el) {
+      activeSize = size;
+      document.querySelectorAll("#posSizeChips .chip").forEach(c => c.classList.remove("active"));
+      if (el) el.classList.add("active");
+      renderPosCatalog();
+    }
+
+    function resetPosFilters() {
+      const searchInput = document.getElementById("posSearch");
+      if (searchInput) searchInput.value = "";
+      activeSex = "All";
+      activeType = "All";
+      activeSize = "All";
+
+      document.querySelectorAll("#posSexChips .chip, #posTypeChips .chip, #posSizeChips .chip").forEach(c => c.classList.remove("active"));
+      document.querySelector("#posSexChips div:first-child")?.classList.add("active");
+      document.querySelector("#posTypeChips div:first-child")?.classList.add("active");
+      document.querySelector("#posSizeChips div:first-child")?.classList.add("active");
+
+      renderPosCatalog();
+    }
+
+    async function fetchFullTablePaged(tableName) {
+      const PAGE_SIZE = 1000;
+      let allRows = [];
+      let from = 0;
+      let hasMore = true;
+
+      while (hasMore) {
+        const to = from + PAGE_SIZE - 1;
+        const { data, error } = await supabaseClient
+          .from(tableName)
+          .select("*")
+          .range(from, to);
+
+        if (error) throw new Error(`${tableName} fetch error: ${error.message}`);
+        if (!data || data.length === 0) {
+          hasMore = false;
+        } else {
+          allRows = allRows.concat(data);
+          if (data.length < PAGE_SIZE) {
+            hasMore = false;
+          } else {
+            from += PAGE_SIZE;
+          }
+        }
+      }
+      return allRows;
+    }
+
+    async function forceFullSupabaseHydration() {
+      if (!supabaseClient || !navigator.onLine) return alert("⚠️ Supabase is offline.");
+      if (!confirm("Download entire database from Supabase to phone?")) return;
+
+      try {
+        const statusBadge = document.getElementById("sbBadge");
+        if (statusBadge) statusBadge.innerText = "⏳ Downloading...";
+
+        const [pData, oData, cData, sData] = await Promise.all([
+          fetchFullTablePaged("products"),
+          fetchFullTablePaged("orders"),
+          fetchFullTablePaged("customers"),
+          fetchFullTablePaged("store_settings")
+        ]);
+
+        if (sData && sData.length > 0) {
+          const txS = db.transaction("settings", "readwrite");
+          const storeS = txS.objectStore("settings");
+          sData.forEach(r => { 
+            appSettings[r.key] = r.value; 
+            storeS.put({ key: r.key, value: r.value, _syncStatus: "synced" }); 
+          });
+          await new Promise(r => { txS.oncomplete = r; });
+          applySettingsUI();
+        }
+
+        if (pData && pData.length > 0) {
+          const txP = db.transaction("products", "readwrite");
+          const storeP = txP.objectStore("products");
+          pData.forEach(p => storeP.put({
+            ProductID: p.product_id, ItemCode: p.item_code, Name_MM: p.name_mm,
+            Sex: p.sex, Type: p.type, Length: p.length, Size: p.size,
+            ColorPattern: p.color_pattern, Remark: p.remark, Stock: p.stock,
+            SellingPrice: p.selling_price, WholesalePrice: p.wholesale_price,
+            TotalCapital: p.total_capital, LastModified: p.last_modified, _syncStatus: "synced",
+            // Add these 5 missing fields:
+            BuyingYuan: p.buying_yuan,
+            SupplierPct: p.supplier_pct,
+            YuanRate: p.yuan_rate,
+            CargoFee: p.cargo_fee,
+            NormalPrice: p.normal_price
+          }));
+          await new Promise(r => { txP.oncomplete = r; });
+        }
+
+        if (oData && oData.length > 0) {
+          const txO = db.transaction("orders", "readwrite");
+          const storeO = txO.objectStore("orders");
+          oData.forEach(o => storeO.put({
+            SalesID: o.sales_id, Date: o.date, CustomerID: o.customer_id, CustomerName: o.customer_name,
+            Phone: o.phone, DeliveryName: o.delivery_name, DeliveryAddress: o.delivery_address,
+            TownshipCity: o.township_city, ItemList: o.item_list, Subtotal: o.subtotal,
+            DiscountType: o.discount_type, DiscountAmount: o.discount_amount, TotalAmount: o.total_amount,
+            PaymentType: o.payment_type, PaidStatus: o.paid_status, Status: o.status,
+            Remark: o.remark, LastModified: o.last_modified, _syncStatus: "synced"
+          }));
+          await new Promise(r => { txO.oncomplete = r; });
+        }
+
+        if (cData && cData.length > 0) {
+          const txC = db.transaction("customers", "readwrite");
+          const storeC = txC.objectStore("customers");
+          cData.forEach(c => storeC.put({
+            CustomerID: c.customer_id, FullName: c.full_name, Phone: c.phone,
+            DefaultAddress: c.default_address, TownshipCity: c.township_city,
+            Remark: c.remark, TotalSpend: c.total_spend, LastOrderDate: c.last_order_date, _syncStatus: "synced"
+          }));
+          await new Promise(r => { txC.oncomplete = r; });
+        }
+
+        localStorage.setItem(KEY_SB_LAST_SYNC, new Date().toISOString());
+        renderPosCatalog();
+        renderInventoryTable();
+        renderOrdersTable();
+        renderCustomersTable();
+        renderAnalytics();
+        updateBadge();
+
+        if (statusBadge) {
+          statusBadge.className = "status-badge badge-synced";
+          statusBadge.innerText = "⚡ Deltabase: Online";
+        }
+
+        alert(`🎉 Full Hydration Complete!\n\nDownloaded:\n• Products: ${pData.length}\n• Orders: ${oData.length}\n• Customers: ${cData.length}`);
+      } catch (err) {
+        alert("Hydration failed: " + err.message);
+      }
+    }
+
+    async function pushPendingToSupabase() {
+      if (!supabaseClient || !navigator.onLine) return;
+      try {
+        const [products, orders, customers] = await Promise.all([
+          dbGetAll("products"), dbGetAll("orders"), dbGetAll("customers")
+        ]);
+
+        const uP = products.filter(p => p._syncStatus === "pending_upload");
+        const uO = orders.filter(o => o._syncStatus === "pending_upload");
+        const uC = customers.filter(c => c._syncStatus === "pending_upload");
+
+        if (uP.length > 0) {
+          const payload = uP.map(p => ({
+            product_id: p.ProductID, item_code: p.ItemCode || "", name_mm: p.Name_MM,
+            sex: p.Sex, type: p.Type, length: p.Length, size: String(p.Size),
+            color_pattern: p.ColorPattern, remark: p.Remark, stock: Number(p.Stock) || 0,
+            selling_price: Number(p.SellingPrice) || 0, wholesale_price: Number(p.WholesalePrice) || 0,
+            total_capital: Number(p.TotalCapital) || 0, last_modified: p.LastModified || new Date().toISOString()
+          }));
+          const { error } = await supabaseClient.from("products").upsert(payload);
+          if (!error) await markSynced("products", uP);
+        }
+
+        if (uO.length > 0) {
+          const payload = uO.map(o => ({
+            sales_id: o.SalesID, date: o.Date, customer_id: o.CustomerID, customer_name: o.CustomerName,
+            phone: o.Phone, delivery_name: o.DeliveryName, delivery_address: o.DeliveryAddress,
+            township_city: o.TownshipCity, item_list: o.ItemList || [], subtotal: Number(o.Subtotal) || 0,
+            discount_type: o.DiscountType, discount_amount: Number(o.DiscountAmount) || 0,
+            total_amount: Number(o.TotalAmount) || 0, payment_type: o.PaymentType, paid_status: o.PaidStatus,
+            status: o.Status, remark: o.Remark, last_modified: o.LastModified || new Date().toISOString()
+          }));
+          const { error } = await supabaseClient.from("orders").upsert(payload);
+          if (!error) await markSynced("orders", uO);
+        }
+
+        if (uC.length > 0) {
+          const payload = uP.map(p => ({
+            product_id: p.ProductID, item_code: p.ItemCode || "", name_mm: p.Name_MM,
+            sex: p.Sex, type: p.Type, length: p.Length, size: String(p.Size),
+            color_pattern: p.ColorPattern, remark: p.Remark, stock: Number(p.Stock) || 0,
+            buying_yuan: Number(p.BuyingYuan) || 0,
+            supplier_pct: Number(p.SupplierPct) || 0,
+            yuan_rate: Number(p.YuanRate) || 620,
+            cargo_fee: Number(p.CargoFee) || 2500,
+            total_capital: Number(p.TotalCapital) || 0,
+            normal_price: Number(p.NormalPrice) || 0,
+            selling_price: Number(p.SellingPrice) || 0,
+            wholesale_price: Number(p.WholesalePrice) || 0,
+            last_modified: p.LastModified || new Date().toISOString()
+          }));
+          const { error } = await supabaseClient.from("customers").upsert(payload);
+          if (!error) await markSynced("customers", uC);
+        }
+
+        updateBadge();
+      } catch (err) {
+        console.warn("Outbound push failed:", err);
+      }
+    }
+
+    async function markSynced(storeName, items) {
+      const tx = db.transaction(storeName, "readwrite");
+      const store = tx.objectStore(storeName);
+      items.forEach(i => { i._syncStatus = "synced"; store.put(i); });
+      return new Promise(r => { tx.oncomplete = r; });
+    }
+
+    // -------------------------------------------------------------------------
+    // SINGLE GAS URL SETUP & HYDRATION
+    // -------------------------------------------------------------------------
+    async function connectAndHydrateStore() {
+      const url = document.getElementById("cfgGasUrl")?.value.trim();
+      const status = document.getElementById("gasStatusText");
+
+      if (!url) return alert("Please enter your Google Apps Script URL.");
+      status.innerHTML = "⏳ Fetching cloud configuration from Google Sheets...";
+
+      try {
+        const res = await fetch(url, { method: "GET" });
+        const json = await res.json();
+
+        if (json.status !== "success") throw new Error(json.message || "Failed to fetch settings");
+
+        localStorage.setItem(KEY_GAS_URL, url);
+
+        // Store fetched settings & Supabase keys
+        const settings = json.data.settings || {};
+        if (settings.SupabaseUrl && settings.SupabaseAnonKey) {
+          localStorage.setItem(KEY_SB_URL, settings.SupabaseUrl);
+          localStorage.setItem(KEY_SB_KEY, settings.SupabaseAnonKey);
+        }
+
+        const tx = db.transaction("settings", "readwrite");
+        const sStore = tx.objectStore("settings");
+        Object.keys(settings).forEach(k => {
+          appSettings[k] = settings[k];
+          sStore.put({ key: k, value: settings[k], _syncStatus: "synced" });
+        });
+        await new Promise(r => { tx.oncomplete = r; });
+        applySettingsUI();
+
+        // Boot Supabase with received credentials
+        initSupabase();
+
+        // Hydrate from Supabase
+        await forceFullSupabaseHydration();
+
+        status.innerHTML = "<span style='color:green;'>✅ Connected & Hydrated!</span>";
+      } catch (err) {
+        status.innerHTML = `<span style='color:red;'>❌ Connection failed: ${err.message}</span>`;
+      }
+    }
+
+    async function testGasEndpoint() {
+      const url = document.getElementById("cfgGasUrl")?.value.trim();
+      const status = document.getElementById("gasStatusText");
+      if (!url) return alert("Enter URL first.");
+      status.innerHTML = "⏳ Testing...";
+      try {
+        const res = await fetch(url);
+        const json = await res.json();
+        status.innerHTML = json.status === "success" 
+          ? "<span style='color:green;'>✅ Google Sheets Connected!</span>" 
+          : `<span style='color:red;'>⚠️ Error: ${json.message}</span>`;
+      } catch(e) {
+        status.innerHTML = `<span style='color:red;'>❌ Failed: ${e.message}</span>`;
+      }
+    }
+
+    function openSettingsModal() {
+      document.getElementById("cfgGasUrl").value = localStorage.getItem(KEY_GAS_URL) || "";
+      document.getElementById("gasStatusText").innerHTML = "";
+      document.getElementById("settingsModal").style.display = "flex";
+    }
+
+    function saveMobileSettings() {
+      const url = document.getElementById("cfgGasUrl")?.value.trim();
+      if (url) localStorage.setItem(KEY_GAS_URL, url);
+      closeModal("settingsModal");
+      alert("Settings saved!");
+    }
+
+    // -------------------------------------------------------------------------
+    // POS CATALOG & CART
+    // -------------------------------------------------------------------------
+    async function renderPosCatalog() {
+      const products = await dbGetAll("products");
+      const query = (document.getElementById("posSearch")?.value || "").toLowerCase().trim();
+      const grid = document.getElementById("posGrid");
+      if (!grid) return;
+
+      const filtered = products.filter(p => {
+        const mSex = activeSex === "All" || p.Sex === activeSex;
+        const mType = activeType === "All" || p.Type === activeType;
+        const mSize = activeSize === "All" || String(p.Size) === activeSize;
+        const str = `${p.ProductID} ${p.Name_MM} ${p.ColorPattern} ${p.Type}`.toLowerCase();
+        return mSex && mType && mSize && (!query || str.includes(query)) && (Number(p.Stock) > 0);
+      });
+
+      if (filtered.length === 0) {
+        grid.innerHTML = `<div style="grid-column: 1/-1; text-align:center; color:#888; padding: 20px;">No available stock.</div>`;
+        return;
+      }
+
+      grid.innerHTML = filtered.map(p => `
+        <div class="product-card">
+          <div>
+            <div class="product-title">${p.Name_MM}</div>
+            <div class="product-meta">${p.Size} | ${p.ColorPattern}</div>
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-top:6px;">
+            <span class="product-price">${Number(p.SellingPrice).toLocaleString()} K</span>
+            <button class="btn btn-primary btn-sm" onclick="addToCart('${p.ProductID}')">➕ Add</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    async function addToCart(productId) {
+      const products = await dbGetAll("products");
+      const p = products.find(x => x.ProductID === productId);
+      if (!p) return;
+
+      const stock = Number(p.Stock) || 0;
+      const existing = currentCart.find(x => x.ProductID === productId);
+
+      if (existing) {
+        if (existing.Quantity + 1 > stock) return alert(`Only ${stock} available!`);
+        existing.Quantity++;
+        existing.Subtotal = existing.Quantity * existing.UnitPrice;
+      } else {
+        if (stock <= 0) return alert("Out of stock!");
+        currentCart.push({
+          ProductID: p.ProductID, Name_MM: p.Name_MM, Size: p.Size,
+          ColorPattern: p.ColorPattern, UnitPrice: Number(p.SellingPrice),
+          Quantity: 1, Subtotal: Number(p.SellingPrice)
+        });
+      }
+      updateCartSummary();
+    }
+
+    function updateCartSummary() {
+      const count = currentCart.reduce((sum, i) => sum + i.Quantity, 0);
+      const subtotal = currentCart.reduce((sum, i) => sum + i.Subtotal, 0);
+
+      document.getElementById("cartFloatCount").innerText = count;
+      document.getElementById("cartFloatTotal").innerText = `${subtotal.toLocaleString()} K`;
+    }
+
+    let mCustSuggestDebounce;
+
+    async function handleMobileCustSuggest() {
+      const input = document.getElementById("cCustName").value.trim();
+      const popup = document.getElementById("cSuggestBox");
+
+      if (document.getElementById("cBoundId").value) {
+        unbindMobileCustomer(false);
+      }
+
+      clearTimeout(mCustSuggestDebounce);
+
+      if (input.length < 1) {
+        popup.style.display = "none";
+        popup.innerHTML = "";
+        return;
+      }
+
+      mCustSuggestDebounce = setTimeout(async () => {
+        const [customers, orders] = await Promise.all([
+          dbGetAll("customers"),
+          dbGetAll("orders")
+        ]);
+        const query = input.toLowerCase();
+
+        const matches = customers.filter(c => 
+          (c.FullName && c.FullName.toLowerCase().includes(query)) ||
+          (c.Phone && String(c.Phone).includes(query)) ||
+          (c.Remark && c.Remark.toLowerCase().includes(query))
+        ).slice(0, 5);
+
+        if (matches.length === 0) {
+          popup.style.display = "none";
+          popup.innerHTML = "";
+          return;
+        }
+
+        popup.innerHTML = matches.map(c => {
+          const custOrders = orders.filter(o => o.CustomerID === c.CustomerID && o.Status !== "Cancelled");
+          custOrders.sort((a, b) => new Date(b.Date) - new Date(a.Date));
+          const last = custOrders[0];
+
+          let summary = "New customer (no previous purchases)";
+          if (last && Array.isArray(last.ItemList) && last.ItemList.length > 0) {
+            summary = `Last: ${last.ItemList.map(i => `${i.Name_MM} (${i.Size})`).join(', ')}`;
+          }
+
+          const phoneStr = c.Phone ? ` • 📞 ${c.Phone}` : '';
+          const cityStr = c.TownshipCity ? ` • 📍 ${c.TownshipCity}` : '';
+
+          return `
+            <div class="cust-suggest-item" onclick="selectMobileSuggestedCustomer('${c.CustomerID}')">
+              <div class="cust-suggest-name">
+                <span>👤 ${c.FullName}${phoneStr}</span>
+                <span style="color:var(--primary); font-family:monospace; font-size:9px;">${c.CustomerID}</span>
+              </div>
+              <div class="cust-suggest-sub">${summary}${cityStr}</div>
+            </div>
+          `;
+        }).join('');
+
+        popup.style.display = "block";
+      }, 150);
+    }
+
+    async function selectMobileSuggestedCustomer(customerId) {
+      const [customers, orders] = await Promise.all([
+        dbGetAll("customers"),
+        dbGetAll("orders")
+      ]);
+      const cust = customers.find(c => c.CustomerID === customerId);
+      if (!cust) return;
+
+      document.getElementById("cBoundId").value = cust.CustomerID;
+      document.getElementById("cCustName").value = cust.FullName || "";
+      document.getElementById("cCustPhone").value = cust.Phone || "";
+      document.getElementById("cTownship").value = cust.TownshipCity || "";
+      document.getElementById("cAddress").value = cust.DefaultAddress || "";
+
+      const totalSpent = orders
+        .filter(o => o.CustomerID === cust.CustomerID && o.Status !== "Cancelled")
+        .reduce((sum, o) => sum + (Number(o.TotalAmount) || 0), 0);
+
+      const badge = document.getElementById("cLookupBadge");
+      document.getElementById("cFoundTitle").innerText = `${cust.FullName} (${Number(totalSpent).toLocaleString()} MMK spent)`;
+      badge.style.display = "block";
+
+      const popup = document.getElementById("cSuggestBox");
+      popup.style.display = "none";
+      popup.innerHTML = "";
+    }
+
+    function unbindMobileCustomer(clearFields = true) {
+      document.getElementById("cBoundId").value = "";
+      document.getElementById("cLookupBadge").style.display = "none";
+      if (clearFields) {
+        document.getElementById("cCustPhone").value = "";
+        document.getElementById("cTownship").value = "";
+        document.getElementById("cAddress").value = "";
+      }
+    }
+
+    // Dismiss suggestion popup when tapping outside
+    document.addEventListener("click", (e) => {
+      if (!e.target.closest("#cCustName") && !e.target.closest("#cSuggestBox")) {
+        const popup = document.getElementById("cSuggestBox");
+        if (popup) popup.style.display = "none";
+      }
+    });
+
+    
+    function openCheckoutModal() {
+      if (currentCart.length === 0) return alert("Cart is empty!");
+      renderCheckoutTotals();
+      document.getElementById("checkoutModal").style.display = "flex";
+    }
+
+    function renderCheckoutTotals() {
+      const tbody = document.getElementById("cCartTableBody");
+      let subtotal = 0;
+
+      tbody.innerHTML = currentCart.map(item => {
+        subtotal += item.Subtotal;
+        return `
+          <tr>
+            <td><b>${item.Name_MM}</b> (${item.Size})</td>
+            <td style="text-align:center;">
+              <button class="cart-qty-btn" onclick="alterCartQty('${item.ProductID}', -1)">-</button>
+              <b>${item.Quantity}</b>
+              <button class="cart-qty-btn" onclick="alterCartQty('${item.ProductID}', 1)">+</button>
+            </td>
+            <td style="text-align:right;">${item.Subtotal.toLocaleString()}</td>
+          </tr>
+        `;
+      }).join('');
+
+      const discType = document.getElementById("cDiscountType").value;
+      const discVal = parseFloat(document.getElementById("cDiscountVal").value) || 0;
+      let discountAmount = 0;
+
+      if (discType === "flat") discountAmount = Math.min(subtotal, discVal);
+      else if (discType === "percentage") discountAmount = Math.round(subtotal * (discVal / 100));
+
+      const net = Math.max(0, subtotal - discountAmount);
+      document.getElementById("cNetTotalDisplay").innerText = `${net.toLocaleString()} MMK`;
+    }
+
+    function alterCartQty(id, delta) {
+      const item = currentCart.find(x => x.ProductID === id);
+      if (!item) return;
+      item.Quantity += delta;
+      if (item.Quantity <= 0) currentCart = currentCart.filter(x => x.ProductID !== id);
+      else item.Subtotal = item.Quantity * item.UnitPrice;
+      updateCartSummary();
+      renderCheckoutTotals();
+    }
+
+    async function submitMobileOrder() {
+      const name = document.getElementById("cCustName").value.trim();
+      if (!name) return alert("Customer name required.");
+
+      const subtotal = currentCart.reduce((sum, i) => sum + i.Subtotal, 0);
+      const discType = document.getElementById("cDiscountType").value;
+      const discVal = parseFloat(document.getElementById("cDiscountVal").value) || 0;
+      let discAmount = 0;
+      if (discType === "flat") discAmount = Math.min(subtotal, discVal);
+      else if (discType === "percentage") discAmount = Math.round(subtotal * (discVal / 100));
+      const netTotal = Math.max(0, subtotal - discAmount);
+
+      const timestamp = new Date().toISOString();
+      const salesId = await generateNextSalesIdMobile();
+      const custId = document.getElementById("cBoundId").value || (await generateNextCustomerIdMobile());
+
+      const orderPayload = {
+        SalesID: salesId, Date: timestamp, CustomerID: custId, CustomerName: name,
+        Phone: document.getElementById("cCustPhone").value.trim(),
+        DeliveryName: document.getElementById("cDeliverySelect").value,
+        DeliveryAddress: document.getElementById("cAddress").value.trim(),
+        TownshipCity: document.getElementById("cTownship").value.trim(),
+        ItemList: currentCart, Subtotal: subtotal, DiscountType: discType,
+        DiscountAmount: discAmount, TotalAmount: netTotal,
+        PaymentType: document.getElementById("cPaymentSelect").value,
+        PaidStatus: document.getElementById("cPaidStatus").value,
+        Status: "Confirmed", Remark: "", LastModified: timestamp, _syncStatus: "pending_upload"
+      };
+
+      const tx = db.transaction(["orders", "products", "customers"], "readwrite");
+      tx.objectStore("orders").put(orderPayload);
+
+      // Deduct stock
+      const pStore = tx.objectStore("products");
+      currentCart.forEach(item => {
+        const req = pStore.get(item.ProductID);
+        req.onsuccess = () => {
+          const p = req.result;
+          if (p) {
+            p.Stock = Math.max(0, (Number(p.Stock) || 0) - item.Quantity);
+            p.LastModified = timestamp;
+            p._syncStatus = "pending_upload";
+            pStore.put(p);
+          }
+        };
+      });
+
+      // Upsert Customer
+      const cStore = tx.objectStore("customers");
+      const cReq = cStore.get(custId);
+      cReq.onsuccess = () => {
+        const c = cReq.result;
+        if (c) {
+          c.FullName = name;
+          c.TotalSpend = (Number(c.TotalSpend) || 0) + netTotal;
+          c.LastOrderDate = timestamp;
+          c._syncStatus = "pending_upload";
+          cStore.put(c);
+        } else {
+          cStore.put({
+            CustomerID: custId, FullName: name, Phone: orderPayload.Phone,
+            TownshipCity: orderPayload.TownshipCity, DefaultAddress: orderPayload.DeliveryAddress,
+            TotalSpend: netTotal, LastOrderDate: timestamp, _syncStatus: "pending_upload"
+          });
+        }
+      };
+
+      tx.oncomplete = () => {
+        currentCart = [];
+        updateCartSummary();
+        unbindMobileCustomer(true);
+        document.getElementById("cCustName").value = "";
+        closeModal("checkoutModal");
+        renderPosCatalog();
+        renderInventoryTable();
+        renderOrdersTable();
+        renderAnalytics();
+        pushPendingToSupabase();
+        unbindMobileCustomer(true);
+        document.getElementById("cCustName").value = "";
+        alert(`✅ Order #${salesId} recorded successfully!`);
+      };
+    }
+
+    // -------------------------------------------------------------------------
+    // INVENTORY & SHIPMENT MATRIX
+    // -------------------------------------------------------------------------
+    async function renderInventoryTable() {
+      const products = await dbGetAll("products");
+      const query = (document.getElementById("invSearch")?.value || "").toLowerCase().trim();
+      const showOut = document.getElementById("invShowOutOfStock")?.checked;
+      const tbody = document.getElementById("invTableBody");
+      if (!tbody) return;
+
+      const filtered = products.filter(p => {
+        const matchSex = activeInvSex === "All" || p.Sex === activeInvSex;
+        const matchType = activeInvType === "All" || p.Type === activeInvType;
+        const matchQuery = !query || `${p.ProductID} ${p.Name_MM} ${p.ColorPattern} ${p.Sex || ''}`.toLowerCase().includes(query);
+        const matchStock = showOut ? true : (Number(p.Stock) > 0);
+        return matchSex && matchType && matchQuery && matchStock;
+      });
+
+      tbody.innerHTML = filtered.map(p => `
+        <tr onclick="openEditProductModal('${p.ProductID}')" style="cursor: pointer;">
+          <td><b>${p.ProductID}</b><br>${p.Name_MM} (${p.Size}|${p.ColorPattern}) [${p.Sex || 'Unisex'}]</td>
+          <td><b>${Number(p.SellingPrice).toLocaleString()}</b></td>
+          <td style="text-align:center; white-space:nowrap;" onclick="event.stopPropagation();">
+            <button class="cart-qty-btn" onclick="adjustStock('${p.ProductID}', -1)">-</button>
+            <span style="padding: 0 4px; font-weight:bold;">${p.Stock}</span>
+            <button class="cart-qty-btn" onclick="adjustStock('${p.ProductID}', 1)">+</button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    async function adjustStock(productId, delta) {
+      const tx = db.transaction("products", "readwrite");
+      const store = tx.objectStore("products");
+      const req = store.get(productId);
+      req.onsuccess = () => {
+        const p = req.result;
+        if (p) {
+          p.Stock = Math.max(0, (Number(p.Stock) || 0) + delta);
+          p.LastModified = new Date().toISOString();
+          p._syncStatus = "pending_upload";
+          store.put(p);
+        }
+      };
+      tx.oncomplete = () => {
+        renderInventoryTable();
+        renderPosCatalog();
+        pushPendingToSupabase();
+      };
+    }
+
+    // -------------------------------------------------------------------------
+    // MATH & SKU HELPERS (Desktop Parity)
+    // -------------------------------------------------------------------------
+    async function generateNextSalesIdMobile() {
+      const orders = await dbGetAll("orders");
+      let maxNum = 0;
+      orders.forEach(o => {
+        if (o.SalesID) {
+          const match = String(o.SalesID).match(/\d+/);
+          if (match) {
+            const num = parseInt(match[0], 10);
+            if (num > maxNum) maxNum = num;
+          }
+        }
+      });
+      return "S" + String(maxNum + 1).padStart(6, "0");
+    }
+
+    async function generateNextCustomerIdMobile() {
+      const customers = await dbGetAll("customers");
+      let maxNum = 0;
+      customers.forEach(c => {
+        if (c.CustomerID) {
+          const match = String(c.CustomerID).match(/\d+/);
+          if (match) {
+            const num = parseInt(match[0], 10);
+            if (num > maxNum) maxNum = num;
+          }
+        }
+      });
+      return "C" + String(maxNum + 1).padStart(6, "0");
+    }
+
+    function roundUpToThousand(num) {
+      if (!num || num <= 0) return 0;
+      return Math.ceil(num / 1000) * 1000;
+    }
+
+    async function generateNextItemCodeMobile() {
+      const products = await dbGetAll("products");
+      let maxNum = 0;
+      products.forEach(p => {
+        if (p.ItemCode) {
+          const match = String(p.ItemCode).match(/\d+/);
+          if (match) {
+            const num = parseInt(match[0], 10);
+            if (num > maxNum) maxNum = num;
+          }
+        }
+      });
+      return "I" + String(maxNum + 1).padStart(6, "0");
+    }
+
+    function cleanColorCode(colorText) {
+      const map = {
+        "ပန်း": "PNK", "pink": "PNK",
+        "ဝါ": "YEL", "yellow": "YEL",
+        "ပြာ": "BLU", "blue": "BLU",
+        "ခဲ": "GRY", "grey": "GRY", "gray": "GRY",
+        "ဖြူ": "WHT", "white": "WHT",
+        "နီ": "RED", "red": "RED",
+        "စိမ်း": "GRN", "green": "GRN",
+        "နက်": "BLK", "black": "BLK",
+        "လိမ္မော်": "ORG", "orange": "ORG",
+        "ခရမ်း": "PUR", "purple": "PUR",
+        "ကြား": "STR", "striped": "STR",
+        "ပွင့်": "FLR", "floral": "FLR"
+      };
+      const normalized = String(colorText).toLowerCase().trim();
+      return map[normalized] || String(colorText).toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 3) || 'DEF';
+    }
+
+    function autoGenerateSingleSku() {
+      const code = document.getElementById("mProdItemCode").value.trim() || "I000000";
+      const size = String(document.getElementById("mProdSizeSelect").value || "").replace(/[^a-zA-Z0-9]/g, "");
+      const color = cleanColorCode(document.getElementById("mProdColorSelect").value || "");
+      document.getElementById("mProdSku").value = `${code}-${size}-${color}`;
+    }
+
+    // -------------------------------------------------------------------------
+    // SINGLE VARIANT MODAL CONTROLLER
+    // -------------------------------------------------------------------------
+    async function openEditProductModal(productId) {
+      const products = await dbGetAll("products");
+      const p = products.find(x => x.ProductID === productId);
+      if (!p) return;
+
+      document.getElementById("mProdEditMode").value = "true";
+      document.getElementById("pModalTitle").innerText = `✏️ Edit Variant: ${p.ProductID}`;
+
+      // Populate base fields
+      document.getElementById("mProdSku").value = p.ProductID;
+      document.getElementById("mProdItemCode").value = p.ItemCode || "";
+      document.getElementById("mProdName").value = p.Name_MM || "";
+      document.getElementById("mProdSex").value = p.Sex || "Unisex";
+      document.getElementById("mProdLength").value = p.Length || "တို";
+      document.getElementById("mProdStock").value = p.Stock ?? 0;
+
+      // Hydrate selects
+      document.getElementById("mProdTypeSelect").innerHTML = (appSettings.ProductTypes || []).map(t => `<option value="${t}" ${t === p.Type ? 'selected' : ''}>${t}</option>`).join('');
+      document.getElementById("mProdSizeSelect").innerHTML = (appSettings.ProductSizes || []).map(s => `<option value="${s}" ${String(s) === String(p.Size) ? 'selected' : ''}>${s}</option>`).join('');
+      document.getElementById("mProdColorSelect").innerHTML = (appSettings.ProductColors || []).map(c => `<option value="${c}" ${c === p.ColorPattern ? 'selected' : ''}>${c}</option>`).join('');
+
+      // Lock primary identifiers to prevent accidental SKU breakage
+      document.getElementById("mProdSizeSelect").disabled = true;
+      document.getElementById("mProdColorSelect").disabled = true;
+
+      // Populate complete pricing engine data
+      document.getElementById("mProdBuyingYuan").value = p.BuyingYuan ?? "";
+      document.getElementById("mProdSupplierPct").value = p.SupplierPct ?? (appSettings.DefaultSupplierPct ?? 3);
+      document.getElementById("mProdYuanRate").value = p.YuanRate || (appSettings.DefaultYuanRate || 620);
+      document.getElementById("mProdCargoFee").value = p.CargoFee || (appSettings.DefaultCargoFee || 2500);
+      document.getElementById("mProdTotalCapital").value = p.TotalCapital ?? "";
+      document.getElementById("mProdNormalPrice").value = p.NormalPrice ?? "";
+      document.getElementById("mProdSellingPrice").value = p.SellingPrice ?? "";
+      document.getElementById("mProdWholesalePrice").value = p.WholesalePrice ?? "";
+
+      document.getElementById("productModal").style.display = "flex";
+    }
+
+    async function openNewProductModal() {
+      const nextCode = await generateNextItemCodeMobile();
+      document.getElementById("mProdEditMode").value = "false";
+      document.getElementById("pModalTitle").innerText = "➕ Single Product Variant";
+      document.getElementById("mProdSizeSelect").disabled = false;
+      document.getElementById("mProdColorSelect").disabled = false;
+      document.getElementById("mProdItemCode").value = nextCode;
+      document.getElementById("mProdName").value = "";
+      document.getElementById("mProdSex").value = "Unisex";
+      document.getElementById("mProdLength").value = "တို";
+      document.getElementById("mProdStock").value = "5";
+
+      // Hydrate select options from appSettings
+      document.getElementById("mProdTypeSelect").innerHTML = (appSettings.ProductTypes || []).map(t => `<option value="${t}">${t}</option>`).join('');
+      document.getElementById("mProdSizeSelect").innerHTML = (appSettings.ProductSizes || []).map(s => `<option value="${s}">${s}</option>`).join('');
+      document.getElementById("mProdColorSelect").innerHTML = (appSettings.ProductColors || []).map(c => `<option value="${c}">${c}</option>`).join('');
+
+      document.getElementById("mProdSizeSelect").onchange = autoGenerateSingleSku;
+      document.getElementById("mProdColorSelect").onchange = autoGenerateSingleSku;
+
+      // Auto-place defaults from appSettings
+      document.getElementById("mProdBuyingYuan").value = "";
+      document.getElementById("mProdSupplierPct").value = appSettings.DefaultSupplierPct ?? 3;
+      document.getElementById("mProdYuanRate").value = appSettings.DefaultYuanRate || 620;
+      document.getElementById("mProdCargoFee").value = appSettings.DefaultCargoFee || 2500;
+      document.getElementById("mProdTotalCapital").value = "";
+      document.getElementById("mProdNormalPrice").value = "";
+      document.getElementById("mProdSellingPrice").value = "";
+      document.getElementById("mProdWholesalePrice").value = "";
+
+      autoGenerateSingleSku();
+      document.getElementById("productModal").style.display = "flex";
+    }
+
+    function calculateSinglePricingEngine() {
+      const buyingYuan = parseFloat(document.getElementById("mProdBuyingYuan").value) || 0;
+      const supplierPct = parseFloat(document.getElementById("mProdSupplierPct").value) || 0;
+      const yuanRate = parseFloat(document.getElementById("mProdYuanRate").value) || (appSettings.DefaultYuanRate || 620);
+      const cargoFee = parseFloat(document.getElementById("mProdCargoFee").value) || (appSettings.DefaultCargoFee || 2500);
+
+      const capital = ((buyingYuan * (1 + (supplierPct / 100))) * yuanRate) + cargoFee;
+      const totalCapital = Math.round(capital);
+
+      const regMarginPct = Number(appSettings.RegularProfitMargin || 33) / 100;
+      const wsMarginPct = Number(appSettings.WholesaleProfitMargin || 15) / 100;
+
+      const normalPrice = Math.round(totalCapital * (1 + regMarginPct));
+      const rawWholesale = totalCapital * (1 + wsMarginPct);
+
+      document.getElementById("mProdTotalCapital").value = totalCapital;
+      document.getElementById("mProdNormalPrice").value = normalPrice;
+      document.getElementById("mProdSellingPrice").value = roundUpToThousand(normalPrice);
+      document.getElementById("mProdWholesalePrice").value = roundUpToThousand(rawWholesale);
+    }
+
+    async function saveMobileProduct() {
+      const isEdit = document.getElementById("mProdEditMode").value === "true";
+      const sku = document.getElementById("mProdSku").value.trim();
+      const code = document.getElementById("mProdItemCode").value.trim();
+      const name = document.getElementById("mProdName").value.trim();
+      const sex = document.getElementById("mProdSex").value;
+      const type = document.getElementById("mProdTypeSelect").value;
+      const length = document.getElementById("mProdLength").value;
+      const size = document.getElementById("mProdSizeSelect").value;
+      const color = document.getElementById("mProdColorSelect").value;
+      const stock = Number(document.getElementById("mProdStock").value) || 0;
+
+      const buyingYuan = parseFloat(document.getElementById("mProdBuyingYuan").value) || 0;
+      const supplierPct = parseFloat(document.getElementById("mProdSupplierPct").value) || 0;
+      const yuanRate = parseFloat(document.getElementById("mProdYuanRate").value) || (appSettings.DefaultYuanRate || 620);
+      const cargoFee = parseFloat(document.getElementById("mProdCargoFee").value) || (appSettings.DefaultCargoFee || 2500);
+      const totalCapital = Number(document.getElementById("mProdTotalCapital").value) || 0;
+      const normalPrice = Number(document.getElementById("mProdNormalPrice").value) || 0;
+      const sellingPrice = Number(document.getElementById("mProdSellingPrice").value) || normalPrice;
+      const wholesalePrice = Number(document.getElementById("mProdWholesalePrice").value) || totalCapital;
+
+      if (!name) return alert("Product Name is required.");
+      if (!sku) return alert("Product SKU is required.");
+
+      let existing = null;
+      if (isEdit) {
+        const products = await dbGetAll("products");
+        existing = products.find(p => p.ProductID === sku);
+      }
+
+      const productRecord = {
+        ProductID: sku,
+        ItemCode: code,
+        Name_MM: name,
+        Sex: sex,
+        Type: type,
+        Length: length,
+        Size: size,
+        ColorPattern: color,
+        Remark: existing ? (existing.Remark || "") : "Mobile single intake",
+        Stock: stock,
+        BuyingYuan: buyingYuan,
+        SupplierPct: supplierPct,
+        YuanRate: yuanRate,
+        CargoFee: cargoFee,
+        TotalCapital: totalCapital,
+        NormalPrice: normalPrice,
+        SellingPrice: sellingPrice,
+        WholesalePrice: wholesalePrice,
+        LastModified: new Date().toISOString(),
+        _syncStatus: "pending_upload"
+      };
+
+      await dbPut("products", productRecord);
+
+      await persistUpdatedSettings({
+        DefaultSupplierPct: supplierPct,
+        DefaultYuanRate: yuanRate,
+        DefaultCargoFee: cargoFee
+      });
+
+      closeModal("productModal");
+      renderInventoryTable();
+      renderPosCatalog();
+      renderAnalytics();
+      pushPendingToSupabase();
+      alert(`✅ ${isEdit ? 'Updated' : 'Saved'} ${sku}!`);
+    }
+
+    // -------------------------------------------------------------------------
+    // BULK MATRIX CONTROLLER
+    // -------------------------------------------------------------------------
+    async function openBulkMatrixModal() {
+      const nextCode = await generateNextItemCodeMobile();
+      document.getElementById("bmItemCode").value = nextCode;
+      document.getElementById("bmName").value = "";
+      document.getElementById("bmSex").value = "Unisex";
+      document.getElementById("bmLength").value = "တို";
+      document.getElementById("bmQuickFill").value = "5";
+
+      // Auto-place defaults from appSettings
+      document.getElementById("bmBuyingYuan").value = "";
+      document.getElementById("bmSupplierPct").value = appSettings.DefaultSupplierPct ?? 3;
+      document.getElementById("bmYuanRate").value = appSettings.DefaultYuanRate || 620;
+      document.getElementById("bmCargoFee").value = appSettings.DefaultCargoFee || 2500;
+      document.getElementById("bmTotalCapital").value = "";
+      document.getElementById("bmNormalPrice").value = "";
+      document.getElementById("bmSellingPrice").value = "";
+      document.getElementById("bmWholesalePrice").value = "";
+
+      const sizes = appSettings.ProductSizes || [];
+      const colors = appSettings.ProductColors || [];
+
+      document.getElementById("bmSizeChecks").innerHTML = sizes.map((s, idx) => `
+        <label class="chip ${idx < 4 ? 'active' : ''}">
+          <input type="checkbox" value="${s}" ${idx < 4 ? 'checked' : ''} onchange="this.parentElement.classList.toggle('active'); renderBmGrid();" style="display:none;">
+          ${s}
+        </label>
+      `).join('');
+
+      document.getElementById("bmColorChecks").innerHTML = colors.map((c, idx) => `
+        <label class="chip ${idx < 3 ? 'active' : ''}">
+          <input type="checkbox" value="${c}" ${idx < 3 ? 'checked' : ''} onchange="this.parentElement.classList.toggle('active'); renderBmGrid();" style="display:none;">
+          ${c}
+        </label>
+      `).join('');
+
+      renderBmGrid();
+      document.getElementById("bulkMatrixModal").style.display = "flex";
+    }
+
+    function calculateBulkPricingEngineMobile() {
+      const buyingYuan = parseFloat(document.getElementById("bmBuyingYuan").value) || 0;
+      const supplierPct = parseFloat(document.getElementById("bmSupplierPct").value) || 0;
+      const yuanRate = parseFloat(document.getElementById("bmYuanRate").value) || (appSettings.DefaultYuanRate || 620);
+      const cargoFee = parseFloat(document.getElementById("bmCargoFee").value) || (appSettings.DefaultCargoFee || 2500);
+
+      const capital = ((buyingYuan * (1 + (supplierPct / 100))) * yuanRate) + cargoFee;
+      const totalCapital = Math.round(capital);
+
+      const regMarginPct = Number(appSettings.RegularProfitMargin || 33) / 100;
+      const wsMarginPct = Number(appSettings.WholesaleProfitMargin || 15) / 100;
+
+      const normalPrice = Math.round(totalCapital * (1 + regMarginPct));
+      const rawWholesale = totalCapital * (1 + wsMarginPct);
+
+      document.getElementById("bmTotalCapital").value = totalCapital;
+      document.getElementById("bmNormalPrice").value = normalPrice;
+      document.getElementById("bmSellingPrice").value = roundUpToThousand(normalPrice);
+      document.getElementById("bmWholesalePrice").value = roundUpToThousand(rawWholesale);
+    }
+
+    function renderBmGrid() {
+      const sizes = Array.from(document.querySelectorAll("#bmSizeChecks input:checked")).map(x => x.value);
+      const colors = Array.from(document.querySelectorAll("#bmColorChecks input:checked")).map(x => x.value);
+      const fillVal = document.getElementById("bmQuickFill")?.value || "5";
+      const table = document.getElementById("bmTable");
+
+      if (sizes.length === 0 || colors.length === 0) {
+        table.innerHTML = "<tr><td style='text-align:center;'>Select sizes & colors above</td></tr>";
+        return;
+      }
+
+      table.innerHTML = `
+        <thead>
+          <tr>
+            <th>Color</th>
+            ${sizes.map(s => `<th>${s}</th>`).join('')}
+          </tr>
+        </thead>
+        <tbody>
+          ${colors.map(c => `
+            <tr>
+              <td><b>${c}</b></td>${sizes.map(s => `
+                <td><input type="number" class="matrix-input-cell" data-color="${c}" data-size="${s}" value="${fillVal}" min="0"></td>
+              `).join('')}
+            </tr>
+          `).join('')}
+        </tbody>
+      `;
+    }
+
+    async function submitBulkMatrixMobile() {
+      const code = document.getElementById("bmItemCode").value;
+      const name = document.getElementById("bmName").value.trim();
+      const sex = document.getElementById("bmSex").value;
+      const type = document.getElementById("bmType").value;
+      const length = document.getElementById("bmLength").value;
+
+      const buyingYuan = parseFloat(document.getElementById("bmBuyingYuan").value) || 0;
+      const supplierPct = parseFloat(document.getElementById("bmSupplierPct").value) || 0;
+      const yuanRate = parseFloat(document.getElementById("bmYuanRate").value) || (appSettings.DefaultYuanRate || 620);
+      const cargoFee = parseFloat(document.getElementById("bmCargoFee").value) || (appSettings.DefaultCargoFee || 2500);
+      const totalCapital = Number(document.getElementById("bmTotalCapital").value) || 0;
+      const normalPrice = Number(document.getElementById("bmNormalPrice").value) || 0;
+      const sellingPrice = Number(document.getElementById("bmSellingPrice").value) || normalPrice;
+      const wholesalePrice = Number(document.getElementById("bmWholesalePrice").value) || totalCapital;
+
+      if (!name) return alert("Product name is required.");
+      if (sellingPrice <= 0) return alert("Selling price is required.");
+
+      const cells = document.querySelectorAll(".matrix-input-cell");
+      const records = [];
+      const timestamp = new Date().toISOString();
+
+      cells.forEach(cell => {
+        const qty = parseInt(cell.value, 10);
+        if (isNaN(qty) || qty < 0) return;
+
+        const color = cell.dataset.color;
+        const size = cell.dataset.size;
+        const cleanColor = cleanColorCode(color);
+        const cleanSize = String(size).replace(/[^a-zA-Z0-9]/g, '');
+        const sku = `${code}-${cleanSize}-${cleanColor}`;
+
+        records.push({
+          ProductID: sku,
+          ItemCode: code,
+          Name_MM: name,
+          Sex: sex,
+          Type: type,
+          Length: length,
+          Size: size,
+          ColorPattern: color,
+          Remark: "Bulk mobile intake",
+          Stock: qty,
+          BuyingYuan: buyingYuan,
+          SupplierPct: supplierPct,
+          YuanRate: yuanRate,
+          CargoFee: cargoFee,
+          TotalCapital: totalCapital,
+          NormalPrice: normalPrice,
+          SellingPrice: sellingPrice,
+          WholesalePrice: wholesalePrice,
+          LastModified: timestamp,
+          _syncStatus: "pending_upload"
+        });
+      });
+
+      if (records.length === 0) return alert("No valid variant quantities entered.");
+
+      const tx = db.transaction("products", "readwrite");
+      records.forEach(r => tx.objectStore("products").put(r));
+      tx.oncomplete = async () => {
+        // Auto-update store setting baselines with latest entered rates
+        await persistUpdatedSettings({
+          DefaultSupplierPct: supplierPct,
+          DefaultYuanRate: yuanRate,
+          DefaultCargoFee: cargoFee
+        });
+
+        closeModal("bulkMatrixModal");
+        renderInventoryTable();
+        renderPosCatalog();
+        pushPendingToSupabase();
+        alert(`✅ Created ${records.length} matrix variants for "${name}"!`);
+      };
+    }
+
+    // -------------------------------------------------------------------------
+    // ORDERS FULFILLMENT & EDIT
+    // -------------------------------------------------------------------------
+    async function renderOrdersTable() {
+      const orders = await dbGetAll("orders");
+      const query = (document.getElementById("orderSearch")?.value || "").toLowerCase().trim();
+      const container = document.getElementById("ordersCardsContainer");
+      if (!container) return;
+
+      orders.sort((a, b) => new Date(b.Date) - new Date(a.Date));
+      const filtered = orders.filter(o => !query || `${o.SalesID} ${o.CustomerName} ${o.Phone}`.toLowerCase().includes(query));
+
+      if (filtered.length === 0) {
+        container.innerHTML = `<div style="text-align:center; color:#888; padding:20px;">No matching orders found.</div>`;
+        return;
+      }
+
+      container.innerHTML = filtered.map(o => {
+        const curStatus = o.PaidStatus ? String(o.PaidStatus).trim() : "";
+        let badgeClass = "status-badge";
+        if (curStatus.toLowerCase() === "paid") badgeClass = "status-badge badge-synced";
+        else if (curStatus.toLowerCase() === "unpaid") badgeClass = "status-badge badge-alert";
+
+        return `
+          <div class="card-panel">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <b>#${o.SalesID}</b>
+              <span class="${badgeClass}">${curStatus || 'Not Set'}</span>
+            </div>
+            <div style="font-size:12px; margin-top:4px;"><b>${o.CustomerName}</b> (${o.Phone || 'No phone'})</div>
+            <div style="font-size:11px; color:#666;">${(o.ItemList || []).map(i => `${i.Name_MM} x${i.Quantity}`).join(', ')}</div>
+            <div style="font-size:13px; font-weight:bold; color:var(--primary); margin-top:4px;">${Number(o.TotalAmount).toLocaleString()} MMK</div>
+            
+            <div style="display:flex; gap:6px; margin-top:8px;">
+              <select onchange="quickUpdatePaid('${o.SalesID}', this.value)" style="font-size:11px; padding:4px;">
+                ${!curStatus ? `<option value="" selected>-- Not Set --</option>` : ''}
+                <option value="Paid" ${curStatus === 'Paid' ? 'selected' : ''}>Paid</option>
+                <option value="Unpaid" ${curStatus === 'Unpaid' ? 'selected' : ''}>Unpaid</option>
+              </select>
+              <button class="btn btn-success btn-sm" onclick='openOrderVoucherModal("${o.SalesID}")'>📸 Voucher</button>
+              <button class="btn btn-secondary btn-sm" onclick="printReceiptMobile('${o.SalesID}')">🖨️ Slip</button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function quickUpdatePaid(salesId, val) {
+      const orders = await dbGetAll("orders");
+      const o = orders.find(x => x.SalesID === salesId);
+      if (o) {
+        o.PaidStatus = val;
+        o.LastModified = new Date().toISOString();
+        o._syncStatus = "pending_upload";
+        await dbPut("orders", o);
+        renderOrdersTable();
+        pushPendingToSupabase();
+      }
+    }
+
+    async function openOrderVoucherModal(salesId) {
+      const orders = await dbGetAll("orders");
+      const order = orders.find(x => x.SalesID === salesId);
+      if (!order) return alert("Order not found!");
+      openVoucherModal(order);
+    }
+
+    function openVoucherModal(order) {
+      if (!order) return alert("Order data not found.");
+      let items = order.ItemList || [];
+      if (typeof items === "string") {
+        try { items = JSON.parse(items); } catch(e) { items = []; }
+      }
+
+      const subtotal = order.Subtotal || items.reduce((sum, i) => sum + (i.Subtotal || 0), 0);
+      const discountAmount = Number(order.DiscountAmount) || 0;
+
+      document.getElementById('vSalesId').innerText = order.SalesID;
+      document.getElementById('vDate').innerText = new Date(order.Date).toLocaleDateString();
+      document.getElementById('vCustName').innerText = order.CustomerName;
+      document.getElementById('vPhone').innerText = order.Phone || 'None';
+      document.getElementById('vDeliveryName').innerText = order.DeliveryName || 'Not assigned';
+      document.getElementById('vAddress').innerText = `${order.DeliveryAddress || ''}${order.TownshipCity ? ', ' + order.TownshipCity : ''}` || 'Not specified';
+      document.getElementById('vPaymentType').innerText = order.PaymentType || '-';
+      document.getElementById('vPaidStatus').innerText = (order.PaidStatus || 'Unpaid').toUpperCase();
+      document.getElementById('vSubtotal').innerText = `${Number(subtotal).toLocaleString()} MMK`;
+      
+      const vDiscRow = document.getElementById('vDiscountRow');
+      if (discountAmount > 0) {
+        vDiscRow.style.display = 'flex';
+        document.getElementById('vDiscountLabel').innerText = order.DiscountLabel || 'Discount:';
+        document.getElementById('vDiscountAmount').innerText = `-${discountAmount.toLocaleString()} MMK`;
+      } else {
+        vDiscRow.style.display = 'none';
+      }
+
+      document.getElementById('vTotalAmount').innerText = `${Number(order.TotalAmount).toLocaleString()} MMK`;
+      document.getElementById('vRemark').innerText = order.Remark || 'None';
+
+      const tbody = document.getElementById('vItemsBody');
+      tbody.innerHTML = items.map(i => `
+        <tr>
+          <td style="padding: 3px 0;"><b>${i.Name_MM}</b><br><span style="font-size:9px; color:#666;">Size: ${i.Size} | Color: ${i.ColorPattern}</span></td>
+          <td style="text-align:center; font-weight:bold; padding: 3px 0;">${i.Quantity}</td>
+          <td style="text-align:right; font-weight:bold; padding: 3px 0;">${Number(i.Subtotal).toLocaleString()}</td>
+        </tr>
+      `).join('');
+
+      document.getElementById('voucherStatusLabel').innerText = '';
+      document.getElementById('voucherModal').style.display = 'flex';
+    }
+
+    async function downloadVoucherImage() {
+      const card = document.getElementById('voucherCardToCapture');
+      const status = document.getElementById('voucherStatusLabel');
+      status.innerText = "📸 Generating image...";
+      try {
+        const canvas = await html2canvas(card, { scale: 2, backgroundColor: "#ffffff", useCORS: true });
+        const salesId = document.getElementById('vSalesId').innerText || 'Order';
+        const link = document.createElement('a');
+        link.download = `Voucher_${salesId}.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+        status.innerText = "✅ Saved image!";
+      } catch (err) {
+        status.innerText = "❌ Image generation failed.";
+      }
+    }
+
+    async function shareVoucherImage() {
+      const card = document.getElementById('voucherCardToCapture');
+      const status = document.getElementById('voucherStatusLabel');
+      status.innerText = "📸 Preparing share...";
+      try {
+        const canvas = await html2canvas(card, { scale: 2, backgroundColor: "#ffffff", useCORS: true });
+        const salesId = document.getElementById('vSalesId').innerText || 'Order';
+        canvas.toBlob(async (blob) => {
+          if (!blob) return status.innerText = "❌ Image creation failed.";
+          const file = new File([blob], `Voucher_${salesId}.png`, { type: 'image/png' });
+          if (navigator.canShare && navigator.canShare({ files: [file] })) {
+            await navigator.share({ files: [file], title: `Voucher #${salesId}` });
+            status.innerText = "✅ Shared!";
+          } else {
+            downloadVoucherImage();
+          }
+        }, 'image/png');
+      } catch (err) {
+        status.innerText = "❌ Share cancelled or unsupported.";
+      }
+    }
+
+    async function copyVoucherToClipboard() {
+      const card = document.getElementById('voucherCardToCapture');
+      const status = document.getElementById('voucherStatusLabel');
+      status.innerText = "📸 Copying...";
+      try {
+        const canvas = await html2canvas(card, { scale: 2, backgroundColor: "#ffffff", useCORS: true });
+        canvas.toBlob(async (blob) => {
+          if (navigator.clipboard && navigator.clipboard.write) {
+            await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+            status.innerText = "✅ Copied to clipboard!";
+          } else {
+            status.innerText = "⚠️ Copy not supported. Use 'Save'.";
+          }
+        }, 'image/png');
+      } catch(err) {
+        status.innerText = "⚠️ Failed to copy.";
+      }
+    }
+
+    async function printReceiptMobile(salesId) {
+      const orders = await dbGetAll("orders");
+      const o = orders.find(x => x.SalesID === salesId);
+      if (!o) return;
+
+      document.getElementById("slipId").innerText = o.SalesID;
+      document.getElementById("slipCust").innerText = `${o.CustomerName} (${o.Phone || ''})`;
+      document.getElementById("slipTotal").innerText = `${Number(o.TotalAmount).toLocaleString()} MMK`;
+      document.getElementById("slipItems").innerHTML = (o.ItemList || []).map(i => `
+        <div>${i.Name_MM} (${i.Size}) x${i.Quantity} - ${Number(i.Subtotal).toLocaleString()} K</div>
+      `).join('');
+
+      window.print();
+    }
+
+    // -------------------------------------------------------------------------
+    // CUSTOMERS DIRECTORY
+    // -------------------------------------------------------------------------
+   async function renderCustomersTable() {
+      const [customers, orders] = await Promise.all([
+        dbGetAll("customers"),
+        dbGetAll("orders")
+      ]);
+      const query = (document.getElementById("custSearch")?.value || "").toLowerCase().trim();
+      const container = document.getElementById("customersContainer");
+      if (!container) return;
+
+      const filtered = customers.filter(c => !query || `${c.FullName} ${c.Phone || ''} ${c.TownshipCity || ''}`.toLowerCase().includes(query));
+
+      if (filtered.length === 0) {
+        container.innerHTML = `<div style="text-align:center; color:#888; padding:20px;">No customers found.</div>`;
+        return;
+      }
+
+      container.innerHTML = filtered.map(c => {
+        // Calculate spend dynamically across all non-cancelled orders matching customer
+        const custOrders = orders.filter(o => o.CustomerID === c.CustomerID && o.Status !== "Cancelled");
+        const orderCount = custOrders.length;
+        const totalSpend = custOrders.reduce((sum, o) => sum + (Number(o.TotalAmount) || 0), Number(c.TotalSpend) || 0);
+
+        return `
+          <div class="card-panel">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <b>${c.FullName}</b>
+              <span style="font-weight:bold; color:var(--primary); font-size:12px;">${totalSpend.toLocaleString()} MMK</span>
+            </div>
+            <div style="font-size:11px; color:#555; margin-top:2px;">
+              📞 ${c.Phone || 'No phone'} | 📍 ${c.TownshipCity || 'N/A'} | 📦 <b>${orderCount} orders</b>
+            </div>
+            <button class="btn btn-primary btn-sm" style="margin-top:8px; width: 100%;" onclick="startOrderForCust('${c.CustomerID}')">🛒 Create POS Order</button>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function startOrderForCust(id) {
+      dbGetAll("customers").then(customers => {
+        const c = customers.find(x => x.CustomerID === id);
+        if (c) {
+          document.getElementById("cBoundId").value = c.CustomerID;
+          document.getElementById("cCustName").value = c.FullName;
+          document.getElementById("cCustPhone").value = c.Phone || "";
+          document.getElementById("cTownship").value = c.TownshipCity || "";
+          document.getElementById("cAddress").value = c.DefaultAddress || "";
+          switchTab("posView", document.querySelectorAll(".nav-item")[0]);
+        }
+      });
+    }
+
+    async function openNewCustomerModal() {
       const nextId = await generateNextCustomerIdMobile();
 
       document.getElementById('mcId').value = nextId;
@@ -49,3 +2480,177 @@ async function openNewCustomerModal() {
       pushPendingToSupabase();
       alert("✅ Customer profile saved!");
     }
+
+    // -------------------------------------------------------------------------
+    // ANALYTICS ENGINE
+    // -------------------------------------------------------------------------
+
+    function setAnalyticsPeriod(period, el) {
+      activeAnalyticsPeriod = period;
+      document.querySelectorAll("#anPeriodChips .chip").forEach(c => c.classList.remove("active"));
+      if (el) el.classList.add("active");
+      renderAnalytics();
+    }
+
+    async function renderAnalytics() {
+      const orders = await dbGetAll("orders");
+      const products = await dbGetAll("products");
+      const pMap = new Map(products.map(p => [p.ProductID, p]));
+
+      const now = new Date();
+      const todayStr = now.toISOString().slice(0, 10);
+
+      // Filter orders by active period
+      const filteredOrders = orders.filter(o => {
+        if (o.Status === "Cancelled") return false;
+        const orderDate = new Date(o.Date);
+        const orderDateStr = orderDate.toISOString().slice(0, 10);
+
+        if (activeAnalyticsPeriod === 'today') {
+          return orderDateStr === todayStr;
+        } else if (activeAnalyticsPeriod === 'this_month') {
+          return orderDate.getFullYear() === now.getFullYear() && orderDate.getMonth() === now.getMonth();
+        }
+        return true; // 'all_time'
+      });
+
+      let rev = 0, cost = 0, units = 0;
+      const catMap = new Map();
+
+      filteredOrders.forEach(o => {
+        rev += Number(o.TotalAmount) || 0;
+        (o.ItemList || []).forEach(i => {
+          const q = Number(i.Quantity) || 0;
+          units += q;
+          const p = pMap.get(i.ProductID);
+          cost += q * (p ? Number(p.TotalCapital) || 0 : 0);
+          const cat = (p && p.Type) ? p.Type : "Other";
+          catMap.set(cat, (catMap.get(cat) || 0) + q);
+        });
+      });
+
+      document.getElementById("anRev").innerText = `${rev.toLocaleString()} MMK`;
+      document.getElementById("anProfit").innerText = `Gross Profit: ${(rev - cost).toLocaleString()} MMK`;
+      document.getElementById("anUnits").innerText = `${units} items sold`;
+
+      const barsContainer = document.getElementById("anCategoryBars");
+      if (catMap.size === 0) {
+        barsContainer.innerHTML = `<div style="color:#888; font-size:11px; padding:6px 0;">No sales in this period.</div>`;
+      } else {
+        barsContainer.innerHTML = [...catMap.entries()].map(([cat, q]) => `
+          <div style="display:flex; justify-content:space-between; font-size:11px; margin-bottom:4px;">
+            <span>${cat}</span><b>${q} units</b>
+          </div>
+        `).join('');
+      }
+    }
+
+    // -------------------------------------------------------------------------
+    // HELPERS & UI CONTROLLERS
+    // -------------------------------------------------------------------------
+    function switchTab(viewId, btn) {
+      document.querySelectorAll(".view-content").forEach(v => v.classList.remove("active"));
+      document.querySelectorAll(".nav-item").forEach(n => n.classList.remove("active"));
+      document.getElementById(viewId).classList.add("active");
+      if (btn) btn.classList.add("active");
+    }
+
+    function closeModal(id) { document.getElementById(id).style.display = "none"; }
+
+    async function persistUpdatedSettings(newRates = {}) {
+      let hasChanges = false;
+      for (const [k, v] of Object.entries(newRates)) {
+        if (v !== undefined && v !== null && appSettings[k] !== v) {
+          appSettings[k] = v;
+          hasChanges = true;
+        }
+      }
+
+      if (hasChanges && db) {
+        const tx = db.transaction("settings", "readwrite");
+        const store = tx.objectStore("settings");
+        for (const [k, v] of Object.entries(appSettings)) {
+          store.put({ key: k, value: v, _syncStatus: "pending_upload" });
+        }
+        await new Promise(r => { tx.oncomplete = r; });
+        applySettingsUI();
+        updateBadge();
+        pushSettingsToSupabase();
+      }
+    }
+
+    async function pushSettingsToSupabase() {
+      if (!supabaseClient || !navigator.onLine) return;
+      try {
+        const payload = Object.entries(appSettings).map(([k, v]) => ({
+          key: k,
+          value: v,
+          updated_at: new Date().toISOString()
+        }));
+
+        const { error } = await supabaseClient.from("store_settings").upsert(payload);
+        if (!error && db) {
+          const tx = db.transaction("settings", "readwrite");
+          const store = tx.objectStore("settings");
+          for (let [k, v] of Object.entries(appSettings)) {
+            store.put({ key: k, value: v, _syncStatus: "synced" });
+          }
+          await new Promise(r => { tx.oncomplete = r; });
+          updateBadge();
+        }
+      } catch (err) {
+        console.warn("Could not push settings to Supabase:", err);
+      }
+    }
+
+    async function loadLocalSettings() {
+      const s = await dbGetAll("settings");
+      s.forEach(row => { appSettings[row.key] = row.value; });
+      applySettingsUI();
+    }
+
+    function applySettingsUI() {
+      const types = ["All", ...(appSettings.ProductTypes || [])];
+      const sizes = ["All", ...(appSettings.ProductSizes || [])];
+
+      const posTypeChips = document.getElementById("posTypeChips");
+    if (posTypeChips) {
+      posTypeChips.innerHTML = types.map(t => `
+        <div class="chip ${t === activeType ? 'active' : ''}" onclick="setPosType('${t}', this)">
+          ${t === 'All' ? 'All Types' : t}
+        </div>
+      `).join('');
+    }
+
+    const posSizeChips = document.getElementById("posSizeChips");
+    if (posSizeChips) {
+      posSizeChips.innerHTML = sizes.map(s => `
+        <div class="chip ${s === activeSize ? 'active' : ''}" onclick="setPosSize('${s}', this)">
+          ${s === 'All' ? 'All Sizes' : s}
+        </div>
+      `).join('');
+    }
+
+      document.getElementById("cDeliverySelect").innerHTML = (appSettings.DeliveryServices || []).map(d => `<option value="${d}">${d}</option>`).join('');
+      document.getElementById("cPaymentSelect").innerHTML = (appSettings.PaymentMethods || []).map(p => `<option value="${p}">${p}</option>`).join('');
+      document.getElementById("bmType").innerHTML = (appSettings.ProductTypes || []).map(t => `<option value="${t}">${t}</option>`).join('');
+    }
+
+    async function updateBadge() {
+      const [p, o, c] = await Promise.all([dbGetAll("products"), dbGetAll("orders"), dbGetAll("customers")]);
+      const unsaved = p.filter(x => x._syncStatus === "pending_upload").length +
+                      o.filter(x => x._syncStatus === "pending_upload").length +
+                      c.filter(x => x._syncStatus === "pending_upload").length;
+
+      const badge = document.getElementById("syncBadge");
+      if (unsaved > 0) {
+        badge.className = "status-badge badge-unsaved";
+        badge.innerText = `⏳ ${unsaved} Pending`;
+      } else {
+        badge.className = "status-badge badge-synced";
+        badge.innerText = "⚡ Synced";
+      }
+    }
+  </script>
+</body>
+</html>
