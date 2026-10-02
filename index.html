@@ -4254,7 +4254,8 @@ document.addEventListener("click", (e) => {
     const products = await dbGetAll("products");
     const matches = products.filter(p => {
       const str = `${p.ProductID} ${p.Name_MM} ${p.ColorPattern} ${p.Size} ${p.Type}`.toLowerCase();
-      return str.includes(query);
+      const hasStock = (Number(p.Stock) || 0) > 0;
+      return str.includes(query) && hasStock;
     });
 
     if (matches.length === 0) {
