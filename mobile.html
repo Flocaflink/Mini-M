@@ -526,6 +526,7 @@
   <!-- Single SKU Intake Modal -->
   <div id="productModal" class="modal-overlay">
     <div class="modal-card" style="max-height: 92vh;">
+      <input type="hidden" id="mProdEditMode" value="false">
       <div class="modal-header">
         <h3 id="pModalTitle">➕ Single Product Variant</h3>
         <button class="close-btn" onclick="closeModal('productModal')">&times;</button>
@@ -534,7 +535,7 @@
       <div style="display: flex; gap: 6px;">
         <div style="flex: 1;">
           <label>Base Code:</label>
-          <input type="text" id="mProdItemCode" readonly style="background:#eee; font-weight:bold;">
+          <input type="text" id="mProdItemCode" readonly style="background:#eee; font-weight:bold;" oninput="autoGenerateSingleSku()">
         </div>
         <div style="flex: 1.5;">
           <label>Name (MM) *:</label>
@@ -1059,7 +1060,13 @@
             Sex: p.sex, Type: p.type, Length: p.length, Size: p.size,
             ColorPattern: p.color_pattern, Remark: p.remark, Stock: p.stock,
             SellingPrice: p.selling_price, WholesalePrice: p.wholesale_price,
-            TotalCapital: p.total_capital, LastModified: p.last_modified, _syncStatus: "synced"
+            TotalCapital: p.total_capital, LastModified: p.last_modified, _syncStatus: "synced",
+            BuyingYuan: p.buying_yuan,
+            SupplierPct: p.supplier_pct,
+            YuanRate: p.yuan_rate,
+            CargoFee: p.cargo_fee,
+            TotalCapital: p.total_capital,
+            NormalPrice: p.normal_price
           }));
           await new Promise(r => { tx.oncomplete = r; });
           renderPosCatalog();
@@ -1205,7 +1212,13 @@
             Sex: p.sex, Type: p.type, Length: p.length, Size: p.size,
             ColorPattern: p.color_pattern, Remark: p.remark, Stock: p.stock,
             SellingPrice: p.selling_price, WholesalePrice: p.wholesale_price,
-            TotalCapital: p.total_capital, LastModified: p.last_modified, _syncStatus: "synced"
+            TotalCapital: p.total_capital, LastModified: p.last_modified, _syncStatus: "synced",
+            // Add these 5 missing fields:
+            BuyingYuan: p.buying_yuan,
+            SupplierPct: p.supplier_pct,
+            YuanRate: p.yuan_rate,
+            CargoFee: p.cargo_fee,
+            NormalPrice: p.normal_price
           }));
           await new Promise(r => { txP.oncomplete = r; });
         }
@@ -1291,10 +1304,19 @@
         }
 
         if (uC.length > 0) {
-          const payload = uC.map(c => ({
-            customer_id: c.CustomerID, full_name: c.FullName, phone: c.Phone,
-            default_address: c.DefaultAddress, township_city: c.TownshipCity, remark: c.Remark,
-            total_spend: Number(c.TotalSpend) || 0, last_order_date: c.LastOrderDate || new Date().toISOString()
+          const payload = uP.map(p => ({
+            product_id: p.ProductID, item_code: p.ItemCode || "", name_mm: p.Name_MM,
+            sex: p.Sex, type: p.Type, length: p.Length, size: String(p.Size),
+            color_pattern: p.ColorPattern, remark: p.Remark, stock: Number(p.Stock) || 0,
+            buying_yuan: Number(p.BuyingYuan) || 0,
+            supplier_pct: Number(p.SupplierPct) || 0,
+            yuan_rate: Number(p.YuanRate) || 620,
+            cargo_fee: Number(p.CargoFee) || 2500,
+            total_capital: Number(p.TotalCapital) || 0,
+            normal_price: Number(p.NormalPrice) || 0,
+            selling_price: Number(p.SellingPrice) || 0,
+            wholesale_price: Number(p.WholesalePrice) || 0,
+            last_modified: p.LastModified || new Date().toISOString()
           }));
           const { error } = await supabaseClient.from("customers").upsert(payload);
           if (!error) await markSynced("customers", uC);
@@ -1715,10 +1737,10 @@
       });
 
       tbody.innerHTML = filtered.map(p => `
-        <tr>
+        <tr onclick="openEditProductModal('${p.ProductID}')" style="cursor: pointer;">
           <td><b>${p.ProductID}</b><br>${p.Name_MM} (${p.Size}|${p.ColorPattern}) [${p.Sex || 'Unisex'}]</td>
           <td><b>${Number(p.SellingPrice).toLocaleString()}</b></td>
-          <td style="text-align:center; white-space:nowrap;">
+          <td style="text-align:center; white-space:nowrap;" onclick="event.stopPropagation();">
             <button class="cart-qty-btn" onclick="adjustStock('${p.ProductID}', -1)">-</button>
             <span style="padding: 0 4px; font-weight:bold;">${p.Stock}</span>
             <button class="cart-qty-btn" onclick="adjustStock('${p.ProductID}', 1)">+</button>
@@ -1799,8 +1821,50 @@
     // -------------------------------------------------------------------------
     // SINGLE VARIANT MODAL CONTROLLER
     // -------------------------------------------------------------------------
+    async function openEditProductModal(productId) {
+      const products = await dbGetAll("products");
+      const p = products.find(x => x.ProductID === productId);
+      if (!p) return;
+
+      document.getElementById("mProdEditMode").value = "true";
+      document.getElementById("pModalTitle").innerText = `✏️ Edit Variant: ${p.ProductID}`;
+
+      // Populate base fields
+      document.getElementById("mProdSku").value = p.ProductID;
+      document.getElementById("mProdItemCode").value = p.ItemCode || "";
+      document.getElementById("mProdName").value = p.Name_MM || "";
+      document.getElementById("mProdSex").value = p.Sex || "Unisex";
+      document.getElementById("mProdLength").value = p.Length || "တို";
+      document.getElementById("mProdStock").value = p.Stock ?? 0;
+
+      // Hydrate selects
+      document.getElementById("mProdTypeSelect").innerHTML = (appSettings.ProductTypes || []).map(t => `<option value="${t}" ${t === p.Type ? 'selected' : ''}>${t}</option>`).join('');
+      document.getElementById("mProdSizeSelect").innerHTML = (appSettings.ProductSizes || []).map(s => `<option value="${s}" ${String(s) === String(p.Size) ? 'selected' : ''}>${s}</option>`).join('');
+      document.getElementById("mProdColorSelect").innerHTML = (appSettings.ProductColors || []).map(c => `<option value="${c}" ${c === p.ColorPattern ? 'selected' : ''}>${c}</option>`).join('');
+
+      // Lock primary identifiers to prevent accidental SKU breakage
+      document.getElementById("mProdSizeSelect").disabled = true;
+      document.getElementById("mProdColorSelect").disabled = true;
+
+      // Populate complete pricing engine data
+      document.getElementById("mProdBuyingYuan").value = p.BuyingYuan ?? "";
+      document.getElementById("mProdSupplierPct").value = p.SupplierPct ?? (appSettings.DefaultSupplierPct ?? 3);
+      document.getElementById("mProdYuanRate").value = p.YuanRate || (appSettings.DefaultYuanRate || 620);
+      document.getElementById("mProdCargoFee").value = p.CargoFee || (appSettings.DefaultCargoFee || 2500);
+      document.getElementById("mProdTotalCapital").value = p.TotalCapital ?? "";
+      document.getElementById("mProdNormalPrice").value = p.NormalPrice ?? "";
+      document.getElementById("mProdSellingPrice").value = p.SellingPrice ?? "";
+      document.getElementById("mProdWholesalePrice").value = p.WholesalePrice ?? "";
+
+      document.getElementById("productModal").style.display = "flex";
+    }
+
     async function openNewProductModal() {
       const nextCode = await generateNextItemCodeMobile();
+      document.getElementById("mProdEditMode").value = "false";
+      document.getElementById("pModalTitle").innerText = "➕ Single Product Variant";
+      document.getElementById("mProdSizeSelect").disabled = false;
+      document.getElementById("mProdColorSelect").disabled = false;
       document.getElementById("mProdItemCode").value = nextCode;
       document.getElementById("mProdName").value = "";
       document.getElementById("mProdSex").value = "Unisex";
@@ -1851,6 +1915,7 @@
     }
 
     async function saveMobileProduct() {
+      const isEdit = document.getElementById("mProdEditMode").value === "true";
       const sku = document.getElementById("mProdSku").value.trim();
       const code = document.getElementById("mProdItemCode").value.trim();
       const name = document.getElementById("mProdName").value.trim();
@@ -1873,6 +1938,12 @@
       if (!name) return alert("Product Name is required.");
       if (!sku) return alert("Product SKU is required.");
 
+      let existing = null;
+      if (isEdit) {
+        const products = await dbGetAll("products");
+        existing = products.find(p => p.ProductID === sku);
+      }
+
       const productRecord = {
         ProductID: sku,
         ItemCode: code,
@@ -1882,7 +1953,7 @@
         Length: length,
         Size: size,
         ColorPattern: color,
-        Remark: "Mobile single intake",
+        Remark: existing ? (existing.Remark || "") : "Mobile single intake",
         Stock: stock,
         BuyingYuan: buyingYuan,
         SupplierPct: supplierPct,
@@ -1898,7 +1969,6 @@
 
       await dbPut("products", productRecord);
 
-      // Auto-update store setting baselines with latest entered rates
       await persistUpdatedSettings({
         DefaultSupplierPct: supplierPct,
         DefaultYuanRate: yuanRate,
@@ -1908,8 +1978,9 @@
       closeModal("productModal");
       renderInventoryTable();
       renderPosCatalog();
+      renderAnalytics();
       pushPendingToSupabase();
-      alert(`✅ Saved ${sku}!`);
+      alert(`✅ ${isEdit ? 'Updated' : 'Saved'} ${sku}!`);
     }
 
     // -------------------------------------------------------------------------
