@@ -728,9 +728,12 @@
           <label>Wholesale Price:</label>
           <input type="number" id="bmWholesalePrice" placeholder="Wholesale Price">
         </div>
-        <div style="flex: 0.8;">
+        <div style="flex: 1.2;">
           <label>Quick Fill:</label>
-          <input type="number" id="bmQuickFill" value="5">
+          <div style="display: flex; gap: 4px;">
+            <input type="number" id="bmQuickFill" value="5" style="min-width: 50px;">
+            <button class="btn btn-secondary btn-sm" onclick="applyBulkQuickFillMobile()">Fill</button>
+          </div>
         </div>
       </div>
 
@@ -2087,13 +2090,18 @@
     function renderBmGrid() {
       const sizes = Array.from(document.querySelectorAll("#bmSizeChecks input:checked")).map(x => x.value);
       const colors = Array.from(document.querySelectorAll("#bmColorChecks input:checked")).map(x => x.value);
-      const fillVal = document.getElementById("bmQuickFill")?.value || "5";
       const table = document.getElementById("bmTable");
 
       if (sizes.length === 0 || colors.length === 0) {
         table.innerHTML = "<tr><td style='text-align:center;'>Select sizes & colors above</td></tr>";
         return;
       }
+
+      // Preserve existing cell values when checking/unchecking boxes
+      const currentValues = {};
+      document.querySelectorAll('.matrix-input-cell').forEach(inp => {
+        currentValues[inp.dataset.color + '_' + inp.dataset.size] = inp.value;
+      });
 
       table.innerHTML = `
         <thead>
@@ -2105,13 +2113,21 @@
         <tbody>
           ${colors.map(c => `
             <tr>
-              <td><b>${c}</b></td>${sizes.map(s => `
-                <td><input type="number" class="matrix-input-cell" data-color="${c}" data-size="${s}" value="${fillVal}" min="0"></td>
-              `).join('')}
+              <td><b>${c}</b></td>${sizes.map(s => {
+                const val = currentValues[c + '_' + s] !== undefined ? currentValues[c + '_' + s] : "0";
+                return `<td><input type="number" class="matrix-input-cell" data-color="${c}" data-size="${s}" value="${val}" min="0"></td>`;
+              }).join('')}
             </tr>
           `).join('')}
         </tbody>
       `;
+    }
+
+    function applyBulkQuickFillMobile() {
+      const fillVal = document.getElementById("bmQuickFill")?.value || "0";
+      document.querySelectorAll(".matrix-input-cell").forEach(cell => {
+        cell.value = fillVal;
+      });
     }
 
     async function submitBulkMatrixMobile() {
