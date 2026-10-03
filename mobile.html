@@ -1311,19 +1311,15 @@
         }
 
         if (uC.length > 0) {
-          const payload = uP.map(p => ({
-            product_id: p.ProductID, item_code: p.ItemCode || "", name_mm: p.Name_MM,
-            sex: p.Sex, type: p.Type, length: p.Length, size: String(p.Size),
-            color_pattern: p.ColorPattern, remark: p.Remark, stock: Number(p.Stock) || 0,
-            buying_yuan: Number(p.BuyingYuan) || 0,
-            supplier_pct: Number(p.SupplierPct) || 0,
-            yuan_rate: Number(p.YuanRate) || 620,
-            cargo_fee: Number(p.CargoFee) || 2500,
-            total_capital: Number(p.TotalCapital) || 0,
-            normal_price: Number(p.NormalPrice) || 0,
-            selling_price: Number(p.SellingPrice) || 0,
-            wholesale_price: Number(p.WholesalePrice) || 0,
-            last_modified: p.LastModified || new Date().toISOString()
+          const payload = uC.map(c => ({
+            customer_id: c.CustomerID,
+            full_name: c.FullName,
+            phone: c.Phone || "",
+            default_address: c.DefaultAddress || "",
+            township_city: c.TownshipCity || "",
+            remark: c.Remark || "",
+            total_spend: Number(c.TotalSpend) || 0,
+            last_order_date: c.LastOrderDate || new Date().toISOString()
           }));
           const { error } = await supabaseClient.from("customers").upsert(payload);
           if (!error) await markSynced("customers", uC);
@@ -1695,6 +1691,11 @@
         const c = cReq.result;
         if (c) {
           c.FullName = name;
+          // Add these three missing lines:
+          c.Phone = orderPayload.Phone || c.Phone || "";
+          c.TownshipCity = orderPayload.TownshipCity || c.TownshipCity || "";
+          c.DefaultAddress = orderPayload.DeliveryAddress || c.DefaultAddress || "";
+          
           c.TotalSpend = (Number(c.TotalSpend) || 0) + netTotal;
           c.LastOrderDate = timestamp;
           c._syncStatus = "pending_upload";
