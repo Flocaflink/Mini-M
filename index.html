@@ -1433,7 +1433,7 @@
 
         <div style="display: flex; gap: 8px; margin-top: 8px;">
           <button type="button" class="btn btn-secondary btn-sm" style="flex: 1;" onclick="testSupabaseConnection()">🧪 Test Supabase</button>
-          <button type="button" class="btn btn-primary btn-sm" style="flex: 1; background: #008055;" onclick="pullSupabaseDeltas(true)">⚡ Pull Supabase Deltas</button>
+          <button type="button" class="btn btn-primary btn-sm" style="flex: 1; background: #008055;" onclick="forceFullSupabaseHydrationDesktop()">📥 Pull All from Supabase</button>
         </div>
 
         <!-- 🚀 Full Migration Tool -->
@@ -3634,6 +3634,122 @@ document.addEventListener("click", (e) => {
       document.getElementById("custTownship").value = "";
       document.getElementById("custAddress").value = "";
       document.getElementById("custRemark").value = "";
+    }
+  }
+
+async function fetchFullTablePaged(tableName) {
+    const PAGE_SIZE = 1000;
+    let allRows = [];
+    let from = 0;
+    let hasMore = true;
+
+    while (hasMore) {
+      const to = from + PAGE_SIZE - 1;
+      const { data, error } = await supabaseClient
+        .from(tableName)
+        .select("*")
+        .range(from, to);
+
+      if (error) throw new Error(`${tableName} fetch error: ${error.message}`);
+      if (!data || data.length === 0) {
+        hasMore = false;
+      } else {
+        allRows = allRows.concat(data);
+        if (data.length < PAGE_SIZE) {
+          hasMore = false;
+        } else {
+          from += PAGE_SIZE;
+        }
+      }
+    }
+    return allRows;
+  }
+
+  async function forceFullSupabaseHydrationDesktop() {
+    if (!supabaseClient || !navigator.onLine) return alert("⚠️ Supabase is offline. Check settings.");
+    if (!confirm("This will download the entire database from Supabase and merge it with your local data. Proceed?")) return;
+
+    try {
+      const statusMsg = document.getElementById("cfgGasStatusMsg");
+      if (statusMsg) statusMsg.innerHTML = "⏳ Downloading full database from Supabase (this may take a moment)...";
+
+      const [pData, oData, cData, sData] = await Promise.all([
+        fetchFullTablePaged("products"),
+        fetchFullTablePaged("orders"),
+        fetchFullTablePaged("customers"),
+        fetchFullTablePaged("store_settings")
+      ]);
+
+      // 1. Hydrate Store Settings
+      if (sData && sData.length > 0) {
+        const txS = db.transaction("settings", "readwrite");
+        const storeS = txS.objectStore("settings");
+        sData.forEach(r => {
+          appSettings[r.key] = r.value;
+          storeS.put({ key: r.key, value: r.value, _syncStatus: "synced" });
+        });
+        await new Promise(r => { txS.oncomplete = r; });
+        applyDynamicSettingsToUI();
+      }
+
+      // 2. Hydrate Products
+      if (pData && pData.length > 0) {
+        const txP = db.transaction("products", "readwrite");
+        const storeP = txP.objectStore("products");
+        pData.forEach(p => storeP.put({
+          ProductID: p.product_id, ItemCode: p.item_code, Name_MM: p.name_mm,
+          Sex: p.sex, Type: p.type, Length: p.length, Size: p.size,
+          ColorPattern: p.color_pattern, Remark: p.remark, Stock: p.stock,
+          SellingPrice: p.selling_price, WholesalePrice: p.wholesale_price,
+          TotalCapital: p.total_capital, LastModified: p.last_modified, _syncStatus: "synced",
+          BuyingYuan: p.buying_yuan, SupplierPct: p.supplier_pct, YuanRate: p.yuan_rate,
+          CargoFee: p.cargo_fee, NormalPrice: p.normal_price
+        }));
+        await new Promise(r => { txP.oncomplete = r; });
+      }
+
+      // 3. Hydrate Orders
+      if (oData && oData.length > 0) {
+        const txO = db.transaction("orders", "readwrite");
+        const storeO = txO.objectStore("orders");
+        oData.forEach(o => storeO.put({
+          SalesID: o.sales_id, Date: o.date, CustomerID: o.customer_id, CustomerName: o.customer_name,
+          Phone: o.phone, DeliveryName: o.delivery_name, DeliveryAddress: o.delivery_address,
+          TownshipCity: o.township_city, ItemList: o.item_list, Subtotal: o.subtotal,
+          DiscountType: o.discount_type, DiscountAmount: o.discount_amount, TotalAmount: o.total_amount,
+          PaymentType: o.payment_type, PaidStatus: o.paid_status, Status: o.status,
+          Remark: o.remark, LastModified: o.last_modified, _syncStatus: "synced",
+          DiscountLabel: o.discount_label
+        }));
+        await new Promise(r => { txO.oncomplete = r; });
+      }
+
+      // 4. Hydrate Customers
+      if (cData && cData.length > 0) {
+        const txC = db.transaction("customers", "readwrite");
+        const storeC = txC.objectStore("customers");
+        cData.forEach(c => storeC.put({
+          CustomerID: c.customer_id, FullName: c.full_name, Phone: c.phone || "",
+          DefaultAddress: c.default_address || "", TownshipCity: c.township_city || "",
+          Remark: c.remark || "", TotalSpend: c.total_spend || 0, LastOrderDate: c.last_order_date || new Date().toISOString(),
+          _syncStatus: "synced"
+        }));
+        await new Promise(r => { txC.oncomplete = r; });
+      }
+
+      // Reset sync clock and render UI
+      localStorage.setItem(KEY_SB_LAST_SYNC, new Date().toISOString());
+      renderPosCatalog();
+      renderInventoryTable();
+      renderOrdersTable();
+      renderCustomersTable();
+      renderAnalyticsDashboard();
+      updateUnsavedChangesBadge();
+
+      if (statusMsg) statusMsg.innerHTML = `<span style="color:green;">✅ Full Hydration Complete!</span>`;
+      alert(`🎉 Full Hydration Complete!\n\nDownloaded:\n• Products: ${pData.length}\n• Orders: ${oData.length}\n• Customers: ${cData.length}`);
+    } catch (err) {
+      alert("Hydration failed: " + err.message);
     }
   }
 
