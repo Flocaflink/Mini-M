@@ -2681,48 +2681,30 @@ async function pushSettingsToSupabase() {
   }
 
   async function generateNextSalesId() {
-    const orders = await dbGetAll("orders");
-    let maxNum = 0;
-    orders.forEach(o => {
-      if (o.SalesID) {
-        const match = String(o.SalesID).match(/\d+/);
-        if (match) {
-          const num = parseInt(match[0], 10);
-          if (num > maxNum) maxNum = num;
-        }
-      }
-    });
-    return "S" + String(maxNum + 1).padStart(6, "0");
+    return generateTimestampId("S");
   }
 
   async function generateNextItemCode() {
-    const products = await dbGetAll("products");
-    let maxNum = 0;
-    products.forEach(p => {
-      if (p.ItemCode) {
-        const match = String(p.ItemCode).match(/\d+/);
-        if (match) {
-          const num = parseInt(match[0], 10);
-          if (num > maxNum) maxNum = num;
-        }
-      }
-    });
-    return "I" + String(maxNum + 1).padStart(6, "0");
+    return generateTimestampId("I");
   }
 
   async function generateNextCustomerId() {
-    const customers = await dbGetAll("customers");
-    let maxNum = 0;
-    customers.forEach(c => {
-      if (c.CustomerID) {
-        const match = String(c.CustomerID).match(/\d+/);
-        if (match) {
-          const num = parseInt(match[0], 10);
-          if (num > maxNum) maxNum = num;
-        }
-      }
-    });
-    return "C" + String(maxNum + 1).padStart(6, "0");
+    return generateTimestampId("C");
+  }
+
+  // Unified Timestamp Generator
+  function generateTimestampId(prefix) {
+    const now = new Date();
+    const yy = String(now.getFullYear()).slice(-2);
+    const mm = String(now.getMonth() + 1).padStart(2, '0');
+    const dd = String(now.getDate()).padStart(2, '0');
+    const hh = String(now.getHours()).padStart(2, '0');
+    const min = String(now.getMinutes()).padStart(2, '0');
+    const ss = String(now.getSeconds()).padStart(2, '0');
+    // 2-digit random entropy to prevent exact-second collisions
+    const rand = Math.floor(Math.random() * 90 + 10); 
+    
+    return `${prefix}${yy}${mm}${dd}-${hh}${min}${ss}-${rand}`;
   }
 
   function roundUpToThousand(num) {
