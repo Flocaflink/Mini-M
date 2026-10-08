@@ -1203,9 +1203,11 @@
           fetchFullTablePaged("store_settings")
         ]);
 
+        // 1. Settings
         if (sData && sData.length > 0) {
           const txS = db.transaction("settings", "readwrite");
           const storeS = txS.objectStore("settings");
+          storeS.clear(); // Wipes old local settings
           sData.forEach(r => { 
             appSettings[r.key] = r.value; 
             storeS.put({ key: r.key, value: r.value, _syncStatus: "synced" }); 
@@ -1214,16 +1216,17 @@
           applySettingsUI();
         }
 
+        // 2. Products
         if (pData && pData.length > 0) {
           const txP = db.transaction("products", "readwrite");
           const storeP = txP.objectStore("products");
+          storeP.clear(); // Wipes old ghost duplicates
           pData.forEach(p => storeP.put({
             ProductID: p.product_id, ItemCode: p.item_code, Name_MM: p.name_mm,
             Sex: p.sex, Type: p.type, Length: p.length, Size: p.size,
             ColorPattern: p.color_pattern, Remark: p.remark, Stock: p.stock,
             SellingPrice: p.selling_price, WholesalePrice: p.wholesale_price,
             TotalCapital: p.total_capital, LastModified: p.last_modified, _syncStatus: "synced",
-            // Add these 5 missing fields:
             BuyingYuan: p.buying_yuan,
             SupplierPct: p.supplier_pct,
             YuanRate: p.yuan_rate,
@@ -1233,9 +1236,11 @@
           await new Promise(r => { txP.oncomplete = r; });
         }
 
+        // 3. Orders
         if (oData && oData.length > 0) {
           const txO = db.transaction("orders", "readwrite");
           const storeO = txO.objectStore("orders");
+          storeO.clear(); // Wipes old ghost duplicates
           oData.forEach(o => storeO.put({
             SalesID: o.sales_id, Date: o.date, CustomerID: o.customer_id, CustomerName: o.customer_name,
             Phone: o.phone, DeliveryName: o.delivery_name, DeliveryAddress: o.delivery_address,
@@ -1247,9 +1252,11 @@
           await new Promise(r => { txO.oncomplete = r; });
         }
 
+        // 4. Customers
         if (cData && cData.length > 0) {
           const txC = db.transaction("customers", "readwrite");
           const storeC = txC.objectStore("customers");
+          storeC.clear(); // Wipes old ghost duplicates
           cData.forEach(c => storeC.put({
             CustomerID: c.customer_id, FullName: c.full_name, Phone: c.phone,
             DefaultAddress: c.default_address, TownshipCity: c.township_city,
