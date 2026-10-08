@@ -5182,7 +5182,11 @@ async function fetchFullTablePaged(tableName) {
       const payload = {
         products: products.map(cleanRecordForSync),
         orders: orders.map(cleanRecordForSync),
-        customers: customers.map(cleanRecordForSync),
+        customers: customers.map(c => {
+          const custOrders = orders.filter(o => o.CustomerID === c.CustomerID && o.Status !== "Cancelled");
+          c.TotalSpend = custOrders.reduce((sum, o) => sum + (Number(o.TotalAmount) || 0), 0);
+          return cleanRecordForSync(c);
+        }),
         settings: appSettings
       };
 
@@ -5382,7 +5386,11 @@ async function fetchFullTablePaged(tableName) {
       const payload = {
         products: products.map(cleanRecordForSync),
         orders: orders.map(cleanRecordForSync),
-        customers: customers.map(cleanRecordForSync),
+        customers: customers.map(c => {
+          const custOrders = orders.filter(o => o.CustomerID === c.CustomerID && o.Status !== "Cancelled");
+          c.TotalSpend = custOrders.reduce((sum, o) => sum + (Number(o.TotalAmount) || 0), 0);
+          return cleanRecordForSync(c);
+        }),
         settings: appSettings
       };
 
