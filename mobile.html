@@ -948,13 +948,13 @@
         renderAnalytics();
         updateBadge();
 
-        // 30s background heartbeat
-        setInterval(() => {
-          if (navigator.onLine) {
-            pushPendingToSupabase();
-            pullSupabaseDeltas(false);
-          }
-        }, 30000);
+        // 300-second heartbeat delta sync
+      setInterval(async () => {
+        if (navigator.onLine) {
+          await pushPendingToSupabase();
+          await pullSupabaseDeltas(false);
+        }
+      }, 300000);
 
       } catch (err) {
         console.error("Boot error:", err);
@@ -1007,20 +1007,36 @@
       supabaseClient
         .channel("mobile-realtime")
         .on("postgres_changes", { event: "*", schema: "public", table: "products" }, payload => {
-          if (payload.new && db) {
+        if (payload.new && db) {
+          const tx = db.transaction("products", "readwrite");
+          const store = tx.objectStore("products");
+          
+          // Read local state before overwriting
+          const req = store.get(payload.new.product_id);
+          req.onsuccess = () => {
+            const local = req.result;
+            // Safety Lock: Do not overwrite if local edits haven't uploaded yet
+            if (local && local._syncStatus === "pending_upload") return; 
+
             const p = payload.new;
-            const rec = {
+            store.put({
               ProductID: p.product_id, ItemCode: p.item_code, Name_MM: p.name_mm,
               Sex: p.sex, Type: p.type, Length: p.length, Size: p.size,
               ColorPattern: p.color_pattern, Remark: p.remark, Stock: p.stock,
               SellingPrice: p.selling_price, WholesalePrice: p.wholesale_price,
-              TotalCapital: p.total_capital, LastModified: p.last_modified, _syncStatus: "synced"
-            };
-            const tx = db.transaction("products", "readwrite");
-            tx.objectStore("products").put(rec);
-            tx.oncomplete = () => { renderPosCatalog(); renderInventoryTable(); renderAnalytics(); };
-          }
-        })
+              TotalCapital: p.total_capital, LastModified: p.last_modified, _syncStatus: "synced",
+              BuyingYuan: p.buying_yuan, SupplierPct: p.supplier_pct, YuanRate: p.yuan_rate,
+              CargoFee: p.cargo_fee, NormalPrice: p.normal_price
+            });
+          };
+          
+          tx.oncomplete = () => { 
+            renderPosCatalog(); 
+            renderInventoryTable(); 
+            renderAnalytics(); 
+          };
+        }
+      })
         .on("postgres_changes", { event: "*", schema: "public", table: "orders" }, payload => {
           if (payload.new && db) {
             const o = payload.new;
@@ -1056,48 +1072,87 @@
       try {
         const lastSync = localStorage.getItem(KEY_SB_LAST_SYNC) || "1970-01-01T00:00:00Z";
 
-        const [pRes, oRes, sRes] = await Promise.all([
+        const [pRes, oRes, sRes, cRes] = await Promise.all([
           supabaseClient.from("products").select("*").gt("updated_at", lastSync),
           supabaseClient.from("orders").select("*").gt("updated_at", lastSync),
-          supabaseClient.from("store_settings").select("*").gt("updated_at", lastSync)
+          supabaseClient.from("store_settings").select("*").gt("updated_at", lastSync),
+          supabaseClient.from("customers").select("*").gt("updated_at", lastSync)
         ]);
 
+        // 1. Products Lock
         if (pRes.data && pRes.data.length > 0) {
+          const localProducts = await dbGetAll("products");
+          const localMap = new Map(localProducts.map(p => [p.ProductID, p]));
+
           const tx = db.transaction("products", "readwrite");
           const s = tx.objectStore("products");
-          pRes.data.forEach(p => s.put({
-            ProductID: p.product_id, ItemCode: p.item_code, Name_MM: p.name_mm,
-            Sex: p.sex, Type: p.type, Length: p.length, Size: p.size,
-            ColorPattern: p.color_pattern, Remark: p.remark, Stock: p.stock,
-            SellingPrice: p.selling_price, WholesalePrice: p.wholesale_price,
-            TotalCapital: p.total_capital, LastModified: p.last_modified, _syncStatus: "synced",
-            BuyingYuan: p.buying_yuan,
-            SupplierPct: p.supplier_pct,
-            YuanRate: p.yuan_rate,
-            CargoFee: p.cargo_fee,
-            TotalCapital: p.total_capital,
-            NormalPrice: p.normal_price
-          }));
+          
+          pRes.data.forEach(p => {
+            const local = localMap.get(p.product_id);
+            if (local && local._syncStatus === "pending_upload") return; 
+
+            s.put({
+              ProductID: p.product_id, ItemCode: p.item_code, Name_MM: p.name_mm,
+              Sex: p.sex, Type: p.type, Length: p.length, Size: p.size,
+              ColorPattern: p.color_pattern, Remark: p.remark, Stock: p.stock,
+              SellingPrice: p.selling_price, WholesalePrice: p.wholesale_price,
+              TotalCapital: p.total_capital, LastModified: p.last_modified, _syncStatus: "synced",
+              BuyingYuan: p.buying_yuan, SupplierPct: p.supplier_pct, YuanRate: p.yuan_rate,
+              CargoFee: p.cargo_fee, NormalPrice: p.normal_price
+            });
+          });
           await new Promise(r => { tx.oncomplete = r; });
           renderPosCatalog();
           renderInventoryTable();
         }
 
+        // 2. Orders Lock
         if (oRes.data && oRes.data.length > 0) {
+          const localOrders = await dbGetAll("orders");
+          const localMap = new Map(localOrders.map(o => [o.SalesID, o]));
+
           const tx = db.transaction("orders", "readwrite");
           const s = tx.objectStore("orders");
-          oRes.data.forEach(o => s.put({
-            SalesID: o.sales_id, Date: o.date, CustomerID: o.customer_id, CustomerName: o.customer_name,
-            Phone: o.phone, DeliveryName: o.delivery_name, DeliveryAddress: o.delivery_address,
-            TownshipCity: o.township_city, ItemList: o.item_list, Subtotal: o.subtotal,
-            DiscountType: o.discount_type, DiscountAmount: o.discount_amount, TotalAmount: o.total_amount,
-            PaymentType: o.payment_type, PaidStatus: o.paid_status, Status: o.status,
-            Remark: o.remark, LastModified: o.last_modified, _syncStatus: "synced"
-          }));
+          oRes.data.forEach(o => {
+            const local = localMap.get(o.sales_id);
+            if (local && local._syncStatus === "pending_upload") return;
+
+            s.put({
+              SalesID: o.sales_id, Date: o.date, CustomerID: o.customer_id, CustomerName: o.customer_name,
+              Phone: o.phone, DeliveryName: o.delivery_name, DeliveryAddress: o.delivery_address,
+              TownshipCity: o.township_city, ItemList: o.item_list, Subtotal: o.subtotal,
+              DiscountType: o.discount_type, DiscountAmount: o.discount_amount, TotalAmount: o.total_amount,
+              PaymentType: o.payment_type, PaidStatus: o.paid_status, Status: o.status,
+              Remark: o.remark, LastModified: o.last_modified, _syncStatus: "synced"
+            });
+          });
           await new Promise(r => { tx.oncomplete = r; });
           renderOrdersTable();
         }
 
+        // 3. Customers Lock
+        if (cRes.data && cRes.data.length > 0) {
+          const localCusts = await dbGetAll("customers");
+          const localMap = new Map(localCusts.map(c => [c.CustomerID, c]));
+
+          const tx = db.transaction("customers", "readwrite");
+          const s = tx.objectStore("customers");
+          cRes.data.forEach(c => {
+            const local = localMap.get(c.customer_id);
+            if (local && local._syncStatus === "pending_upload") return;
+
+            s.put({
+              CustomerID: c.customer_id, FullName: c.full_name, Phone: c.phone || "",
+              DefaultAddress: c.default_address || "", TownshipCity: c.township_city || "",
+              Remark: c.remark || "", TotalSpend: Number(c.total_spend) || 0,
+              LastOrderDate: c.last_order_date || new Date().toISOString(), _syncStatus: "synced"
+            });
+          });
+          await new Promise(r => { tx.oncomplete = r; });
+          renderCustomersTable();
+        }
+
+        // 4. Settings
         if (sRes.data && sRes.data.length > 0) {
           const tx = db.transaction("settings", "readwrite");
           const s = tx.objectStore("settings");
@@ -1445,18 +1500,24 @@
         return;
       }
 
-      grid.innerHTML = filtered.map(p => `
-        <div class="product-card">
-          <div>
-            <div class="product-title">${p.Name_MM}</div>
-            <div class="product-meta">${p.Size} | ${p.ColorPattern}</div>
+      grid.innerHTML = filtered.map(p => {
+        const stock = Number(p.Stock) || 0;
+        const stockColor = stock <= 2 ? 'var(--warning)' : 'var(--success)';
+        
+        return `
+          <div class="product-card">
+            <div>
+              <div class="product-title">${p.Name_MM}</div>
+              <div class="product-meta">${p.Size} | ${p.ColorPattern}</div>
+              <div class="product-meta" style="color: ${stockColor}; font-weight: bold; margin-top: 2px;">📦 ${stock} in stock</div>
+            </div>
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-top:6px;">
+              <span class="product-price">${Number(p.SellingPrice).toLocaleString()} K</span>
+              <button class="btn btn-primary btn-sm" onclick="addToCart('${p.ProductID}')">➕ Add</button>
+            </div>
           </div>
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-top:6px;">
-            <span class="product-price">${Number(p.SellingPrice).toLocaleString()} K</span>
-            <button class="btn btn-primary btn-sm" onclick="addToCart('${p.ProductID}')">➕ Add</button>
-          </div>
-        </div>
-      `).join('');
+        `;
+      }).join('');
     }
 
     async function addToCart(productId) {
@@ -1554,6 +1615,64 @@
         popup.style.display = "block";
       }, 150);
     }
+
+    async function openItemHistoryModal(productId) {
+    const [orders, products] = await Promise.all([
+      dbGetAll("orders"),
+      dbGetAll("products")
+    ]);
+    
+    const product = products.find(p => p.ProductID === productId);
+    const pName = product ? `${product.Name_MM} (Size: ${product.Size} | Color: ${product.ColorPattern})` : productId;
+    
+    document.getElementById('historyModalTitle').innerText = `📋 Trace: ${productId}`;
+    
+    let totalSold = 0;
+    const historyRows = [];
+
+    // Scan strictly offline orders
+    orders.forEach(o => {
+      if (o.Status === "Cancelled") return; 
+      
+      const items = Array.isArray(o.ItemList) ? o.ItemList : [];
+      const targetItem = items.find(i => i.ProductID === productId);
+      
+      if (targetItem) {
+        const qty = Number(targetItem.Quantity) || 0;
+        totalSold += qty;
+        historyRows.push({
+          dateObj: new Date(o.Date),
+          dateStr: new Date(o.Date).toLocaleDateString(),
+          customer: o.CustomerName || "Unknown",
+          qty: qty
+        });
+      }
+    });
+
+    // Sort chronologically (newest first)
+    historyRows.sort((a, b) => b.dateObj - a.dateObj);
+
+    const tbody = document.getElementById('historyTableBody');
+    
+    if (historyRows.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="3" style="text-align: center; color: #888; padding: 15px;">No sales recorded for this specific variant yet.</td></tr>`;
+    } else {
+      tbody.innerHTML = historyRows.map(row => `
+        <tr>
+          <td style="font-size: 11px;">${row.dateStr}</td>
+          <td><b>${row.customer}</b></td>
+          <td style="text-align: center; font-weight: bold; color: var(--primary);">${row.qty}</td>
+        </tr>
+      `).join('');
+    }
+    
+    document.getElementById('historyModalSubtitle').innerHTML = `
+      <b>Item:</b> ${pName} <br>
+      <span style="color: var(--success); font-weight: bold;">✅ Total Lifetime Sold: ${totalSold} units</span>
+    `;
+    
+    document.getElementById('itemHistoryModal').style.display = 'flex';
+  }
 
     async function selectMobileSuggestedCustomer(customerId) {
       const [customers, orders] = await Promise.all([
@@ -1762,6 +1881,8 @@
             <button class="cart-qty-btn" onclick="adjustStock('${p.ProductID}', -1)">-</button>
             <span style="padding: 0 4px; font-weight:bold;">${p.Stock}</span>
             <button class="cart-qty-btn" onclick="adjustStock('${p.ProductID}', 1)">+</button>
+            <br>
+            <button class="btn btn-sm" style="margin-top: 6px; padding: 2px 6px; font-size: 10px; background: #0d5c75; color: white; width: 100%;" onclick="openItemHistoryModal('${p.ProductID}')">📋 Trace</button>
           </td>
         </tr>
       `).join('');
@@ -2659,5 +2780,40 @@
       }
     }
   </script>
+
+<!-- Item Sales History / Trace Modal -->
+<div id="itemHistoryModal" class="modal-overlay">
+  <div class="modal-card" style="max-width: 600px;">
+    <div class="modal-header">
+      <h3 id="historyModalTitle">📋 Item Sales History</h3>
+      <button class="close-btn" onclick="closeModal('itemHistoryModal')">&times;</button>
+    </div>
+    
+    <div style="margin-bottom: 12px; font-size: 12px; color: #444; background: #f8f9fa; padding: 10px; border-radius: 6px; border: 1px solid var(--border);" id="historyModalSubtitle">
+      Loading data...
+    </div>
+    
+    <div style="overflow-y: auto; max-height: 400px; border: 1px solid #ddd; border-radius: 6px;">
+      <table class="data-table" style="margin: 0;">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Customer Name</th>
+            <th style="text-align: center;">Qty Bought</th>
+            <th>Order ID</th>
+          </tr>
+        </thead>
+        <tbody id="historyTableBody">
+          <!-- Rows injected here -->
+        </tbody>
+      </table>
+    </div>
+    
+    <div style="text-align: right; margin-top: 12px;">
+      <button class="btn" style="background:#ccc;" onclick="closeModal('itemHistoryModal')">Close</button>
+    </div>
+  </div>
+</div>
+
 </body>
 </html>
